@@ -157,8 +157,11 @@ class JsonResponseUtil:
             raise
 
     @classmethod
-    def get_correct_json_string(cls, json_string: str) -> str:
+    def get_correct_json_string(cls, json_string: str | None) -> str:
         """Get correct json string applying all available methods to fix in case the provided string is incorrect."""
+
+        if not json_string:
+            return '{}'
 
         # Remove all the symbols before the first opened bracket and after the last closed,
         # in particular, '''json<actual_json>''' wrap.
