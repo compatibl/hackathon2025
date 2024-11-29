@@ -79,13 +79,13 @@ class JsonResponseUtil:
                 first_curly_bracket > first_square_bracket and last_square_bracket > last_curly_bracket
             )
             if is_content_in_curly_brackets:
-                return json_string[first_curly_bracket: last_curly_bracket + 1]
+                return json_string[first_curly_bracket : last_curly_bracket + 1]
             if is_content_in_square_brackets:
-                return json_string[first_square_bracket: last_square_bracket + 1]
+                return json_string[first_square_bracket : last_square_bracket + 1]
         elif is_square_brackets_found:
-            return json_string[first_square_bracket: last_square_bracket + 1]
+            return json_string[first_square_bracket : last_square_bracket + 1]
         elif is_curly_brackets_found:
-            return json_string[first_curly_bracket: last_curly_bracket + 1]
+            return json_string[first_curly_bracket : last_curly_bracket + 1]
 
         # Return original string in case one or both opened and closed curly brackets were not found,
         # the provided json string is incorrect in such case. And content can not be extracted properly.
@@ -161,7 +161,7 @@ class JsonResponseUtil:
         """Get correct json string applying all available methods to fix in case the provided string is incorrect."""
 
         if not json_string:
-            return '{}'
+            return "{}"
 
         # Remove all the symbols before the first opened bracket and after the last closed,
         # in particular, '''json<actual_json>''' wrap.
