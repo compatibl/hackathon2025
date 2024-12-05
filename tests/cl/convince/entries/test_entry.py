@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pytest
-from cl.tradeentry.entries.currency_entry import CurrencyEntry
+from cl.tradeentry.entries.ccy_entry import CcyEntry
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.testing.regression_guard import RegressionGuard
 from cl.convince.entries.entry_key import EntryKey
@@ -28,22 +28,22 @@ def test_create_key():
     locale = "en-GB"
 
     # Check with type and description only
-    entry = CurrencyEntry(text="Sample Text", locale=locale)
+    entry = CcyEntry(text="Sample Text", locale=locale)
     entry.init()
     guard.write(entry.entry_id)
 
     # Check with body
-    entry = CurrencyEntry(text=" ".join(20 * ["Long Text"]), locale=locale)
+    entry = CcyEntry(text=" ".join(20 * ["Long Text"]), locale=locale)
     entry.init()
     guard.write(entry.entry_id)
 
     # Check with data
-    entry = CurrencyEntry(text="Multiline\nText", locale=locale)
+    entry = CcyEntry(text="Multiline\nText", locale=locale)
     entry.init()
     guard.write(entry.entry_id)
 
     # Check with both
-    entry = CurrencyEntry(text="Sample Text", locale=locale, data="Sample Data")
+    entry = CcyEntry(text="Sample Text", locale=locale, data="Sample Data")
     entry.init()
     guard.write(entry.entry_id)
 
