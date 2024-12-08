@@ -25,7 +25,7 @@ class ConvinceSettings(Settings):
     """Locale and related conventions."""
 
     locale: str | None = None
-    """Locale in BCP 47 ll-CC where ll is language and CC is country for AI applications, no effect on front end."""
+    """Default locale for AI in BCP 47 language-country format, for example en-US (has no effect on the front end)."""
 
     load_completions_from_csv: bool | None = None
     """Completions are loaded from CSV files by default, use this field to change."""
@@ -73,7 +73,7 @@ class ConvinceSettings(Settings):
 
     @classmethod
     def parse_locale(cls, locale: str) -> Tuple[str, str]:
-        """Parse locale in BCP 47 ll-CC where ll is language and CC is country (not region)."""
+        """Locale is in BCP 47 language-country format, for example en-US (second token must be country, not region)."""
         locale_tokens = locale.split("-")
         format_msg = "  - Locale not in BCP 47 ll-CC format where ll is language and CC is country, for example en-US"
         if len(locale_tokens) != 2:

@@ -34,7 +34,7 @@ class CompletionKey(KeyMixin):
         return CompletionKey
 
     def init(self) -> Self:
-        # Validate entry_id inside a key but not inside a record where it will be set automatically
+        # Validate entry_id inside a key but not inside a record where it will be set based on other fields
         if is_key(self):
             if "(" not in self.completion_id or ")" not in self.completion_id:
                 raise UserError(
