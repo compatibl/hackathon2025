@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from dataclasses import dataclass
-from typing import Tuple
 from typing_extensions import Self
-from cl.runtime.exceptions.error_util import ErrorUtil
+from cl.runtime.context.os_util import OsUtil
 from cl.runtime.settings.settings import Settings
 
 
@@ -24,12 +22,39 @@ from cl.runtime.settings.settings import Settings
 class CompletionSettings(Settings):
     """Settings that apply to the entire Convince package."""
 
-    load_completions_from_csv: bool | None = None
-    """Completions are loaded from CSV files by default, use this field to change."""
+    load_from_csv: bool | None = None
+    """Determines if completions are loaded from CSV files (defaults to True on Windows, required on other OS)."""
 
-    save_completions_to_csv: bool | None = None
-    """Completions are saved to CSV files by default on Windows only, use this field to change."""
+    save_to_csv: bool | None = None
+    """Determines if completions are saved to CSV files (defaults to True on Windows, required on other OS)."""
 
     @classmethod
     def get_prefix(cls) -> str:
-        return "convince"
+        return "convince_completion"
+
+    def init(self) -> Self:
+        """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
+
+        if self.load_from_csv is None:
+            # Defaults to True on Windows, required on other OS
+            if OsUtil.is_windows():
+                self.load_from_csv = True
+            else:
+                raise RuntimeError(
+                    "Setting CL_CONVINCE_COMPLETION_LOAD_FROM_CSV is required on non-Windows platforms.\n"
+                    "Specify in settings.yaml or as an environment variable."
+                )
+
+        # Save completions to a local file on Windows only
+        if self.save_to_csv is None:
+            # Defaults to True on Windows, required on other OS
+            if OsUtil.is_windows():
+                self.save_to_csv = True
+            else:
+                raise RuntimeError(
+                    "Setting CL_CONVINCE_COMPLETION_SAVE_TO_CSV is required on non-Windows platforms.\n"
+                    "Specify in settings.yaml or as an environment variable."
+                )
+
+        # Return self to enable method chaining
+        return self

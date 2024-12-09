@@ -19,7 +19,6 @@ from typing import Any
 from typing import Dict
 from cl.runtime import Context
 from cl.runtime.context.env_util import EnvUtil
-from cl.runtime.experiments.trial_key import TrialKey
 from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
 from cl.convince.llms.completion import Completion
@@ -118,7 +117,7 @@ class CompletionCache:
         Context.current().save_one(completion_record)
 
         # Save completions to a file unless explicitly turned off in CompletionSettings
-        if CompletionSettings.instance().save_completions_to_csv:
+        if CompletionSettings.instance().save_to_csv:
 
             # Check if the file already exists
             is_new = not os.path.exists(self.output_path)
@@ -177,7 +176,7 @@ class CompletionCache:
         if not self._completions_loaded:
             self._completions_loaded = True
 
-            if CompletionSettings.instance().load_completions_from_csv and os.path.exists(self.output_path):
+            if CompletionSettings.instance().load_from_csv and os.path.exists(self.output_path):
                 # Populate the dictionary from file if exists but not yet loaded
                 with open(self.output_path, mode="r", newline="", encoding="utf-8") as file:
                     reader = csv.reader(file, delimiter=",", quotechar='"', escapechar="\\", lineterminator=os.linesep)
