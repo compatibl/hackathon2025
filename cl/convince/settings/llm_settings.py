@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from typing import Tuple
 
 from typing_extensions import Self
-
 from cl.runtime.exceptions.error_util import ErrorUtil
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.runtime.settings.settings import Settings
@@ -44,24 +43,24 @@ class LlmSettings(Settings):
         return "convince_llm"
 
     _language: str | None = None
-    """Two-letter lowercase language code for AI applications (has no effect on the front end)."""
+    """
+    Two-letter lowercase language code that LLM is instructed to use, for example 'en' for 'en-US' locale.
+    This applies to completions only and has no effect on the UI or the data file format.
+    """
 
     _country: str | None = None
-    """Two-letter UPPERCASE country code (not region) for AI applications (has no effect on the front end)."""
+    """
+    Two-letter UPPERCASE country code that LLM is instructed to use, for example 'US' for 'en-US' locale.
+    This applies to completions only and has no effect on the UI or the data file format.
+    The code must represent a country, not a region.
+    """
 
     def init(self) -> Self:
         """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
-        # Set default locale
+
+        # Set locale to en-US if not specified
         if self.locale is None:
             self.locale = "en-US"
-
-        # Load completions from a local file unless turned off explicitly
-        if self.load_completions_from_csv is None:
-            self.load_completions_from_csv = True
-
-        # Save completions to a local file on Windows only
-        if self.save_completions_to_csv is None:
-            self.save_completions_to_csv = os.name == "nt"
 
         # Validate locale and get language and region
         language, country = self.parse_locale(self.locale)
@@ -74,11 +73,18 @@ class LlmSettings(Settings):
         return self
 
     def get_language(self) -> str:
-        """Two-letter lowercase language code."""
+        """
+        Two-letter lowercase language code that LLM is instructed to use, for example 'en' for 'en-US' locale.
+        This applies to completions only and has no effect on the UI or the data file format.
+        """
         return self._language
 
     def get_country(self) -> str:
-        """Two-letter UPPERCASE country code (not region)."""
+        """
+        Two-letter UPPERCASE country code that LLM is instructed to use, for example 'US' for 'en-US' locale.
+        This applies to completions only and has no effect on the UI or the data file format.
+        The code must represent a country, not a region.
+        """
         return self._country
 
     @classmethod
