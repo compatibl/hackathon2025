@@ -17,14 +17,13 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
-
-from cl.convince.settings.llm_settings import LlmSettings
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.convince.entries.base_entry_key import BaseEntryKey
+from cl.convince.settings.llm_settings import LlmSettings
 
 
 @dataclass(slots=True, kw_only=True)
@@ -64,9 +63,7 @@ class BaseEntry(BaseEntryKey, ABC):
         # Generate digest if multiline or more than 80 characters
         self.entry_id = StringUtil.digest(
             self.text,
-            text_params=(
-                self.locale,
-            ),
+            text_params=(self.locale,),
             hash_params=(self.data,),
         )
 

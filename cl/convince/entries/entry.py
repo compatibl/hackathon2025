@@ -18,8 +18,6 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
-
-from cl.convince.settings.llm_settings import LlmSettings
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -28,6 +26,7 @@ from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.entries.entry_key import EntryKey
+from cl.convince.settings.llm_settings import LlmSettings
 
 
 @dataclass(slots=True, kw_only=True)

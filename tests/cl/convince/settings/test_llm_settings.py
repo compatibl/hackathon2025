@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import pytest
-from cl.convince.settings.llm_settings import LlmSettings
 from cl.runtime.primitive.string_util import StringUtil
+from cl.convince.settings.llm_settings import LlmSettings
 
 
 def test_llm_settings():
@@ -24,6 +24,7 @@ def test_llm_settings():
     assert StringUtil.is_not_empty(settings.locale)
     assert StringUtil.is_not_empty(settings.full)
     assert StringUtil.is_not_empty(settings.mini)
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

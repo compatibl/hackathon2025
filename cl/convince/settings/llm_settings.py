@@ -15,7 +15,6 @@
 import os
 from dataclasses import dataclass
 from typing import Tuple
-
 from typing_extensions import Self
 from cl.runtime.exceptions.error_util import ErrorUtil
 from cl.runtime.records.dataclasses_extensions import missing
