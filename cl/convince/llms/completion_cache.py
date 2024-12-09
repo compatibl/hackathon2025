@@ -25,7 +25,7 @@ from cl.runtime.settings.project_settings import ProjectSettings
 from cl.convince.llms.completion import Completion
 from cl.convince.llms.completion_util import CompletionUtil
 from cl.convince.llms.llm_key import LlmKey
-from cl.convince.settings.convince_settings import ConvinceSettings
+from cl.convince.settings.completion_settings import CompletionSettings
 
 _supported_extensions = ["csv"]
 """The list of supported output file extensions (formats)."""
@@ -117,8 +117,8 @@ class CompletionCache:
         # Save completions to DB (including preloads) outside a test
         Context.current().save_one(completion_record)
 
-        # Save completions to a file unless explicitly turned off in ConvinceSettings
-        if ConvinceSettings.instance().save_completions_to_csv:
+        # Save completions to a file unless explicitly turned off in CompletionSettings
+        if CompletionSettings.instance().save_completions_to_csv:
 
             # Check if the file already exists
             is_new = not os.path.exists(self.output_path)
@@ -173,11 +173,11 @@ class CompletionCache:
 
     def load_completion_dict(self) -> None:
         """Load cache file."""
-        # Load if the file exists unless explicitly turned off in ConvinceSettings
+        # Load if the file exists unless explicitly turned off in CompletionSettings
         if not self._completions_loaded:
             self._completions_loaded = True
 
-            if ConvinceSettings.instance().load_completions_from_csv and os.path.exists(self.output_path):
+            if CompletionSettings.instance().load_completions_from_csv and os.path.exists(self.output_path):
                 # Populate the dictionary from file if exists but not yet loaded
                 with open(self.output_path, mode="r", newline="", encoding="utf-8") as file:
                     reader = csv.reader(file, delimiter=",", quotechar='"', escapechar="\\", lineterminator=os.linesep)

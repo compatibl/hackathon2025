@@ -21,7 +21,7 @@ from cl.runtime.settings.settings import Settings
 
 
 @dataclass(slots=True, kw_only=True)
-class ConvinceSettings(Settings):
+class CompletionSettings(Settings):
     """Settings that apply to the entire Convince package."""
 
     load_completions_from_csv: bool | None = None
