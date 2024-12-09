@@ -18,6 +18,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
+
+from cl.convince.settings.llm_settings import LlmSettings
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -26,7 +28,6 @@ from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.entries.entry_key import EntryKey
-from cl.convince.settings.convince_settings import ConvinceSettings
 
 
 @dataclass(slots=True, kw_only=True)
@@ -58,12 +59,12 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
         if StringUtil.is_empty(self.text):
             raise UserError(f"Empty 'text' field in {type(self).__name__}.")
 
-        # Check locale format or set based on the default in ConvinceSettings if not specified
+        # Check locale format or set based on the default in LlmSettings if not specified
         if self.locale is not None:
             # This performs validation
-            ConvinceSettings.parse_locale(self.locale)
+            LlmSettings.parse_locale(self.locale)
         else:
-            self.locale = ConvinceSettings.instance().locale
+            self.locale = LlmSettings.instance().locale
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):

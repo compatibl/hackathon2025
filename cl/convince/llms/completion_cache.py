@@ -22,7 +22,6 @@ from cl.runtime.context.env_util import EnvUtil
 from cl.runtime.experiments.trial_key import TrialKey
 from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
-from cl.runtime.settings.settings import Settings
 from cl.convince.llms.completion import Completion
 from cl.convince.llms.completion_util import CompletionUtil
 from cl.convince.llms.llm_key import LlmKey
