@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from dataclasses import dataclass
-from typing import Tuple
 from typing_extensions import Self
-from cl.runtime.exceptions.error_util import ErrorUtil
+from cl.runtime.parsers.locale import Locale
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.runtime.settings.settings import Settings
 
@@ -28,7 +26,7 @@ class LlmSettings(Settings):
     locale: str = missing()
     """
     Locale that LLM is instructed to use in BCP 47 language-country format, for example en-US.
-    This applies to completions only and has no effect on the UI or the data file format.
+    This applies to LLM completions only and has no effect on the UI or the data file format.
     """
 
     full: str = missing()
@@ -41,76 +39,11 @@ class LlmSettings(Settings):
     def get_prefix(cls) -> str:
         return "convince_llm"
 
-    _language: str | None = None
-    """
-    Two-letter lowercase language code that LLM is instructed to use, for example 'en' for 'en-US' locale.
-    This applies to completions only and has no effect on the UI or the data file format.
-    """
-
-    _country: str | None = None
-    """
-    Two-letter UPPERCASE country code that LLM is instructed to use, for example 'US' for 'en-US' locale.
-    This applies to completions only and has no effect on the UI or the data file format.
-    The code must represent a country, not a region.
-    """
-
     def init(self) -> Self:
         """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
 
-        # Set locale to en-US if not specified
-        if self.locale is None:
-            self.locale = "en-US"
-
-        # Validate locale and get language and region
-        language, country = self.parse_locale(self.locale)
-
-        # Assign language and country fields
-        self._language = language
-        self._country = country
+        # Validate locale format by running init_all for a locale object
+        Locale(locale_id=self.locale).init_all()
 
         # Return self to enable method chaining
         return self
-
-    def get_language(self) -> str:
-        """
-        Two-letter lowercase language code that LLM is instructed to use, for example 'en' for 'en-US' locale.
-        This applies to completions only and has no effect on the UI or the data file format.
-        """
-        return self._language
-
-    def get_country(self) -> str:
-        """
-        Two-letter UPPERCASE country code that LLM is instructed to use, for example 'US' for 'en-US' locale.
-        This applies to completions only and has no effect on the UI or the data file format.
-        The code must represent a country, not a region.
-        """
-        return self._country
-
-    @classmethod
-    def parse_locale(cls, locale: str) -> Tuple[str, str]:
-        """Locale is in BCP 47 language-country format, for example en-US (second token must be country, not region)."""
-        locale_tokens = locale.split("-")
-        format_msg = "  - Locale not in BCP 47 ll-CC format where ll is language and CC is country, for example en-US"
-        if len(locale_tokens) != 2:
-            raise ErrorUtil.value_error(
-                locale,
-                details=f"{format_msg}\n  - It has {len(locale_tokens)} dash-delimited tokens instead of 2",
-                value_name="locale",
-                data_type=LlmSettings,
-            )
-        if not len(language := locale_tokens[0]) == 2 and language.islower():
-            raise ErrorUtil.value_error(
-                locale,
-                details=f"{format_msg}\n  - Its first part must be a two-letter lowercase language code",
-                value_name="locale",
-                data_type=LlmSettings,
-            )
-        if not len(country := locale_tokens[1]) == 2 and country.isupper():
-            raise ErrorUtil.value_error(
-                locale,
-                details=f"{format_msg}\n  - Its second part must be a two-letter UPPERCASE country code (not region)",
-                value_name="locale",
-                data_type=LlmSettings,
-            )
-
-        return language, country

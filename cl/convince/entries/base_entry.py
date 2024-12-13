@@ -19,6 +19,7 @@ from typing import Type
 from typing_extensions import Self
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
+from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.dataclasses_extensions import missing
@@ -33,7 +34,7 @@ class BaseEntry(BaseEntryKey, ABC):
     text: str = missing()
     """Description exactly as provided by the user (included in MD5 hash)."""
 
-    locale: str = missing()
+    locale: LocaleKey = missing()
     """Locale in BCP 47 language-country format, for example en-US (included in MD5 hash)."""
 
     data: str | None = None
