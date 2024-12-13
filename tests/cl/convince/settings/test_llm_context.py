@@ -19,23 +19,30 @@ from cl.convince.llms.claude.claude_llm import ClaudeLlm
 from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llama.llama_llm import LlamaLlm
 from cl.convince.llms.llm import Llm
+from cl.convince.llms.llm_key import LlmKey
 from cl.runtime import Context
 from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.parsers.locale import Locale
+from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.string_util import StringUtil
 from cl.convince.settings.llm_settings import LlmSettings
 from cl.runtime.settings.preload_settings import PreloadSettings
 
+def test_root_context():
+    """Test root context outside 'with' clause."""
+    llm_context = LlmContext.current()
+    llm_settings = LlmSettings.instance()
+    assert llm_context.locale.locale_id == llm_settings.locale
+    assert llm_context.full_llm.llm_id == llm_settings.full
+    assert llm_context.mini_llm.llm_id == llm_settings.mini
 
-def test_llm_context():
-    """Test LlmSettings class."""
 
-    with TestingContext() as context:
+def test_with_context():
+    """Test 'with' clause."""
 
-        # Save records from preload directory to DB and execute run_configure on all preloaded Config records
-        PreloadSettings.instance().save_and_configure(final_record_types=[Locale, GptLlm, LlamaLlm, ClaudeLlm])
+    with TestingContext():
 
-        # With no fields set
+        # With clause, no fields set
         llm_settings = LlmSettings.instance()
         with LlmContext(allow_root=True):
             llm_context = LlmContext.current()
@@ -43,17 +50,23 @@ def test_llm_context():
             assert llm_context.full_llm.llm_id == llm_settings.full
             assert llm_context.mini_llm.llm_id == llm_settings.mini
 
-        # With all fields set
-        locale_param = Locale(locale_id='en-US').init_all()
-        full_llm_param = GptLlm(llm_id='full_llm').init_all()
-        mini_llm_param = GptLlm(llm_id='mini_llm').init_all()
+        # With clause, all fields set
+        locale_param = LocaleKey(locale_id='en-US')
+        full_llm_param = LlmKey(llm_id='full_llm')
+        mini_llm_param = LlmKey(llm_id='mini_llm')
         with LlmContext(allow_root=True, locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
             llm_context = LlmContext.current()
             assert llm_context.locale is locale_param
             assert llm_context.full_llm is full_llm_param
             assert llm_context.mini_llm is mini_llm_param
 
-        # Test without allow_root
+        # Test root context after exiting 'with' clause
+        llm_context = LlmContext.current()
+        assert llm_context.locale.locale_id == llm_settings.locale
+        assert llm_context.full_llm.llm_id == llm_settings.full
+        assert llm_context.mini_llm.llm_id == llm_settings.mini
+
+        # With clause without setting allow_root=True
         with pytest.raises(RuntimeError):
             with LlmContext():
                 pass

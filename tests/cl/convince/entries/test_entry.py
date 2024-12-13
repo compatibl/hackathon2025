@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pytest
+from cl.runtime.parsers.locale_key import LocaleKey
 from cl.tradeentry.entries.ccy_entry import CcyEntry
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.testing.regression_guard import RegressionGuard
@@ -25,7 +26,7 @@ def test_create_key():
     guard = RegressionGuard()
 
     # Record type
-    locale = "en-GB"
+    locale = LocaleKey(locale_id="en-GB")
 
     # Check with type and description only
     entry = CcyEntry(text="Sample Text", locale=locale)

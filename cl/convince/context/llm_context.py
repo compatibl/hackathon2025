@@ -29,33 +29,26 @@ from cl.runtime.records.dataclasses_extensions import missing
 class LlmContext(BaseContext):
     """LLM settings in the Convince package."""
 
-    locale: Locale = missing()
+    locale: LocaleKey = missing()
     """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
 
-    full_llm: Llm = missing()
+    full_llm: LlmKey = missing()
     """Default full LLM."""
 
-    mini_llm: Llm = missing()
+    mini_llm: LlmKey = missing()
     """Default mini LLM."""
 
     def init(self) -> Self:
         """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
 
         # Initialize empty fields from settings only for the root context
-        if self._is_root:
-            settings = LlmSettings.instance()
-            context = Context.current()
-            if self.locale is None:
-                # Try loading the locale from storage
-                locale = context.load_one(Locale, LocaleKey(locale_id=settings.locale), is_record_optional=True)
-                if locale is None:
-                    # Create with default settings if does not exist
-                    locale = Locale(locale_id=settings.locale).init_all()
-                self.locale = locale
-            if self.full_llm is None:
-                self.full_llm = context.load_one(Llm, LlmKey(llm_id=settings.full))
-            if self.mini_llm is None:
-                self.mini_llm = context.load_one(Llm, LlmKey(llm_id=settings.mini))
+        settings = LlmSettings.instance()
+        if self.locale is None and settings.locale is not None:
+            self.locale = LocaleKey(locale_id=settings.locale)
+        if self.full_llm is None and settings.full is not None:
+            self.full_llm = LlmKey(llm_id=settings.full)
+        if self.mini_llm is None and settings.mini is not None:
+            self.mini_llm = LlmKey(llm_id=settings.mini)
 
         # Freeze to prevent further modifications (ok to call even if already frozen)
         self.freeze()

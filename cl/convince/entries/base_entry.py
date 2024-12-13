@@ -17,6 +17,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
+
+from cl.convince.context.llm_context import LlmContext
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.parsers.locale_key import LocaleKey
@@ -50,12 +52,9 @@ class BaseEntry(BaseEntryKey, ABC):
         if StringUtil.is_empty(self.text):
             raise UserError(f"Empty 'text' field in {type(self).__name__}.")
 
-        # Check locale format or set based on the default in LlmSettings if not specified
-        if self.locale is not None:
-            # This performs validation
-            LlmSettings.parse_locale(self.locale)
-        else:
-            self.locale = LlmSettings.instance().locale
+        # Get locale from LlmContext if not specified
+        if self.locale is None:
+            self.locale = LlmContext.current().locale
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):
@@ -64,7 +63,7 @@ class BaseEntry(BaseEntryKey, ABC):
         # Generate digest if multiline or more than 80 characters
         self.entry_id = StringUtil.digest(
             self.text,
-            text_params=(self.locale,),
+            text_params=(self.locale.locale_id,),
             hash_params=(self.data,),
         )
 
