@@ -59,10 +59,7 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
             raise UserError(f"Empty 'text' field in {type(self).__name__}.")
 
         # Check locale format or set based on the default in LlmSettings if not specified
-        if self.locale is not None:
-            # This performs validation
-            LlmSettings.parse_locale(self.locale)
-        else:
+        if self.locale is None:
             self.locale = LlmSettings.instance().locale
 
         # Convert field types if necessary

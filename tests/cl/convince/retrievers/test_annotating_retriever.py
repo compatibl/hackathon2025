@@ -14,7 +14,14 @@
 
 import pytest
 from typing import List
+
+from cl.convince.context.llm_context import LlmContext
+from cl.convince.llms.claude.claude_llm import ClaudeLlm
+from cl.convince.llms.gpt.gpt_llm import GptLlm
+from cl.convince.llms.llama.llama_llm import LlamaLlm
 from cl.runtime.context.testing_context import TestingContext
+from cl.runtime.parsers.locale import Locale
+from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.testing.regression_guard import RegressionGuard
 from cl.convince.entries.entry import Entry
 from cl.convince.retrievers.annotating_retriever import AnnotatingRetriever
@@ -41,7 +48,7 @@ def _test_extract(input_text: str, param_description: str, param_samples: List[s
     param_samples_str = "".join(f"  - {x}\n" for x in param_samples) if param_samples is not None else None
     stub_full_llms = get_stub_full_llms()
     for llm in stub_full_llms:
-        with TestingContext(full_llm=llm):
+        with LlmContext(allow_root=True, full_llm=llm):
             retriever = AnnotatingRetriever(
                 retriever_id="test_annotating_retriever",
             )
@@ -54,8 +61,9 @@ def _test_extract(input_text: str, param_description: str, param_samples: List[s
 
 def test_zero_shot():
     """Test without samples."""
-    _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)
-
+    with TestingContext():
+        PreloadSettings.instance().save_and_configure(final_record_types=[Locale, GptLlm, LlamaLlm, ClaudeLlm])
+        _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)
 
 if __name__ == "__main__":
     pytest.main([__file__])

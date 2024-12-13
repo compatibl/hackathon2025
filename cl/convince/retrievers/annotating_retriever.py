@@ -16,6 +16,8 @@ import re
 from dataclasses import dataclass
 from typing import List
 from typing_extensions import Self
+
+from cl.convince.context.llm_context import LlmContext
 from cl.runtime import Context
 from cl.runtime.experiments.trial_key import TrialKey
 from cl.runtime.log.exceptions.user_error import UserError
@@ -94,7 +96,8 @@ class AnnotatingRetriever(Retriever):
 
         # Load the full LLM specified by the context
         context = Context.current()
-        llm = context.load_one(Llm, context.full_llm)
+        llm_context = LlmContext.current()
+        llm = context.load_one(Llm, llm_context.full_llm)
 
         # Load the prompt
         prompt = context.load_one(Prompt, self.prompt)
