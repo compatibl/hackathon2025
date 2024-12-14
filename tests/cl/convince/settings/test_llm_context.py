@@ -13,30 +13,39 @@
 # limitations under the License.
 
 import pytest
-
+import random
+import time
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 from cl.convince.context.llm_context import LlmContext
-from cl.convince.llms.claude.claude_llm import ClaudeLlm
-from cl.convince.llms.gpt.gpt_llm import GptLlm
-from cl.convince.llms.llama.llama_llm import LlamaLlm
-from cl.convince.llms.llm import Llm
 from cl.convince.llms.llm_key import LlmKey
-from cl.runtime import Context
 from cl.runtime.context.testing_context import TestingContext
-from cl.runtime.parsers.locale import Locale
 from cl.runtime.parsers.locale_key import LocaleKey
-from cl.runtime.primitive.string_util import StringUtil
 from cl.convince.settings.llm_settings import LlmSettings
-from cl.runtime.settings.preload_settings import PreloadSettings
 
+# Create a local random instance with the seed
+_RANDOM = random.Random(0)
 
-def test_with_context():
-    """Test 'with' clause."""
+def _sleep():
+    """Sleep for a random interval from 0 to 1 sec."""
+    duration = _RANDOM.uniform(0, 1)
+    time.sleep(duration)
+
+async def _sleep_async():
+    """Sleep for a random interval from 0 to 1 sec."""
+    duration = _RANDOM.uniform(0, 1)
+    await asyncio.sleep(duration)
+
+def _perform_testing():
+    """Use for testing in-process or in multiple threads."""
 
     with TestingContext():
 
         # With clause, no fields set
         llm_settings = LlmSettings.instance()
         with LlmContext(is_root=True):
+            # Sleep between entering 'with' clause and calling 'current'
+            _sleep()
             llm_context = LlmContext.current()
             assert llm_context.locale.locale_id == llm_settings.locale
             assert llm_context.full_llm.llm_id == llm_settings.full
@@ -47,19 +56,89 @@ def test_with_context():
         full_llm_param = LlmKey(llm_id='full_llm')
         mini_llm_param = LlmKey(llm_id='mini_llm')
         with LlmContext(is_root=True, locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
+            # Sleep between entering 'with' clause and calling 'current'
+            _sleep()
             llm_context = LlmContext.current()
             assert llm_context.locale is locale_param
             assert llm_context.full_llm is full_llm_param
             assert llm_context.mini_llm is mini_llm_param
 
         # Call 'current' method outside with clause
+        _sleep()
         with pytest.raises(RuntimeError):
             LlmContext.current()
 
         # With clause without setting is_root=True
+        _sleep()
         with pytest.raises(RuntimeError):
             with LlmContext():
                 pass
+
+async def _perform_testing_async():
+    """Use for testing in async loop."""
+
+    with TestingContext():
+
+        # With clause, no fields set
+        llm_settings = LlmSettings.instance()
+        with LlmContext(is_root=True):
+            # Sleep between entering 'with' clause and calling 'current'
+            await _sleep_async()
+            llm_context = LlmContext.current()
+            assert llm_context.locale.locale_id == llm_settings.locale
+            assert llm_context.full_llm.llm_id == llm_settings.full
+            assert llm_context.mini_llm.llm_id == llm_settings.mini
+
+        # With clause, all fields set
+        locale_param = LocaleKey(locale_id='en-US')
+        full_llm_param = LlmKey(llm_id='full_llm')
+        mini_llm_param = LlmKey(llm_id='mini_llm')
+        with LlmContext(is_root=True, locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
+            # Sleep between entering 'with' clause and calling 'current'
+            await _sleep_async()
+            llm_context = LlmContext.current()
+            assert llm_context.locale is locale_param
+            assert llm_context.full_llm is full_llm_param
+            assert llm_context.mini_llm is mini_llm_param
+
+        # Call 'current' method outside with clause
+        await _sleep_async()
+        with pytest.raises(RuntimeError):
+            LlmContext.current()
+
+        # With clause without setting is_root=True
+        await _sleep_async()
+        with pytest.raises(RuntimeError):
+            with LlmContext():
+                pass
+
+async def _gather():
+    """Gather async functions."""
+    await asyncio.gather(
+        _perform_testing_async(),
+        _perform_testing_async(),
+        _perform_testing_async(),
+        _perform_testing_async(),
+        _perform_testing_async()
+    )
+
+def test_in_process():
+    """Test in different threads."""
+
+    # Perform testing in process
+    _perform_testing()
+
+def test_in_threads():
+    """Test in different threads."""
+    thread_count = 5
+    with ThreadPoolExecutor(max_workers=thread_count) as executor:
+        futures = [executor.submit(_perform_testing) for _ in range(thread_count)]
+    for future in futures:
+        future.result()
+
+def test_in_async_loop():
+    """Test in different async environments."""
+    asyncio.run(_gather())
 
 
 if __name__ == "__main__":
