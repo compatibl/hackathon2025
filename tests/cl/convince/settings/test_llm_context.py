@@ -36,7 +36,7 @@ def test_with_context():
 
         # With clause, no fields set
         llm_settings = LlmSettings.instance()
-        with LlmContext(allow_root=True):
+        with LlmContext(is_root=True):
             llm_context = LlmContext.current()
             assert llm_context.locale.locale_id == llm_settings.locale
             assert llm_context.full_llm.llm_id == llm_settings.full
@@ -46,7 +46,7 @@ def test_with_context():
         locale_param = LocaleKey(locale_id='en-US')
         full_llm_param = LlmKey(llm_id='full_llm')
         mini_llm_param = LlmKey(llm_id='mini_llm')
-        with LlmContext(allow_root=True, locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
+        with LlmContext(is_root=True, locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
             llm_context = LlmContext.current()
             assert llm_context.locale is locale_param
             assert llm_context.full_llm is full_llm_param
@@ -56,7 +56,7 @@ def test_with_context():
         with pytest.raises(RuntimeError):
             LlmContext.current()
 
-        # With clause without setting allow_root=True
+        # With clause without setting is_root=True
         with pytest.raises(RuntimeError):
             with LlmContext():
                 pass
