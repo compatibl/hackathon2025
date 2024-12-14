@@ -63,16 +63,16 @@ def _perform_testing():
             assert llm_context.full_llm is full_llm_param
             assert llm_context.mini_llm is mini_llm_param
 
-        # Call 'current' method outside with clause
-        _sleep()
-        with pytest.raises(RuntimeError):
-            LlmContext.current()
+    # Call 'current' method outside with clause
+    _sleep()
+    with pytest.raises(RuntimeError):
+        LlmContext.current()
 
-        # With clause without setting is_root=True
-        _sleep()
-        with pytest.raises(RuntimeError):
-            with LlmContext():
-                pass
+    # With clause without setting is_root=True
+    _sleep()
+    with pytest.raises(RuntimeError):
+        with LlmContext():
+            pass
 
 async def _perform_testing_async():
     """Use for testing in async loop."""
@@ -101,16 +101,16 @@ async def _perform_testing_async():
             assert llm_context.full_llm is full_llm_param
             assert llm_context.mini_llm is mini_llm_param
 
-        # Call 'current' method outside with clause
-        await _sleep_async()
-        with pytest.raises(RuntimeError):
-            LlmContext.current()
+    # Call 'current' method outside with clause
+    await _sleep_async()
+    with pytest.raises(RuntimeError):
+        LlmContext.current()
 
-        # With clause without setting is_root=True
-        await _sleep_async()
-        with pytest.raises(RuntimeError):
-            with LlmContext():
-                pass
+    # With clause without setting is_root=True
+    await _sleep_async()
+    with pytest.raises(RuntimeError):
+        with LlmContext():
+            pass
 
 async def _gather():
     """Gather async functions."""
@@ -138,6 +138,10 @@ def test_in_threads():
 
 def test_in_async_loop():
     """Test in different async environments."""
+
+    # Clear the context in case it was not cleared on exit from the previous test
+    LlmContext.clear()
+
     asyncio.run(_gather())
 
 
