@@ -28,14 +28,6 @@ from cl.runtime.primitive.string_util import StringUtil
 from cl.convince.settings.llm_settings import LlmSettings
 from cl.runtime.settings.preload_settings import PreloadSettings
 
-def test_root_context():
-    """Test root context outside 'with' clause."""
-    llm_context = LlmContext.current()
-    llm_settings = LlmSettings.instance()
-    assert llm_context.locale.locale_id == llm_settings.locale
-    assert llm_context.full_llm.llm_id == llm_settings.full
-    assert llm_context.mini_llm.llm_id == llm_settings.mini
-
 
 def test_with_context():
     """Test 'with' clause."""
@@ -60,11 +52,9 @@ def test_with_context():
             assert llm_context.full_llm is full_llm_param
             assert llm_context.mini_llm is mini_llm_param
 
-        # Test root context after exiting 'with' clause
-        llm_context = LlmContext.current()
-        assert llm_context.locale.locale_id == llm_settings.locale
-        assert llm_context.full_llm.llm_id == llm_settings.full
-        assert llm_context.mini_llm.llm_id == llm_settings.mini
+        # Call 'current' method outside with clause
+        with pytest.raises(RuntimeError):
+            LlmContext.current()
 
         # With clause without setting allow_root=True
         with pytest.raises(RuntimeError):
