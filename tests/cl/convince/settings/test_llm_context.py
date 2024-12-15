@@ -44,10 +44,10 @@ def _perform_testing():
 
         # With clause, no fields set
         llm_settings = LlmSettings.instance()
-        with LlmContext(is_root=True):
+        with LlmContext():
             # Sleep between entering 'with' clause and calling 'current'
             _sleep()
-            llm_context = LlmContext.current()
+            llm_context = Context.current().extension(LlmContext)
             assert llm_context.locale.locale_id == llm_settings.locale
             assert llm_context.full_llm.llm_id == llm_settings.full
             assert llm_context.mini_llm.llm_id == llm_settings.mini
@@ -56,10 +56,10 @@ def _perform_testing():
         locale_param = LocaleKey(locale_id='en-US')
         full_llm_param = LlmKey(llm_id='full_llm')
         mini_llm_param = LlmKey(llm_id='mini_llm')
-        with LlmContext(is_root=True, locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
+        with LlmContext(locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
             # Sleep between entering 'with' clause and calling 'current'
             _sleep()
-            llm_context = LlmContext.current()
+            llm_context = Context.current().extension(LlmContext)
             assert llm_context.locale is locale_param
             assert llm_context.full_llm is full_llm_param
             assert llm_context.mini_llm is mini_llm_param
@@ -67,7 +67,7 @@ def _perform_testing():
     # Call 'current' method outside with clause
     _sleep()
     with pytest.raises(RuntimeError):
-        LlmContext.current()
+        Context.current().extension(LlmContext)
 
     # With clause without setting is_root=True
     _sleep()
@@ -82,10 +82,10 @@ async def _perform_testing_async():
 
         # With clause, no fields set
         llm_settings = LlmSettings.instance()
-        with LlmContext(is_root=True):
+        with LlmContext():
             # Sleep between entering 'with' clause and calling 'current'
             await _sleep_async()
-            llm_context = LlmContext.current()
+            llm_context = Context.current().extension(LlmContext)
             assert llm_context.locale.locale_id == llm_settings.locale
             assert llm_context.full_llm.llm_id == llm_settings.full
             assert llm_context.mini_llm.llm_id == llm_settings.mini
@@ -94,10 +94,10 @@ async def _perform_testing_async():
         locale_param = LocaleKey(locale_id='en-US')
         full_llm_param = LlmKey(llm_id='full_llm')
         mini_llm_param = LlmKey(llm_id='mini_llm')
-        with LlmContext(is_root=True, locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
+        with LlmContext(locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
             # Sleep between entering 'with' clause and calling 'current'
             await _sleep_async()
-            llm_context = LlmContext.current()
+            llm_context = Context.current().extension(LlmContext)
             assert llm_context.locale is locale_param
             assert llm_context.full_llm is full_llm_param
             assert llm_context.mini_llm is mini_llm_param
@@ -105,7 +105,7 @@ async def _perform_testing_async():
     # Call 'current' method outside with clause
     await _sleep_async()
     with pytest.raises(RuntimeError):
-        LlmContext.current()
+        Context.current().extension(LlmContext)
 
     # With clause without setting is_root=True
     await _sleep_async()

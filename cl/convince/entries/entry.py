@@ -18,6 +18,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
+
+from cl.convince.context.llm_context import LlmContext
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -60,7 +62,7 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
 
         # Check locale format or set based on the default in LlmSettings if not specified
         if self.locale is None:
-            self.locale = LlmSettings.instance().locale
+            self.locale = Context.current().extension(LlmContext).locale
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):

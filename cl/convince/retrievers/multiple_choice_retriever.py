@@ -103,7 +103,7 @@ class MultipleChoiceRetriever(Retriever):
 
         # Load the full LLM specified by the context
         context = Context.current()
-        llm_context = LlmContext.current()
+        llm_context = Context.current().extension(LlmContext)
         llm = context.load_one(Llm, llm_context.full_llm)
 
         # Load the prompt
