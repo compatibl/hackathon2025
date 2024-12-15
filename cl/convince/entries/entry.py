@@ -22,6 +22,7 @@ from typing_extensions import Self
 from cl.convince.context.llm_context import LlmContext
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
+from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.primitive.string_util import StringUtil
@@ -41,7 +42,7 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
     text: str = missing()
     """Description exactly as provided by the user (included in MD5 hash)."""
 
-    locale: str = missing()
+    locale: LocaleKey = missing()
     """Locale in BCP 47 ll-CC where ll is language and CC is country (included in MD5 hash)."""
 
     data: str | None = None
@@ -77,7 +78,7 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
             self.text,
             text_params=(
                 self.entry_type,
-                self.locale,
+                self.locale.locale_id,
             ),
             hash_params=(self.data,),
         )
