@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 import asyncio
 from cl.convince.context.llm_context import LlmContext
 from cl.convince.llms.llm_key import LlmKey
+from cl.runtime import Context
 from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.convince.settings.llm_settings import LlmSettings
@@ -139,10 +140,14 @@ def test_in_threads():
 def test_in_async_loop():
     """Test in different async environments."""
 
-    # Clear the context in case it was not cleared on exit from the previous test
-    LlmContext.clear()
-
-    asyncio.run(_gather())
+    # Save previous state of context stack before test execution
+    state_before = Context.reset_before()
+    try:
+        # Run using cooperative multitasking (asyncio)
+        asyncio.run(_gather())
+    finally:
+        # Restore previous state of context stack after async method execution even if an exception occurred
+        Context.reset_after(state_before)
 
 
 if __name__ == "__main__":
