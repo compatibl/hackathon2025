@@ -13,138 +13,134 @@
 # limitations under the License.
 
 import pytest
-import random
 import time
-from concurrent.futures import ThreadPoolExecutor
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from random import Random
+
 from cl.convince.context.llm_context import LlmContext
-from cl.convince.llms.llm_key import LlmKey
-from cl.runtime import Context
+from cl.runtime.context.context import Context
 from cl.runtime.context.testing_context import TestingContext
+from cl.runtime.context.base_context import _CONTEXT_STACK_VAR  # noqa
 from cl.runtime.parsers.locale_key import LocaleKey
-from cl.convince.settings.llm_settings import LlmSettings
 
-# Create a local random instance with the seed
-_RANDOM = random.Random(0)
+TASK_COUNT = 3
+MAX_SLEEP_DURATION = 0.2
 
-def _sleep():
-    """Sleep for a random interval from 0 to 1 sec."""
-    duration = _RANDOM.uniform(0, 1)
+
+def _sleep(*, task_index: int, rnd: Random, max_sleep_duration: float):
+    """Sleep for a random interval, reducing the interval for higher task index."""
+    duration = rnd.uniform(0, max_sleep_duration) * (TASK_COUNT - task_index) / TASK_COUNT
     time.sleep(duration)
 
-async def _sleep_async():
-    """Sleep for a random interval from 0 to 1 sec."""
-    duration = _RANDOM.uniform(0, 1)
+
+async def _sleep_async(*, task_index: int, rnd: Random, max_sleep_duration: float):
+    """Sleep for a random interval, reducing the interval for higher task index."""
+    duration = rnd.uniform(0, max_sleep_duration) * (TASK_COUNT - task_index) / TASK_COUNT
     await asyncio.sleep(duration)
 
-def _perform_testing():
+
+def _perform_testing(
+        *,
+        task_index: int,
+        rnd: Random,
+        max_sleep_duration: float = MAX_SLEEP_DURATION,
+):
     """Use for testing in-process or in multiple threads."""
 
+    # Sleep before entering the task
+    _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
     with TestingContext():
+        _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+        assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
+        llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
+        with TestingContext(extensions=[llm_context_1]):
+            _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+            assert Context.current().extension(LlmContext) is llm_context_1
+            llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
+            with TestingContext(extensions=[llm_context_2]):
+                _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+                assert Context.current().extension(LlmContext) is llm_context_2
+            assert Context.current().extension(LlmContext) is llm_context_1
+        assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
 
-        # With clause, no fields set
-        llm_settings = LlmSettings.instance()
-        with LlmContext():
-            # Sleep between entering 'with' clause and calling 'current'
-            _sleep()
-            llm_context = Context.current().extension(LlmContext)
-            assert llm_context.locale.locale_id == llm_settings.locale
-            assert llm_context.full_llm.llm_id == llm_settings.full
-            assert llm_context.mini_llm.llm_id == llm_settings.mini
-
-        # With clause, all fields set
-        locale_param = LocaleKey(locale_id='en-US')
-        full_llm_param = LlmKey(llm_id='full_llm')
-        mini_llm_param = LlmKey(llm_id='mini_llm')
-        with LlmContext(locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
-            # Sleep between entering 'with' clause and calling 'current'
-            _sleep()
-            llm_context = Context.current().extension(LlmContext)
-            assert llm_context.locale is locale_param
-            assert llm_context.full_llm is full_llm_param
-            assert llm_context.mini_llm is mini_llm_param
-
-    # Call 'current' method outside with clause
-    _sleep()
-    with pytest.raises(RuntimeError):
-        Context.current().extension(LlmContext)
-
-    # With clause without setting is_root=True
-    _sleep()
-    with pytest.raises(RuntimeError):
-        with LlmContext():
-            pass
-
-async def _perform_testing_async():
+async def _perform_testing_async(
+        *,
+        task_index: int,
+        rnd: Random,
+        is_inner: bool = False,
+        max_sleep_duration: float = MAX_SLEEP_DURATION,
+):
     """Use for testing in async loop."""
 
+    # Sleep before entering the task
+    await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
     with TestingContext():
+        await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+        assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
+        llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
+        with TestingContext(extensions=[llm_context_1]):
+            await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+            assert Context.current().extension(LlmContext) is llm_context_1
+            llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
+            with TestingContext(extensions=[llm_context_2]):
+                await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+                assert Context.current().extension(LlmContext) is llm_context_2
+            assert Context.current().extension(LlmContext) is llm_context_1
+        assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
 
-        # With clause, no fields set
-        llm_settings = LlmSettings.instance()
-        with LlmContext():
-            # Sleep between entering 'with' clause and calling 'current'
-            await _sleep_async()
-            llm_context = Context.current().extension(LlmContext)
-            assert llm_context.locale.locale_id == llm_settings.locale
-            assert llm_context.full_llm.llm_id == llm_settings.full
-            assert llm_context.mini_llm.llm_id == llm_settings.mini
 
-        # With clause, all fields set
-        locale_param = LocaleKey(locale_id='en-US')
-        full_llm_param = LlmKey(llm_id='full_llm')
-        mini_llm_param = LlmKey(llm_id='mini_llm')
-        with LlmContext(locale=locale_param, full_llm=full_llm_param, mini_llm=mini_llm_param):
-            # Sleep between entering 'with' clause and calling 'current'
-            await _sleep_async()
-            llm_context = Context.current().extension(LlmContext)
-            assert llm_context.locale is locale_param
-            assert llm_context.full_llm is full_llm_param
-            assert llm_context.mini_llm is mini_llm_param
-
-    # Call 'current' method outside with clause
-    await _sleep_async()
-    with pytest.raises(RuntimeError):
-        Context.current().extension(LlmContext)
-
-    # With clause without setting is_root=True
-    await _sleep_async()
-    with pytest.raises(RuntimeError):
-        with LlmContext():
-            pass
-
-async def _gather():
+async def _gather(rnd: Random):
     """Gather async functions."""
-    await asyncio.gather(
-        _perform_testing_async(),
-        _perform_testing_async(),
-        _perform_testing_async(),
-        _perform_testing_async(),
-        _perform_testing_async()
-    )
+    tasks = [_perform_testing_async(task_index=i, rnd=rnd) for i in range(TASK_COUNT)]
+    await asyncio.gather(*tasks)
+
+def test_error_handling():
+    """Test error handling in specifying extensions."""
+    llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
+    llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
+    with pytest.raises(RuntimeError):
+        # Two extension instances of the same type
+        with TestingContext(extensions=[llm_context_1, llm_context_2]):
+            pass
 
 def test_in_process():
     """Test in different threads."""
 
-    # Perform testing in process
-    _perform_testing()
+    # Create a local random instance with seed
+    rnd = Random(0)
+
+    # Run sequentially in-process
+    [_perform_testing(task_index=task_index, rnd=rnd, max_sleep_duration=0) for task_index in range(TASK_COUNT)]
+
 
 def test_in_threads():
     """Test in different threads."""
-    thread_count = 5
-    with ThreadPoolExecutor(max_workers=thread_count) as executor:
-        futures = [executor.submit(_perform_testing) for _ in range(thread_count)]
+
+    # Create a local random instance with seed
+    rnd = Random(0)
+
+    # Run in parallel threads
+    with ThreadPoolExecutor(max_workers=TASK_COUNT) as executor:
+        futures = [
+            executor.submit(_perform_testing, **{"task_index": task_index, "rnd": rnd})
+            for task_index in range(TASK_COUNT)
+        ]
     for future in futures:
         future.result()
+
 
 def test_in_async_loop():
     """Test in different async environments."""
 
-    # Save previous state of context stack before test execution
+    # Save previous state of context stack before async method execution
     state_before = Context.reset_before()
     try:
+        # Create a local random instance with seed
+        rnd = Random(0)
+
         # Run using cooperative multitasking (asyncio)
-        asyncio.run(_gather())
+        asyncio.run(_gather(rnd))
     finally:
         # Restore previous state of context stack after async method execution even if an exception occurred
         Context.reset_after(state_before)
