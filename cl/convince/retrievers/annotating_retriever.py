@@ -16,14 +16,13 @@ import re
 from dataclasses import dataclass
 from typing import List
 from typing_extensions import Self
-
-from cl.convince.context.llm_context import LlmContext
 from cl.runtime import Context
 from cl.runtime.experiments.trial_key import TrialKey
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.dataclasses_extensions import missing
+from cl.convince.context.llm_context import LlmContext
 from cl.convince.entries.entry import Entry
 from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llm import Llm

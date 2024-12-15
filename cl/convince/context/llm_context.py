@@ -14,11 +14,11 @@
 
 from dataclasses import dataclass
 from typing_extensions import Self
-from cl.convince.llms.llm_key import LlmKey
-from cl.convince.settings.llm_settings import LlmSettings
 from cl.runtime.context.context_extension import ContextExtension
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.records.dataclasses_extensions import missing
+from cl.convince.llms.llm_key import LlmKey
+from cl.convince.settings.llm_settings import LlmSettings
 
 
 @dataclass(slots=True, kw_only=True)

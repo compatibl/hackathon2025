@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.parsers.locale_key import LocaleKey
 from cl.tradeentry.entries.ccy_entry import CcyEntry
 from cl.runtime.log.exceptions.user_error import UserError
+from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.testing.regression_guard import RegressionGuard
 from cl.convince.entries.entry_key import EntryKey
 

@@ -14,17 +14,16 @@
 
 import pytest
 from typing import List
-
-from cl.convince.context.llm_context import LlmContext
-from cl.convince.llms.claude.claude_llm import ClaudeLlm
-from cl.convince.llms.gpt.gpt_llm import GptLlm
-from cl.convince.llms.llama.llama_llm import LlamaLlm
 from cl.runtime import Context
 from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.testing.regression_guard import RegressionGuard
+from cl.convince.context.llm_context import LlmContext
 from cl.convince.entries.entry import Entry
+from cl.convince.llms.claude.claude_llm import ClaudeLlm
+from cl.convince.llms.gpt.gpt_llm import GptLlm
+from cl.convince.llms.llama.llama_llm import LlamaLlm
 from cl.convince.retrievers.annotating_retriever import AnnotatingRetriever
 from stubs.cl.convince.experiments.stub_llms import get_stub_full_llms
 
@@ -65,6 +64,7 @@ def test_zero_shot():
     with TestingContext():
         PreloadSettings.instance().save_and_configure(final_record_types=[Locale, GptLlm, LlamaLlm, ClaudeLlm])
         _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

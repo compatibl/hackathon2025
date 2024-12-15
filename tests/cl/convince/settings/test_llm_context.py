@@ -13,16 +13,15 @@
 # limitations under the License.
 
 import pytest
-import time
 import asyncio
+import time
 from concurrent.futures import ThreadPoolExecutor
 from random import Random
-
-from cl.convince.context.llm_context import LlmContext
+from cl.runtime.context.base_context import _CONTEXT_STACK_VAR  # noqa
 from cl.runtime.context.context import Context
 from cl.runtime.context.testing_context import TestingContext
-from cl.runtime.context.base_context import _CONTEXT_STACK_VAR  # noqa
 from cl.runtime.parsers.locale_key import LocaleKey
+from cl.convince.context.llm_context import LlmContext
 
 TASK_COUNT = 3
 MAX_SLEEP_DURATION = 0.2
@@ -41,10 +40,10 @@ async def _sleep_async(*, task_index: int, rnd: Random, max_sleep_duration: floa
 
 
 def _perform_testing(
-        *,
-        task_index: int,
-        rnd: Random,
-        max_sleep_duration: float = MAX_SLEEP_DURATION,
+    *,
+    task_index: int,
+    rnd: Random,
+    max_sleep_duration: float = MAX_SLEEP_DURATION,
 ):
     """Use for testing in-process or in multiple threads."""
 
@@ -64,12 +63,13 @@ def _perform_testing(
             assert Context.current().extension(LlmContext) is llm_context_1
         assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
 
+
 async def _perform_testing_async(
-        *,
-        task_index: int,
-        rnd: Random,
-        is_inner: bool = False,
-        max_sleep_duration: float = MAX_SLEEP_DURATION,
+    *,
+    task_index: int,
+    rnd: Random,
+    is_inner: bool = False,
+    max_sleep_duration: float = MAX_SLEEP_DURATION,
 ):
     """Use for testing in async loop."""
 
@@ -95,6 +95,7 @@ async def _gather(rnd: Random):
     tasks = [_perform_testing_async(task_index=i, rnd=rnd) for i in range(TASK_COUNT)]
     await asyncio.gather(*tasks)
 
+
 def test_error_handling():
     """Test error handling in specifying extensions."""
     llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
@@ -103,6 +104,7 @@ def test_error_handling():
         # Two extension instances of the same type
         with TestingContext(extensions=[llm_context_1, llm_context_2]):
             pass
+
 
 def test_in_process():
     """Test in different threads."""
