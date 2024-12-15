@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from typing import Type
+
 from typing_extensions import Self
 from cl.runtime.context.extension_context import ExtensionContext
 from cl.runtime.parsers.locale_key import LocaleKey
@@ -33,6 +35,16 @@ class LlmContext(ExtensionContext):
 
     mini_llm: LlmKey = missing()
     """Default mini LLM."""
+
+    @classmethod
+    def get_base_type(cls) -> Type:
+        """Return base class of this extension category even if called from a derived class, do not use 'return cls'."""
+        return LlmContext
+
+    @classmethod
+    def create_default(cls) -> Self:
+        """Create default extension instance, this method will be called for the class returned by 'get_base_type'."""
+        return LlmContext()
 
     def init(self) -> Self:
         """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
