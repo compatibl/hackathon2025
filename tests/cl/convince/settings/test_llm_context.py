@@ -17,7 +17,6 @@ import asyncio
 import time
 from concurrent.futures import ThreadPoolExecutor
 from random import Random
-from cl.runtime.context.base_context import _CONTEXT_STACK_VAR  # noqa
 from cl.runtime.context.context import Context
 from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.parsers.locale_key import LocaleKey
