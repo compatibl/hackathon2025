@@ -25,6 +25,17 @@ from cl.convince.context.llm_context import LlmContext
 TASK_COUNT = 3
 MAX_SLEEP_DURATION = 0.2
 
+def _verify_no_current_context(*, where_str: str):
+    """Check for current context, raise an error if it exists when is_inner is False."""
+    try:
+        current_context = LlmContext.current()
+        # If LlmContext.current() succeeds, it was leaked from outside the environment, raise an error
+        raise RuntimeError(
+            f"Context.LlmContext() is leaked from outside the asynchronous environment {where_str}.")
+    except RuntimeError:
+        # Raised as expected, continue
+        pass
+
 
 def _sleep(*, task_index: int, rnd: Random, max_sleep_duration: float):
     """Sleep for a random interval, reducing the interval for higher task index."""
@@ -48,19 +59,35 @@ def _perform_testing(
 
     # Sleep before entering the task
     _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+    
+    # Task label
+    task_label = f"async task {task_index}"
+    
+    # Verify current context
+    _verify_no_current_context(where_str=f"before {task_label}")
+
     with TestingContext():
+        
         _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-        assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
+        
+        # Verify current context
+        _verify_no_current_context(where_str=f"before {task_label}")
+    
         llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
-        with TestingContext(extensions=[llm_context_1]):
+        with llm_context_1:
             _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-            assert Context.current().extension(LlmContext) is llm_context_1
+            assert LlmContext.current() is llm_context_1
             llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
-            with TestingContext(extensions=[llm_context_2]):
+            with llm_context_2:
                 _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-                assert Context.current().extension(LlmContext) is llm_context_2
-            assert Context.current().extension(LlmContext) is llm_context_1
-        assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
+                assert LlmContext.current() is llm_context_2
+            assert LlmContext.current() is llm_context_1
+            
+        # Verify current context
+        _verify_no_current_context(where_str=f"after {task_label}")
+        
+    # Verify current context
+    _verify_no_current_context(where_str=f"after {task_label}")
 
 
 async def _perform_testing_async(
@@ -74,20 +101,34 @@ async def _perform_testing_async(
 
     # Sleep before entering the task
     await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+
+    # Task label
+    task_label = f"async task {task_index}"
+
+    # Verify current context
+    _verify_no_current_context(where_str=f"before {task_label}")
+
     with TestingContext():
         await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-        assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
-        llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
-        with TestingContext(extensions=[llm_context_1]):
-            await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-            assert Context.current().extension(LlmContext) is llm_context_1
-            llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
-            with TestingContext(extensions=[llm_context_2]):
-                await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-                assert Context.current().extension(LlmContext) is llm_context_2
-            assert Context.current().extension(LlmContext) is llm_context_1
-        assert Context.current().extension(LlmContext) is LlmContext._default()  # noqa
 
+        # Verify current context
+        _verify_no_current_context(where_str=f"before {task_label}")
+
+        llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
+        with llm_context_1:
+            await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+            assert LlmContext.current() is llm_context_1
+            llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
+            with llm_context_2:
+                await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
+                assert LlmContext.current() is llm_context_2
+            assert LlmContext.current() is llm_context_1
+
+        # Verify current context
+        _verify_no_current_context(where_str=f"after {task_label}")
+
+    # Verify current context
+    _verify_no_current_context(where_str=f"after {task_label}")
 
 async def _gather(rnd: Random):
     """Gather async functions."""
@@ -97,13 +138,25 @@ async def _gather(rnd: Random):
 
 def test_error_handling():
     """Test error handling in specifying extensions."""
+
     llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
     llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
-    with pytest.raises(RuntimeError):
-        # Two extension instances of the same type
-        with TestingContext(extensions=[llm_context_1, llm_context_2]):
-            pass
 
+    # Two with on the same object
+    with pytest.raises(RuntimeError):
+        with llm_context_1:
+            with llm_context_1:
+                pass
+
+    # Raise if modified other by exiting from 'with'
+    with pytest.raises(RuntimeError):
+        with llm_context_1:
+            llm_context_1.__exit__(None, None, None)
+
+    # Raise if exiting another instance
+    with pytest.raises(RuntimeError):
+        with llm_context_1:
+            llm_context_2.__exit__(None, None, None)
 
 def test_in_process():
     """Test in different threads."""

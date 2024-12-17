@@ -53,7 +53,7 @@ class BaseEntry(BaseEntryKey, ABC):
 
         # Get locale from LlmContext if not specified
         if self.locale is None:
-            self.locale = Context.current().extension(LlmContext).locale
+            self.locale = LlmContext.current().locale
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):

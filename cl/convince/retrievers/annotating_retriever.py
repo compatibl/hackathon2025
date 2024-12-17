@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import List
 from typing_extensions import Self
 from cl.runtime import Context
-from cl.runtime.experiments.trial_key import TrialKey
+from cl.runtime.context.trial_context import TrialContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
@@ -95,7 +95,7 @@ class AnnotatingRetriever(Retriever):
 
         # Load the full LLM specified by the context
         context = Context.current()
-        llm_context = Context.current().extension(LlmContext)
+        llm_context = LlmContext.current()
         llm = context.load_one(Llm, llm_context.full_llm)
 
         # Load the prompt
@@ -106,15 +106,8 @@ class AnnotatingRetriever(Retriever):
             is_last_trial = retry_index == self.max_retries - 1
 
             # Append retry_index to trial_id to avoid reusing a cached completion
-            if self.max_retries > 1:
-                context = Context.current()
-                if context.trial is not None:
-                    trial_key = TrialKey(trial_id=f"{context.trial.trial_id}\\{retry_index}")
-                else:
-                    trial_key = TrialKey(trial_id=str(retry_index))
-            else:
-                trial_key = context.trial
-            with Context(trial=trial_key) as context:
+            trial_id = str(retry_index) if self.max_retries > 1 else None
+            with TrialContext(trial_id=trial_id) as trial_context:
 
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
@@ -122,7 +115,7 @@ class AnnotatingRetriever(Retriever):
                 # Create a retrieval record and populate it with inputs, each trial will have a new one
                 retrieval = AnnotatingRetrieval(
                     retriever=self.get_key(),
-                    trial=context.trial,
+                    trial_id=trial_context.trial_id,
                     input_text=input_text,
                     param_description=param_description,
                     is_required=is_required,

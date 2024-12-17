@@ -16,7 +16,8 @@ from dataclasses import dataclass
 from typing import Type
 
 from typing_extensions import Self
-from cl.runtime.context.extension_context import ExtensionContext
+
+from cl.runtime.context.base_context import BaseContext
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.convince.llms.llm_key import LlmKey
@@ -24,7 +25,7 @@ from cl.convince.settings.llm_settings import LlmSettings
 
 
 @dataclass(slots=True, kw_only=True)
-class LlmContext(ExtensionContext):
+class LlmContext(BaseContext):
     """LLM defaults."""
 
     locale: LocaleKey = missing()
@@ -37,17 +38,20 @@ class LlmContext(ExtensionContext):
     """Default mini LLM."""
 
     @classmethod
-    def get_base_type(cls) -> Type:
-        """Return base class of this extension category even if called from a derived class, do not use 'return cls'."""
+    def get_key_type(cls) -> Type:
+        """
+        To get the current context for cls, ContextManager will perform dict lookup based cls.get_key_type().
+
+        Notes:
+            - Return as specific type rather than type(self) to avoid variation across derived types
+            - The returned type may be a base context class or a dedicated key type
+            - Contexts that have different key types are isolated from each other and have independent 'with' clauses
+            - As all contexts are singletons and have no key fields, get_key method is not required
+        """
         return LlmContext
 
-    @classmethod
-    def create_default(cls) -> Self:
-        """Create default extension instance, this method will be called for the class returned by 'get_base_type'."""
-        return LlmContext()
-
-    def init(self) -> Self:
-        """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
+    def __post_init__(self):
+        """Set fields to their values in settings if not specified."""
 
         # Initialize empty fields from settings
         settings = LlmSettings.instance()

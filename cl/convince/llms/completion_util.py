@@ -15,8 +15,7 @@
 import collections
 import os
 from typing import Iterable
-from cl.runtime import Context
-from cl.runtime.primitive.string_util import StringUtil
+from cl.runtime.context.trial_context import TrialContext
 
 
 class CompletionUtil:
@@ -30,9 +29,9 @@ class CompletionUtil:
         result = query.strip()
 
         # Add trial_id to the beginning of cached query key
-        context = Context.current()
-        if context.trial is not None:
-            result = f"TrialID: {context.trial.trial_id}\n{result}"
+        trial_context = TrialContext.current_or_none()
+        if trial_context is not None and trial_context.trial_id is not None:
+            result = f"TrialID: {trial_context.trial_id}\n{result}"
 
         # Normalize EOL
         result = cls.to_python_eol(result)

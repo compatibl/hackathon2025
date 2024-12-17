@@ -62,7 +62,7 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
 
         # Check locale format or set based on the default in LlmSettings if not specified
         if self.locale is None:
-            self.locale = Context.current().extension(LlmContext).locale
+            self.locale = LlmContext.current().locale
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):

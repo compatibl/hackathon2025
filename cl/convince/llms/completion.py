@@ -16,7 +16,6 @@ import re
 from abc import ABC
 from dataclasses import dataclass
 from typing_extensions import Self
-from cl.runtime.experiments.trial_key import TrialKey
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.dataclasses_extensions import missing
@@ -47,8 +46,8 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
     strict time ordering guarantees within the same process, thread and context.
     """
 
-    trial: TrialKey | None = None
-    """Trial for which the completion is recorded."""
+    trial_id: str | None = None
+    """Trial identifier for which the completion is recorded."""
 
     def get_key(self) -> CompletionKey:
         # Check that the fields required to compute the key are set
@@ -75,10 +74,11 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
             raise UserError(f"Empty 'timestamp' field in {type(self).__name__}.")
 
         # Extract TrialID from the query if present
+        # TODO: Review if it is preferable to add it to the query here instead
         if self.query.startswith("TrialID: "):
             match = re.search(_TRIAL_ID_RE, self.query)
             trial_id = match.group(1) if match else None
-            self.trial = TrialKey(trial_id=trial_id) if trial_id is not None else None
+            self.trial_id = trial_id
 
         # Return self to enable method chaining
         return self
