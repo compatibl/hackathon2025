@@ -17,6 +17,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
+
+from cl.convince.llms.llm_key import LlmKey
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.parsers.locale_key import LocaleKey
@@ -51,9 +53,16 @@ class BaseEntry(BaseEntryKey, ABC):
         if StringUtil.is_empty(self.text):
             raise UserError(f"Empty 'text' field in {type(self).__name__}.")
 
-        # Get locale from LlmContext if not specified
         if self.locale is None:
-            self.locale = LlmContext.current().locale
+            # If locale is None, get it from LlmContext unless it is also None, in which case use LlmSettings
+            # TODO: Review this code if default context is added
+            llm_context = LlmContext.current_or_none()
+            if llm_context is not None:
+                # Use the current LlmContext if present
+                self.locale = llm_context.locale
+            else:
+                # Otherwise use the settings
+                self.locale = LocaleKey(locale_id=LlmSettings.instance().locale)
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):

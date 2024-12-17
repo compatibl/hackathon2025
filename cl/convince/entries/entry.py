@@ -60,9 +60,16 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
         if StringUtil.is_empty(self.text):
             raise UserError(f"Empty 'text' field in {type(self).__name__}.")
 
-        # Check locale format or set based on the default in LlmSettings if not specified
         if self.locale is None:
-            self.locale = LlmContext.current().locale
+            # If locale is None, get it from LlmContext unless it is also None, in which case use LlmSettings
+            # TODO: Review this code if default context is added
+            llm_context = LlmContext.current_or_none()
+            if llm_context is not None:
+                # Use the current LlmContext if present
+                self.locale = llm_context.locale
+            else:
+                # Otherwise use the settings
+                self.locale = LocaleKey(locale_id=LlmSettings.instance().locale)
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):
