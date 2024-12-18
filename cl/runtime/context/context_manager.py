@@ -11,50 +11,96 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from contextvars import ContextVar
+from contextvars import Token
 from dataclasses import dataclass
-from typing import Any
-from typing import Dict
-from typing import Type
-from typing import TypeVar
+from typing import List, Dict, cast
+from typing_extensions import Self
+from cl.runtime.context.base_context import BaseContext
+from cl.runtime.serialization.dict_serializer import DictSerializer
 
-_STACK_DICT: ContextVar = ContextVar("_STACK_DICT", default=None)
-"""
-Each extension context adds self to the stack value where its type is key on __enter__ and removes self on __exit__.
-Each asynchronous context has its own stack dictionary.
-"""
-
-_ASYNC_SENTINEL: ContextVar = ContextVar("_ASYNC_SENTINEL", default=False)
-"""Helps detect if async context is not the process root."""
-
-_ASYNC_SENTINEL.set(True)
-"""Set to true in the process root async context where import is running."""
-
-_CONTEXT_DICT: Dict[str, Any] = {}
-"""Stores the current context for each prefix."""
-
-TContext = TypeVar("TContext")
-
+_DICT_SERIALIZER = DictSerializer()
+"""Serializer used to serialize and deserialize contexts."""
 
 @dataclass(slots=True, kw_only=True)
 class ContextManager:
-    """Records current context for each context type to restore them during out-of-process task execution."""
+    """Records current context for each context key type and restores them during out-of-process task execution."""
+
+    _contexts: List[BaseContext] | None = None
+    """Current contexts that will be restored during out-of-process task execution."""
+
+    _token: Token | None = None
+    """Context token is saved in ContextManager.__enter__ and restored in ContextManager.__exit__."""
+
+    def __init__(self, data: List[Dict]):
+        """Create from contexts serialized into a list of dicts."""
+
+        # Assign default values for each field to avoid not initialized errors
+        self._contexts = None
+        self._token = None
+
+        # Deserialize if data is not empty
+        if data:
+            self._contexts = _DICT_SERIALIZER.deserialize_data(data, list)
+
+        # Perform checks and apply settings
+        if self._contexts:
+            for context in self._contexts:
+
+                # Ensure context is derived from BaseContext
+                if not isinstance(context, BaseContext):
+                    raise RuntimeError(f"Context {type(context).__name__} cannot be activated by ContextManager "
+                                       f"because it is not derived from {BaseContext.__name__}.")
+
+                # Mark as deserialized to prevent repeat initialization
+                context.is_deserialized = True
+
+    def __enter__(self):
+        """Invoke __enter__ for each item in the 'contexts' field."""
+
+        if self._token is None:
+            self._token = BaseContext.reset_before()
+        else:
+            raise RuntimeError("Nested 'with' clauses are not permitted or necessary with ContextManager.")
+
+        # Enter into each context, skip if self._contexts is None or empty
+        if self._contexts:
+            tuple(context.__enter__() for context in self._contexts)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Invoke __exit__ for each item in the 'contexts' field."""
+
+        if self._token is not None:
+             BaseContext.reset_after(self._token)
+        else:
+            raise RuntimeError("Detected ContextManager.__exit__ without a preceding ContextManager.__enter__.")
+
+        # Exit from each context, skip if self._contexts is None or empty
+        if self._contexts:
+            tuple(context.__exit__(exc_type, exc_val, exc_tb) for context in self._contexts)
+
+        # Return False to propagate exception to the caller
+        return False
 
     @classmethod
-    def current(cls, context_type: Type[TContext]) -> TContext:
-        """
-        Return the current instance of context for the specified type or None if not set.
-        This method will run in every async context.
-        """
-        return _CONTEXT_DICT.get(context_type, None)
+    def serialize_all_current(cls) -> List[Dict]:
+        """Serialize all current contexts to a list of dicts, each dict represents one serialized context."""
+
+        # Get current contexts for all key types
+        contexts = BaseContext.all_current()
+
+        # Serialize
+        result = cls._serialize_contexts(contexts)
+        return result
 
     @classmethod
-    def update(cls, context: Any) -> None:
-        """
-        The current context is stored separately for each context type.
-        This method will raise an error if async context is not process root.
-        """
-        if not _ASYNC_SENTINEL:
-            raise RuntimeError("Current context can only be updated in async context of the process root.")
-        _CONTEXT_DICT[type(context)] = context
+    def _serialize_contexts(cls, contexts: List[BaseContext]) -> List[Dict]:
+        """Serialize argument contexts to a list of dicts, each dict represents one serialized context."""
+
+        # Use serializer
+        result = _DICT_SERIALIZER.serialize_data(contexts)
+
+        # Set is_deserialized to True to prevent repeated initialization
+        if result:
+            for context_data in result:
+                context_data["is_deserialized"] = True
+        return result
