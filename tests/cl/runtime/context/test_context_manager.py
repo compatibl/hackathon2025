@@ -31,10 +31,10 @@ def _perform_serialization_test(contexts: List[BaseContext]):
 
     # Ensure the deserialized list is identical to the argument
     if not contexts:
-        assert not deserialized_context_manager._contexts  # noqa
+        assert not deserialized_context_manager._all_contexts  # noqa
     else:
-        assert len(contexts) == len(deserialized_context_manager._contexts)  # noqa
-        for context, deserialized_context in zip(contexts, deserialized_context_manager._contexts):  # noqa
+        assert len(contexts) == len(deserialized_context_manager._all_contexts)  # noqa
+        for context, deserialized_context in zip(contexts, deserialized_context_manager._all_contexts):  # noqa
             # Set is_deserialized for the left hand side because ContextManager will set it for the right hand side
             context.is_deserialized = True
             assert context == deserialized_context
@@ -52,6 +52,7 @@ def _perform_manager_test(contexts: List[BaseContext]):
             if contexts:
                 for context in contexts:
                     current_context = type(context).current_or_none()
+                    context.is_deserialized = True
                     assert context == current_context
     finally:
         # Restore contextvars for BaseContext
@@ -62,22 +63,22 @@ def test_context_manager():
 
     # No contexts defined
     _perform_serialization_test([])
-
-    # Recreate using ContextManager
     _perform_manager_test([])
 
-    # Inside a single 'with TestContext()' clause
-    with TestingContext() as context:
-        _perform_serialization_test([context])
+    # Create TestContext() but do not use 'with' clause
+    context_external = TestingContext()
+    _perform_manager_test([context_external])
 
+    # Inside a single 'with TestContext()' clause
+    with TestingContext() as context_1:
+        _perform_serialization_test([context_1])
     # Recreate using ContextManager
-    _perform_manager_test([context])
+    _perform_manager_test([context_1])
 
     # Inside two nested 'with' clauses for the same key type Context
     with TestingContext() as context_1:
         with Context(dataset="abc") as context_2:
             _perform_serialization_test([context_2])
-
     # Recreate using ContextManager
     _perform_manager_test([context_2])
 
@@ -85,9 +86,9 @@ def test_context_manager():
     with TestingContext() as context_1:
         with TrialContext(trial_id="abc") as context_2:
             _perform_serialization_test([context_1, context_2])
-
     # Recreate using ContextManager
     _perform_manager_test([context_1, context_2])
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

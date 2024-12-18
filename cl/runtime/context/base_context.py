@@ -154,7 +154,7 @@ class BaseContext(ContextMixin, ABC):
         # Get context stack for the current asynchronous environment
         context_stack = self._get_context_stack()
         if context_stack is None or len(context_stack) == 0:
-            class_name = {type(self).__name__}
+            class_name = type(self).__name__
             raise RuntimeError(f"Current {class_name} stack has been cleared inside 'with {class_name}(...)' clause.")
 
         # Restore the previous current context on exiting from 'with Context(...)' clause
