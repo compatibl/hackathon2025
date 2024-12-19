@@ -28,10 +28,10 @@ class CompletionUtil:
         # Strip leading and trailing whitespace and EOL
         result = query.strip()
 
-        # Add trial_id to the beginning of cached query key
-        trial_context = TrialContext.current_or_none()
-        if trial_context is not None and trial_context.trial_id is not None:
-            result = f"TrialID: {trial_context.trial_id}\n{result}"
+        # Get combined trial_id from all previous 'with TrialContext(...)' clauses
+        # and add it to the beginning of formatted query
+        if (trial_id := TrialContext.get_trial_id()) is not None:
+            result = f"TrialID: {trial_id}\n{result}"
 
         # Normalize EOL
         result = cls.to_python_eol(result)
