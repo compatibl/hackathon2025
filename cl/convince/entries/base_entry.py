@@ -17,8 +17,6 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
-
-from cl.convince.llms.llm_key import LlmKey
 from cl.runtime import Context
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.parsers.locale_key import LocaleKey
@@ -27,6 +25,7 @@ from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.convince.context.llm_context import LlmContext
 from cl.convince.entries.base_entry_key import BaseEntryKey
+from cl.convince.llms.llm_key import LlmKey
 from cl.convince.settings.llm_settings import LlmSettings
 
 

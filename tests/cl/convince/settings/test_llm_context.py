@@ -17,7 +17,6 @@ import asyncio
 import time
 from concurrent.futures import ThreadPoolExecutor
 from random import Random
-
 from cl.runtime.context.base_context import BaseContext
 from cl.runtime.context.context import Context
 from cl.runtime.context.testing_context import TestingContext
@@ -27,13 +26,13 @@ from cl.convince.context.llm_context import LlmContext
 TASK_COUNT = 3
 MAX_SLEEP_DURATION = 0.2
 
+
 def _verify_no_current_context(*, where_str: str):
     """Check for current context, raise an error if it exists when is_inner is False."""
     try:
         current_context = LlmContext.current()
         # If LlmContext.current() succeeds, it was leaked from outside the environment, raise an error
-        raise RuntimeError(
-            f"Context.LlmContext() is leaked from outside the asynchronous environment {where_str}.")
+        raise RuntimeError(f"Context.LlmContext() is leaked from outside the asynchronous environment {where_str}.")
     except RuntimeError:
         # Raised as expected, continue
         pass
@@ -61,20 +60,20 @@ def _perform_testing(
 
     # Sleep before entering the task
     _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-    
+
     # Task label
     task_label = f"async task {task_index}"
-    
+
     # Verify current context
     _verify_no_current_context(where_str=f"before {task_label}")
 
     with TestingContext():
-        
+
         _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-        
+
         # Verify current context
         _verify_no_current_context(where_str=f"before {task_label}")
-    
+
         llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
         with llm_context_1:
             _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
@@ -84,10 +83,10 @@ def _perform_testing(
                 _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
                 assert LlmContext.current() is llm_context_2
             assert LlmContext.current() is llm_context_1
-            
+
         # Verify current context
         _verify_no_current_context(where_str=f"after {task_label}")
-        
+
     # Verify current context
     _verify_no_current_context(where_str=f"after {task_label}")
 
@@ -132,6 +131,7 @@ async def _perform_testing_async(
     # Verify current context
     _verify_no_current_context(where_str=f"after {task_label}")
 
+
 async def _gather(rnd: Random):
     """Gather async functions."""
     tasks = [_perform_testing_async(task_index=i, rnd=rnd) for i in range(TASK_COUNT)]
@@ -159,6 +159,7 @@ def test_error_handling():
     with pytest.raises(RuntimeError):
         with llm_context_1:
             llm_context_2.__exit__(None, None, None)
+
 
 def test_in_process():
     """Test in different threads."""

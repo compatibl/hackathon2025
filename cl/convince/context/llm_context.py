@@ -14,9 +14,7 @@
 
 from dataclasses import dataclass
 from typing import Type
-
 from typing_extensions import Self
-
 from cl.runtime.context.base_context import BaseContext
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.records.dataclasses_extensions import missing
