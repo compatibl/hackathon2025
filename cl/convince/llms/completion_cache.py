@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 from typing import Dict
 from cl.runtime import Context
+from cl.runtime.context.db_context import DbContext
 from cl.runtime.context.env_util import EnvUtil
 from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
@@ -114,7 +115,7 @@ class CompletionCache:
         )
 
         # Save completions to DB (including preloads) outside a test
-        Context.current().save_one(completion_record)
+        DbContext.save_one(completion_record)
 
         # Save completions to a file unless explicitly turned off in CompletionSettings
         if CompletionSettings.instance().save_to_csv:
@@ -166,7 +167,7 @@ class CompletionCache:
         completion_key = Completion(llm=LlmKey(llm_id=self.channel), query=query).get_key()
 
         # Return completion string from DB or None if the record is not found
-        completion = Context.current().load_one(Completion, completion_key, is_record_optional=True)
+        completion = DbContext.load_one(Completion, completion_key, is_record_optional=True)
         result = completion.completion if completion is not None else None
         return result
 
@@ -207,4 +208,4 @@ class CompletionCache:
                     ]
 
                     # Save to DB unless inside a test
-                    context.save_many(completions)
+                    DbContext.save_many(completions)

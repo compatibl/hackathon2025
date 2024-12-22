@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
 from cl.runtime import Context
+from cl.runtime.context.db_context import DbContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -123,14 +124,14 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
         result.init()
 
         # Save to replace the current record
-        Context.current().save_one(result)
+        DbContext.save_one(result)
 
     def run_mark_verified(self) -> None:
         """Mark verified."""
         self.verified = True
-        Context.current().save_one(self)
+        DbContext.save_one(self)
 
     def run_unmark_verified(self) -> None:
         """Unmark verified."""
         self.verified = False
-        Context.current().save_one(self)
+        DbContext.save_one(self)

@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import List
 from typing_extensions import Self
 from cl.runtime import Context
+from cl.runtime.context.db_context import DbContext
 from cl.runtime.context.trial_context import TrialContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -103,10 +104,10 @@ class MultipleChoiceRetriever(Retriever):
         # Load the full LLM specified by the context
         context = Context.current()
         llm_context = LlmContext.current()
-        llm = context.load_one(Llm, llm_context.full_llm)
+        llm = DbContext.load_one(Llm, llm_context.full_llm)
 
         # Load the prompt
-        prompt = Context.current().load_one(Prompt, self.prompt)
+        prompt = DbContext.load_one(Prompt, self.prompt)
         valid_choices_str = "; ".join(valid_choices)
 
         trial_count = 2
@@ -142,13 +143,13 @@ class MultipleChoiceRetriever(Retriever):
                         retrieval.success = json_result.get("success", None)
                         retrieval.param_value = json_result.get("param_value", None)
                         retrieval.justification = json_result.get("justification", None)
-                        context.save_one(retrieval)
+                        DbContext.save_one(retrieval)
                     else:
                         retrieval.success = "N"
                         retrieval.justification = (
                             f"Could not extract JSON from the LLM response. " f"LLM response:\n{completion}\n"
                         )
-                        context.save_one(retrieval)
+                        DbContext.save_one(retrieval)
                         raise UserError(retrieval.justification)
 
                     # Normalize output
@@ -189,7 +190,7 @@ class MultipleChoiceRetriever(Retriever):
                 except Exception as e:
                     retrieval.success = "N"
                     retrieval.justification = str(e)
-                    context.save_one(retrieval)
+                    DbContext.save_one(retrieval)
                     if is_last_trial:
                         # Rethrow only when the last trial is reached
                         raise UserError(

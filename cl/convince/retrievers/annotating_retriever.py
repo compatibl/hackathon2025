@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import List
 from typing_extensions import Self
 from cl.runtime import Context
+from cl.runtime.context.db_context import DbContext
 from cl.runtime.context.trial_context import TrialContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -96,10 +97,10 @@ class AnnotatingRetriever(Retriever):
         # Load the full LLM specified by the context
         context = Context.current()
         llm_context = LlmContext.current()
-        llm = context.load_one(Llm, llm_context.full_llm)
+        llm = DbContext.load_one(Llm, llm_context.full_llm)
 
         # Load the prompt
-        prompt = context.load_one(Prompt, self.prompt)
+        prompt = DbContext.load_one(Prompt, self.prompt)
 
         # Run multiple retries
         for retry_index in range(self.max_retries):
@@ -134,13 +135,13 @@ class AnnotatingRetriever(Retriever):
                         retrieval.success = json_result.get("success", None)
                         retrieval.annotated_text = json_result.get("annotated_text", None)
                         retrieval.justification = json_result.get("justification", None)
-                        context.save_one(retrieval)
+                        DbContext.save_one(retrieval)
                     else:
                         retrieval.success = "N"
                         retrieval.justification = (
                             f"Could not extract JSON from the LLM response. " f"LLM response:\n{completion}\n"
                         )
-                        context.save_one(retrieval)
+                        DbContext.save_one(retrieval)
                         raise UserError(retrieval.justification)
 
                     # Return None if not found
@@ -190,7 +191,7 @@ class AnnotatingRetriever(Retriever):
                     # Combine and return from inside the loop
                     # TODO: Determine if numbered combination works better
                     retrieval.output_text = " ".join(matches)
-                    context.save_one(retrieval)
+                    DbContext.save_one(retrieval)
 
                     # Return only the parameter value
                     return retrieval.output_text
@@ -200,7 +201,7 @@ class AnnotatingRetriever(Retriever):
                         # Rethrow only when the last trial is reached
                         retrieval.success = "N"
                         retrieval.justification = str(e)
-                        context.save_one(retrieval)
+                        DbContext.save_one(retrieval)
                         raise UserError(
                             f"Unable to extract parameter from the input text after {self.max_retries} retries.\n"
                             f"Input text: {input_text}\n"
