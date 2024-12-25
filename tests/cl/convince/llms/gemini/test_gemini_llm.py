@@ -19,13 +19,11 @@ from cl.convince.llms.gemini.gemini_llm import GeminiLlm
 
 def test_smoke():
     """Test GeminiLlm class."""
-
-    with TestingContext():
-        llms = [
-            GeminiLlm(llm_id="gemini-1.5-flash"),
-        ]
-        for llm in llms:
-            assert "4" in llm.completion("2 times 2?")
+    llms = [
+        GeminiLlm(llm_id="gemini-1.5-flash"),
+    ]
+    for llm in llms:
+        assert "4" in llm.completion("2 times 2?")
 
 
 if __name__ == "__main__":

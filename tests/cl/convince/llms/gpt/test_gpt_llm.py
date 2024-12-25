@@ -19,14 +19,12 @@ from cl.convince.llms.gpt.gpt_llm import GptLlm
 
 def test_smoke():
     """Test GptLlm class."""
-
-    with TestingContext():
-        llms = [
-            GptLlm(llm_id="gpt-4o-mini"),
-            GptLlm(llm_id="gpt-4o-mini-0.2", model_name="gpt-4o-mini", temperature=0.2),
-        ]
-        for llm in llms:
-            assert "4" in llm.completion("2 times 2?")
+    llms = [
+        GptLlm(llm_id="gpt-4o-mini"),
+        GptLlm(llm_id="gpt-4o-mini-0.2", model_name="gpt-4o-mini", temperature=0.2),
+    ]
+    for llm in llms:
+        assert "4" in llm.completion("2 times 2?")
 
 
 if __name__ == "__main__":

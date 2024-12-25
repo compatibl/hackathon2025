@@ -37,28 +37,25 @@ def _get_extended_prompt(i: int):
 
 def test_verbosity(local_dir_fixture):
     """Test for verbosity."""
+    reps = 2
+    plot = GroupBarPlot(plot_id="verbosity")
+    plot.values = []
+    plot.bar_labels = []
+    plot.group_labels = []
+    stub_mini_llms = get_stub_mini_llms()
+    for llm in stub_mini_llms:
 
-    with TestingContext():
+        # Calculate
+        simple_sum = sum(llm.completion(_get_simple_prompt(i + 1)) == str(pow(i + 1, 2)) for i in range(reps))
+        extended_sum = sum(llm.completion(_get_extended_prompt(i + 1)) == str(pow(i + 1, 2)) for i in range(reps))
 
-        reps = 2
-        plot = GroupBarPlot(plot_id="verbosity")
-        plot.values = []
-        plot.bar_labels = []
-        plot.group_labels = []
-        stub_mini_llms = get_stub_mini_llms()
-        for llm in stub_mini_llms:
+        # Add to plot
+        plot.bar_labels.extend([llm.llm_id] * 2)
+        plot.group_labels.extend(["Simple", "Extended"])
+        plot.values.extend([simple_sum / reps, extended_sum / reps])
 
-            # Calculate
-            simple_sum = sum(llm.completion(_get_simple_prompt(i + 1)) == str(pow(i + 1, 2)) for i in range(reps))
-            extended_sum = sum(llm.completion(_get_extended_prompt(i + 1)) == str(pow(i + 1, 2)) for i in range(reps))
-
-            # Add to plot
-            plot.bar_labels.extend([llm.llm_id] * 2)
-            plot.group_labels.extend(["Simple", "Extended"])
-            plot.values.extend([simple_sum / reps, extended_sum / reps])
-
-        # Save
-        plot.save_png()
+    # Save
+    plot.save_png()
 
 
 if __name__ == "__main__":

@@ -19,14 +19,12 @@ from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaL
 
 def test_smoke():
     """Test FireworksLlamaLlm class."""
-
-    with TestingContext():
-        llms = [
-            FireworksLlamaLlm(llm_id="llama-v3-8b-instruct"),
-            FireworksLlamaLlm(llm_id="llama-v3-8b-instruct-0.2", model_name="llama-v3-8b-instruct", temperature=0.2),
-        ]
-        for llm in llms:
-            assert "4" in llm.completion("2 times 2?")
+    llms = [
+        FireworksLlamaLlm(llm_id="llama-v3-8b-instruct"),
+        FireworksLlamaLlm(llm_id="llama-v3-8b-instruct-0.2", model_name="llama-v3-8b-instruct", temperature=0.2),
+    ]
+    for llm in llms:
+        assert "4" in llm.completion("2 times 2?")
 
 
 if __name__ == "__main__":

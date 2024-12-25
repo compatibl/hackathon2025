@@ -61,9 +61,8 @@ def _test_extract(input_text: str, param_description: str, param_samples: List[s
 
 def test_zero_shot():
     """Test without samples."""
-    with TestingContext():
-        PreloadSettings.instance().save_and_configure(final_record_types=[Locale, GptLlm, LlamaLlm, ClaudeLlm])
-        _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)
+    PreloadSettings.instance().save_and_configure(final_record_types=[Locale, GptLlm, LlamaLlm, ClaudeLlm])
+    _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)
 
 
 if __name__ == "__main__":

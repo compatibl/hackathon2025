@@ -24,20 +24,18 @@ _TEMPLATE = "StrReq='{StrReq}' StrOpt='{StrOpt}' IntReq='{IntReq}' IntOpt='{IntO
 
 def test_formatted_prompt():
     """Smoke test."""
+    guard = RegressionGuard()
+    prompt = FormattedPrompt(prompt_id="Default", template=_TEMPLATE, params_type=StubPromptParams.__name__)
 
-    with TestingContext():
-        guard = RegressionGuard()
-        prompt = FormattedPrompt(prompt_id="Default", template=_TEMPLATE, params_type=StubPromptParams.__name__)
+    # Simple prompt
+    guard.write(prompt.render(StubPromptParams(str_opt="def", int_opt=456)))
 
-        # Simple prompt
-        guard.write(prompt.render(StubPromptParams(str_opt="def", int_opt=456)))
-
-        # Formatted string raises an error when parameter is None
-        try:
-            prompt.render(StubPromptParams())
-        except UserError as e:
-            guard.write(f"Expected UserError: {e}")
-        RegressionGuard().verify_all()
+    # Formatted string raises an error when parameter is None
+    try:
+        prompt.render(StubPromptParams())
+    except UserError as e:
+        guard.write(f"Expected UserError: {e}")
+    RegressionGuard().verify_all()
 
 
 if __name__ == "__main__":

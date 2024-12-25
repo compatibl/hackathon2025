@@ -23,24 +23,21 @@ from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms
 
 def _test_recall(text: str):
     """Test the specified recall string."""
+    prompt = (
+        f"Reply with the following text changing nothing in it at all. "
+        f"I will check that the text matches exactly. This is a test. Text: {text}"
+    )
+    run_count = 1
 
-    with TestingContext():
+    stub_mini_llms = get_stub_mini_llms()
+    for llm in stub_mini_llms:
+        guard = RegressionGuard(channel=llm.llm_id)
+        for _ in range(run_count):
 
-        prompt = (
-            f"Reply with the following text changing nothing in it at all. "
-            f"I will check that the text matches exactly. This is a test. Text: {text}"
-        )
-        run_count = 1
+            result = llm.completion(prompt)
+            guard.write(result)
 
-        stub_mini_llms = get_stub_mini_llms()
-        for llm in stub_mini_llms:
-            guard = RegressionGuard(channel=llm.llm_id)
-            for _ in range(run_count):
-
-                result = llm.completion(prompt)
-                guard.write(result)
-
-        guard.verify_all()
+    guard.verify_all()
 
 
 def test_well_known_phrase():
