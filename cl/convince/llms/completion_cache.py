@@ -195,7 +195,6 @@ class CompletionCache:
                         )
 
                     # Create and save a completion record
-                    context = Context.current()
                     completions = [
                         Completion(
                             llm=LlmKey(llm_id=self.channel),

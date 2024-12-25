@@ -95,7 +95,6 @@ class AnnotatingRetriever(Retriever):
     ) -> str | None:
 
         # Load the full LLM specified by the context
-        context = Context.current()
         llm_context = LlmContext.current()
         llm = DbContext.load_one(Llm, llm_context.full_llm)
 
