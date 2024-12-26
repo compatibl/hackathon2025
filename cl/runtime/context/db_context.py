@@ -19,6 +19,7 @@ from typing_extensions import Self
 from cl.runtime import Db, Context, ClassInfo
 from cl.runtime.context.base_context import BaseContext
 from cl.runtime.context.env_util import EnvUtil
+from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.db.dataset_util import DatasetUtil
 from cl.runtime.db.db_key import DbKey
 from cl.runtime.db.protocols import TKey
@@ -377,22 +378,15 @@ class DbContext(BaseContext):
         db_type = ClassInfo.get_class_type(context_settings.db_class)
 
         # If not inside a test
-        if not Settings.is_inside_test:
-
-            # Use db_id from settings for context_id unless specified by the caller
+        if (testing_namespace := TestingContext.get_testing_namespace_or_none()) is not None:
+            # Inside a test use 'temp' followed by context_id converted to semicolon-delimited format for db_id
+            db_id = "temp;" + testing_namespace.replace(".", ";")
+        else:
+            # Outside a test use db_id from settings for context_id unless specified by the caller
             if context_settings.context_id is not None:
                 db_id = context_settings.context_id
             else:
                 db_id = Settings.process_timestamp
-
-        # Inside test
-        else:
-
-            # For a test, env name is dot-delimited test module, class in snake_case (if any), and method or function
-            env_name = EnvUtil.get_env_name()
-
-            # Use 'temp' followed by context_id converted to semicolon-delimited format for db_id
-            db_id = "temp;" + env_name.replace(".", ";")
 
         # Create and return
         result = db_type(db_id=db_id)

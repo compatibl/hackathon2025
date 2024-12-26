@@ -21,6 +21,7 @@ from cl.runtime import Context
 from cl.runtime.context.base_context import BaseContext
 from cl.runtime.context.db_context import DbContext
 from cl.runtime.context.process_context import ProcessContext
+from cl.runtime.context.testing_context import TestingContext
 
 
 class ContextMiddleware:
@@ -39,10 +40,11 @@ class ContextMiddleware:
             token = BaseContext.clear_contextvar()
             try:
                 with ProcessContext():
-                    with DbContext():
-                        # TODO: Create a test setting to enable this other than by uncommenting
-                        # await asyncio.sleep(duration)
-                        await self.app(scope, receive, send)
+                    with TestingContext():
+                        with DbContext():
+                            # TODO: Create a test setting to enable this other than by uncommenting
+                            # await asyncio.sleep(duration)
+                            await self.app(scope, receive, send)
             finally:
                 # Restore ContextVar to its previous state after async task execution using a token
                 # from 'clear_contextvar' whether or not an exception occurred

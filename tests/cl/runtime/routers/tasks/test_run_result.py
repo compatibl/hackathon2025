@@ -19,6 +19,7 @@ from fastapi import FastAPI
 from starlette.testclient import TestClient
 from cl.runtime import Context
 from cl.runtime.context.db_context import DbContext
+from cl.runtime.routers.context_middleware import ContextMiddleware
 from cl.runtime.routers.tasks import tasks_router
 from cl.runtime.routers.tasks.run_response_item import handler_queue
 from cl.runtime.routers.tasks.task_result_request import TaskResultRequest
@@ -76,6 +77,7 @@ def test_api():
     """Test REST API for /tasks/run/result route."""
 
     test_app = FastAPI()
+    test_app.add_middleware(ContextMiddleware)
     test_app.include_router(tasks_router.router, prefix="/tasks", tags=["Tasks"])
     with TestClient(test_app) as test_client:
         for request in _save_tasks_and_get_requests():
