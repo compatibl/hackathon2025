@@ -19,7 +19,7 @@ from typing import Dict
 from cl.runtime.backend.core.user_key import UserKey
 from cl.runtime.context.base_context import BaseContext
 from cl.runtime.context.env_util import EnvUtil
-from cl.runtime.context.testing_context import TestingContext
+from cl.runtime.context.process_context import ProcessContext
 from cl.runtime.db.db_key import DbKey
 from cl.runtime.log.log_key import LogKey
 from cl.runtime.records.dataclasses_extensions import missing
@@ -54,9 +54,9 @@ class UserContext(BaseContext):
         if (user_context := UserContext.current_or_none()) is not None:
             # User for the current UserContext
             return user_context.user
-        elif (testing_namespace := TestingContext.get_testing_namespace_or_none()) is not None:
-            # Use testing namespace as the user
-            return UserKey(username=testing_namespace)
+        elif ProcessContext.is_testing():
+            # Use process namespace as the user
+            return UserKey(username=ProcessContext.get_process_namespace())
         else:
             # User reported by OS
             os_user_id = getuser()

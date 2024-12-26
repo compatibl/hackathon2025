@@ -19,7 +19,7 @@ from typing_extensions import Self
 from cl.runtime import Db, Context, ClassInfo
 from cl.runtime.context.base_context import BaseContext
 from cl.runtime.context.env_util import EnvUtil
-from cl.runtime.context.testing_context import TestingContext
+from cl.runtime.context.process_context import ProcessContext
 from cl.runtime.db.dataset_util import DatasetUtil
 from cl.runtime.db.db_key import DbKey
 from cl.runtime.db.protocols import TKey
@@ -96,7 +96,7 @@ class DbContext(BaseContext):
         """Supports 'with' operator for resource disposal."""
 
         # Call '__enter__' method of base first
-        Context.__enter__(self)
+        BaseContext.__enter__(self)
 
         try:
             # Execute on default (root) context instances only if they are not deserialized
@@ -109,7 +109,7 @@ class DbContext(BaseContext):
             # Treat the exception as though it happened outside the 'with' clause:
             #   - Call __exit__ method of base class without passing exception details
             #   - Then rethrow the exception
-            Context.__exit__(self, None, None, None)
+            BaseContext.__exit__(self, None, None, None)
             raise e
         return self
 
@@ -126,11 +126,11 @@ class DbContext(BaseContext):
             # Treat the exception as though it happened outside the 'with' clause:
             #   - Call __exit__ method of base class without passing exception details
             #   - Then rethrow the exception
-            Context.__exit__(self, None, None, None)
+            BaseContext.__exit__(self, None, None, None)
             raise e
         else:
             # Otherwise delegate to the __exit__ method of base
-            return Context.__exit__(self, exc_type, exc_val, exc_tb)
+            return BaseContext.__exit__(self, exc_type, exc_val, exc_tb)
     
     @classmethod
     def get_db(cls) -> Db:
@@ -378,15 +378,7 @@ class DbContext(BaseContext):
         db_type = ClassInfo.get_class_type(context_settings.db_class)
 
         # If not inside a test
-        if (testing_namespace := TestingContext.get_testing_namespace_or_none()) is not None:
-            # Inside a test use 'temp' followed by context_id converted to semicolon-delimited format for db_id
-            db_id = "temp;" + testing_namespace.replace(".", ";")
-        else:
-            # Outside a test use db_id from settings for context_id unless specified by the caller
-            if context_settings.context_id is not None:
-                db_id = context_settings.context_id
-            else:
-                db_id = Settings.process_timestamp
+        db_id = "temp;" + ProcessContext.get_process_namespace().replace(".", ";")
 
         # Create and return
         result = db_type(db_id=db_id)
