@@ -14,7 +14,6 @@
 
 import pytest
 from typing import List
-from cl.runtime import Context
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.testing.regression_guard import RegressionGuard
