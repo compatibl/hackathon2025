@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.testing.regression_guard import RegressionGuard
 from cl.convince.prompts.formatted_prompt import FormattedPrompt

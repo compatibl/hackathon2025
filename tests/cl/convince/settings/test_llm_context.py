@@ -19,7 +19,6 @@ from concurrent.futures import ThreadPoolExecutor
 from random import Random
 from cl.runtime.context.base_context import BaseContext
 from cl.runtime.context.context import Context
-from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.convince.context.llm_context import LlmContext
 
@@ -64,30 +63,21 @@ def _perform_testing(
     # Task label
     task_label = f"async task {task_index}"
 
-    # Verify current context
+    # Verify that there is no current context
     _verify_no_current_context(where_str=f"before {task_label}")
+    _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
 
-    with TestingContext():
-
+    llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
+    with llm_context_1:
         _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-
-        # Verify current context
-        _verify_no_current_context(where_str=f"before {task_label}")
-
-        llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
-        with llm_context_1:
+        assert LlmContext.current() is llm_context_1
+        llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
+        with llm_context_2:
             _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-            assert LlmContext.current() is llm_context_1
-            llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
-            with llm_context_2:
-                _sleep(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-                assert LlmContext.current() is llm_context_2
-            assert LlmContext.current() is llm_context_1
+            assert LlmContext.current() is llm_context_2
+        assert LlmContext.current() is llm_context_1
 
-        # Verify current context
-        _verify_no_current_context(where_str=f"after {task_label}")
-
-    # Verify current context
+    # Verify that there is no current context
     _verify_no_current_context(where_str=f"after {task_label}")
 
 
@@ -106,29 +96,21 @@ async def _perform_testing_async(
     # Task label
     task_label = f"async task {task_index}"
 
-    # Verify current context
+    # Verify that there is no current context
     _verify_no_current_context(where_str=f"before {task_label}")
+    await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
 
-    with TestingContext():
+    llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
+    with llm_context_1:
         await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-
-        # Verify current context
-        _verify_no_current_context(where_str=f"before {task_label}")
-
-        llm_context_1 = LlmContext(locale=LocaleKey(locale_id="en-US"))
-        with llm_context_1:
+        assert LlmContext.current() is llm_context_1
+        llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
+        with llm_context_2:
             await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-            assert LlmContext.current() is llm_context_1
-            llm_context_2 = LlmContext(locale=LocaleKey(locale_id="en-GB"))
-            with llm_context_2:
-                await _sleep_async(task_index=task_index, rnd=rnd, max_sleep_duration=max_sleep_duration)
-                assert LlmContext.current() is llm_context_2
-            assert LlmContext.current() is llm_context_1
+            assert LlmContext.current() is llm_context_2
+        assert LlmContext.current() is llm_context_1
 
-        # Verify current context
-        _verify_no_current_context(where_str=f"after {task_label}")
-
-    # Verify current context
+    # Verify that there is no current context
     _verify_no_current_context(where_str=f"after {task_label}")
 
 

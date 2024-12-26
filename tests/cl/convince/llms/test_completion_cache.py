@@ -16,7 +16,6 @@ import pytest
 import os
 from typing import List
 from cl.runtime.context.env_util import EnvUtil
-from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.primitive.timestamp import Timestamp
 from cl.convince.llms.completion_cache import CompletionCache
 

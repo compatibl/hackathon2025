@@ -15,7 +15,6 @@
 import pytest
 import datetime as dt
 from random import Random
-from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.primitive.date_util import DateUtil
 from cl.runtime.testing.regression_guard import RegressionGuard
 from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms

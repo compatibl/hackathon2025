@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.context.testing_context import TestingContext
 from cl.convince.llms.gemini.gemini_llm import GeminiLlm
 
 
