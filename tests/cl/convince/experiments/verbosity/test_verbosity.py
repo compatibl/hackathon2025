@@ -16,7 +16,7 @@ import pytest
 from cl.runtime.plots.group_bar_plot import GroupBarPlot
 from cl.runtime.testing.pytest.pytest_fixtures import testing_work_dir
 from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms
-
+from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 
 def _get_question(i: int):
     return f"{i} times {i}"
@@ -34,7 +34,7 @@ def _get_extended_prompt(i: int):
     )
 
 
-def test_verbosity(testing_work_dir):
+def test_verbosity(testing_work_dir, testing_db):
     """Test for verbosity."""
     reps = 2
     plot = GroupBarPlot(plot_id="verbosity")

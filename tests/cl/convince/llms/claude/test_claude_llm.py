@@ -14,9 +14,9 @@
 
 import pytest
 from cl.convince.llms.claude.claude_llm import ClaudeLlm
+from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 
-
-def test_smoke():
+def test_smoke(testing_db):
     """Test ClaudeLlm class."""
     llms = [
         ClaudeLlm(llm_id="claude-3-haiku-20240307"),

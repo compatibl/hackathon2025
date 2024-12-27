@@ -14,9 +14,9 @@
 
 import pytest
 from cl.convince.llms.gpt.gpt_llm import GptLlm
+from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 
-
-def test_smoke():
+def test_smoke(testing_db):
     """Test GptLlm class."""
     llms = [
         GptLlm(llm_id="gpt-4o-mini"),

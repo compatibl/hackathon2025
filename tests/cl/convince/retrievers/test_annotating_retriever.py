@@ -24,6 +24,7 @@ from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llama.llama_llm import LlamaLlm
 from cl.convince.retrievers.annotating_retriever import AnnotatingRetriever
 from stubs.cl.convince.experiments.stub_llms import get_stub_full_llms
+from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 
 ENTRY_TEXT = "Sell 10y SOFR swap at 3.45%"
 PARAM_DESCRIPTION = "Fixed rate."
@@ -57,7 +58,7 @@ def _test_extract(input_text: str, param_description: str, param_samples: List[s
     RegressionGuard().verify_all()
 
 
-def test_zero_shot():
+def test_zero_shot(testing_db):
     """Test without samples."""
     PreloadSettings.instance().save_and_configure(final_record_types=[Locale, GptLlm, LlamaLlm, ClaudeLlm])
     _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)

@@ -14,9 +14,9 @@
 
 import pytest
 from cl.convince.llms.gemini.gemini_llm import GeminiLlm
+from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 
-
-def test_smoke():
+def test_smoke(testing_db):
     """Test GeminiLlm class."""
     llms = [
         GeminiLlm(llm_id="gemini-1.5-flash"),
