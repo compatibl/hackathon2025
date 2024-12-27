@@ -14,7 +14,7 @@
 
 import pytest
 from cl.runtime.plots.group_bar_plot import GroupBarPlot
-from cl.runtime.testing.pytest.pytest_fixtures import local_dir_fixture
+from cl.runtime.testing.pytest.pytest_fixtures import testing_work_dir
 from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms
 
 
@@ -34,7 +34,7 @@ def _get_extended_prompt(i: int):
     )
 
 
-def test_verbosity(local_dir_fixture):
+def test_verbosity(testing_work_dir):
     """Test for verbosity."""
     reps = 2
     plot = GroupBarPlot(plot_id="verbosity")
