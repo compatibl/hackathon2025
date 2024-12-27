@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import pytest
-from cl.convince.llms.claude.claude_llm import ClaudeLlm
 from cl.runtime.testing.pytest.pytest_fixtures import testing_db
+from cl.convince.llms.claude.claude_llm import ClaudeLlm
+
 
 def test_smoke(testing_db):
     """Test ClaudeLlm class."""

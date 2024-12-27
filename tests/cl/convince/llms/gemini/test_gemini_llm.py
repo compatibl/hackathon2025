@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import pytest
-from cl.convince.llms.gemini.gemini_llm import GeminiLlm
 from cl.runtime.testing.pytest.pytest_fixtures import testing_db
+from cl.convince.llms.gemini.gemini_llm import GeminiLlm
+
 
 def test_smoke(testing_db):
     """Test GeminiLlm class."""

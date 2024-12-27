@@ -20,6 +20,7 @@ from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 from cl.runtime.testing.regression_guard import RegressionGuard
 from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms
 
+
 def _test_recall(text: str):
     """Test the specified recall string."""
     prompt = (

@@ -16,6 +16,7 @@ import pytest
 from typing import List
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.settings.preload_settings import PreloadSettings
+from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 from cl.runtime.testing.regression_guard import RegressionGuard
 from cl.convince.context.llm_context import LlmContext
 from cl.convince.entries.entry import Entry
@@ -24,7 +25,6 @@ from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llama.llama_llm import LlamaLlm
 from cl.convince.retrievers.annotating_retriever import AnnotatingRetriever
 from stubs.cl.convince.experiments.stub_llms import get_stub_full_llms
-from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 
 ENTRY_TEXT = "Sell 10y SOFR swap at 3.45%"
 PARAM_DESCRIPTION = "Fixed rate."

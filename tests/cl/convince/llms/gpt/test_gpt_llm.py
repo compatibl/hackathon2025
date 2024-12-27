@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import pytest
-from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.runtime.testing.pytest.pytest_fixtures import testing_db
+from cl.convince.llms.gpt.gpt_llm import GptLlm
+
 
 def test_smoke(testing_db):
     """Test GptLlm class."""

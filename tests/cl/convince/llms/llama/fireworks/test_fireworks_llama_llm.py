@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import pytest
-from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm
 from cl.runtime.testing.pytest.pytest_fixtures import testing_db
+from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm
+
 
 def test_smoke(testing_db):
     """Test FireworksLlamaLlm class."""
