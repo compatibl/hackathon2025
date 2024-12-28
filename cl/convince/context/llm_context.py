@@ -48,8 +48,10 @@ class LlmContext(BaseContext):
     def init(self) -> Self:
         """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
 
-        # Skip init when already the current context
-        if self.current_or_none() is self:
+        # Do not execute this code on deserialized or current context instances
+        #   - If the instance is deserialized, init_all has already been executed before serialization
+        #   - If the instance is current, init_all has already been executed inside __enter__
+        if self.is_deserialized or self.current_or_none() is self:
             return self
 
         # Initialize empty fields in this context instance from the current context instance or settings,
