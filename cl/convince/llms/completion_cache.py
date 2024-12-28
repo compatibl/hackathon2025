@@ -64,7 +64,7 @@ class CompletionCache:
     _completions_loaded: bool = False
     """Flag indicating stored completions were loaded."""
 
-    def __post_init__(self):
+    def __post_init__(self):  # TODO: Refactor to avoid __post_init__
         """
         Load the completions file from disk once on construction. New completions added to this instance
         are written to disk but not reused.

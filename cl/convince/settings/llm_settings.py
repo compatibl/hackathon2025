@@ -23,16 +23,16 @@ from cl.runtime.settings.settings import Settings
 class LlmSettings(Settings):
     """LLM settings in the Convince package."""
 
-    locale: str = missing()
+    locale: str | None = None
     """
     Locale that LLM is instructed to use in BCP 47 language-country format, for example en-US.
     This applies to LLM completions only and has no effect on the UI or the data file format.
     """
 
-    full: str = missing()
+    full: str | None = None
     """String identifier of the full LLM used in the absence of override (ensure the LLM record exists)."""
 
-    mini: str = missing()
+    mini: str | None = None
     """String identifier of the mini LLM used in the absence of override (ensure the LLM record exists)."""
 
     @classmethod
