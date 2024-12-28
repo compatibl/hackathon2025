@@ -23,15 +23,11 @@ from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.convince.context.llm_context import LlmContext
-from cl.convince.entries.entry import Entry
-from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llm import Llm
-from cl.convince.llms.llm_key import LlmKey
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
 from cl.convince.prompts.prompt import Prompt
 from cl.convince.prompts.prompt_key import PromptKey
 from cl.convince.retrievers.multiple_choice_retrieval import MultipleChoiceRetrieval
-from cl.convince.retrievers.retrieval import Retrieval
 from cl.convince.retrievers.retriever import Retriever
 from cl.convince.retrievers.retriever_util import RetrieverUtil
 
@@ -101,8 +97,7 @@ class MultipleChoiceRetriever(Retriever):
     ) -> MultipleChoiceRetrieval:
 
         # Load the full LLM specified by the context
-        llm_context = LlmContext.current()
-        llm = DbContext.load_one(Llm, llm_context.full_llm)
+        llm = DbContext.load_one(Llm, LlmContext.get_full_llm())
 
         # Load the prompt
         prompt = DbContext.load_one(Prompt, self.prompt)
