@@ -60,3 +60,30 @@ class LlmContext(BaseContext):
 
         # Return self to enable method chaining
         return self
+
+    @classmethod
+    def get_locale(cls) -> LocaleKey:
+        """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
+        if (context := cls.current_or_none()) is not None:
+            return context.locale
+        else:
+            settings = LlmSettings.instance()
+            return LocaleKey(locale_id=settings.locale)
+
+    @classmethod
+    def get_full_llm(cls) -> LlmKey:
+        """Default full LLM."""
+        if (context := cls.current_or_none()) is not None:
+            return context.full_llm
+        else:
+            settings = LlmSettings.instance()
+            return LlmKey(llm_id=settings.full)
+
+    @classmethod
+    def get_mini_llm(cls) -> LlmKey:
+        """Default mini LLM."""
+        if (context := cls.current_or_none()) is not None:
+            return context.mini_llm
+        else:
+            settings = LlmSettings.instance()
+            return LlmKey(llm_id=settings.mini)
