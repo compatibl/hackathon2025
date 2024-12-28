@@ -113,7 +113,7 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
         # Create a record of the same type but copy the base class fields except entry_type and verified
         record_type = type(self)
         result = record_type(text=self.text, locale=self.locale, data=self.data)  # noqa
-        result.init()
+        result.init_all()
 
         # Save to replace the current record
         DbContext.save_one(result)
