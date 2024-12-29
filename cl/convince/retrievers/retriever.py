@@ -27,10 +27,7 @@ class Retriever(RetrieverKey, RecordMixin[RetrieverKey], ABC):
     def get_key(self) -> RetrieverKey:
         return RetrieverKey(retriever_id=self.retriever_id)
 
-    def init(self) -> Self:
-        """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
         if self.retriever_id is None:
             self.retriever_id = Timestamp.create()
-
-        # Return self to enable method chaining
-        return self

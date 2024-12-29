@@ -36,7 +36,7 @@ class EntryKey(KeyMixin):
     def get_key_type(cls) -> Type:
         return EntryKey
 
-    def init(self) -> Self:
+    def init(self) -> None:
         # Validate entry_id inside a key but not inside a record where it will be set automatically
         if is_key(self):
             if "(" not in self.entry_id or ")" not in self.entry_id:
@@ -48,6 +48,3 @@ Format 2: digest (type, locale, md5)
 EntryId: {self.entry_id}
 """
                 )
-
-        # Return self to enable method chaining
-        return self

@@ -45,8 +45,8 @@ class LlmContext(Context):
         """
         return "LlmContext"
 
-    def init(self) -> Self:
-        """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
 
         # Initialize empty fields in this context instance from the current context instance or settings,
         # except when self is already the current context
@@ -56,9 +56,6 @@ class LlmContext(Context):
             self.full_llm = self.get_full_llm_or_none()
         if self.mini_llm is None:
             self.mini_llm = self.get_mini_llm_or_none()
-
-        # Return self to enable method chaining
-        return self
 
     @classmethod
     def get_locale(cls) -> LocaleKey:

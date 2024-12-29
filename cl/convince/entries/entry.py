@@ -53,7 +53,7 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
     def get_key(self) -> EntryKey:
         return EntryKey(entry_id=self.entry_id)
 
-    def init(self) -> Self:
+    def init(self) -> None:
         """Generate entry_id from text, locale and data fields."""
 
         # Check text
@@ -81,9 +81,6 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
             ),
             hash_params=(self.data,),
         )
-
-        # Return self to enable method chaining
-        return self
 
     @abstractmethod
     def get_base_type(self) -> Type:

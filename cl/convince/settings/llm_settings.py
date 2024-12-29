@@ -39,11 +39,8 @@ class LlmSettings(Settings):
     def get_prefix(cls) -> str:
         return "convince_llm"
 
-    def init(self) -> Self:
-        """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
 
         # Validate locale format by running init_all for a locale object
         Locale(locale_id=self.locale).init_all()
-
-        # Return self to enable method chaining
-        return self

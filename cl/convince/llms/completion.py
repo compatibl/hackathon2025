@@ -61,7 +61,7 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
         self.completion_id = StringUtil.digest(self.query, text_params=(self.llm.llm_id,))
         return CompletionKey(completion_id=self.completion_id)
 
-    def init(self) -> Self:
+    def init(self) -> None:
         """Generate entry_id from llm_id, trial_id and query fields."""
 
         # Check that the fields required to compute the key are set and assign the primary key fields
@@ -79,6 +79,3 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
             match = re.search(_TRIAL_ID_RE, self.query)
             trial_id = match.group(1) if match else None
             self.trial_id = trial_id
-
-        # Return self to enable method chaining
-        return self

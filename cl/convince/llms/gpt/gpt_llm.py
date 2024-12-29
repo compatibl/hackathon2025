@@ -43,8 +43,8 @@ class GptLlm(Llm):
     _client: ClassVar[OpenAI] = None
     """OpenAI client instance."""
 
-    def init(self) -> Self:
-        """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
         if self.temperature is not None:
             if isinstance(self.temperature, float) or isinstance(self.temperature, int):
                 self.temperature = float(self.temperature)
@@ -58,9 +58,6 @@ class GptLlm(Llm):
                 self.temperature = min(max(self.temperature, 0.0), 1.0)
             else:
                 raise RuntimeError(f"{type(self).__name__} field 'api_base_url' must be None or a number from 0 to 1")
-
-        # Return self to enable method chaining
-        return self
 
     def uncached_completion(self, request_id: str, query: str) -> str:
         """Perform completion without CompletionCache lookup, call completion instead."""

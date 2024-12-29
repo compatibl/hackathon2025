@@ -36,7 +36,7 @@ class BaseEntryKey(KeyMixin, ABC):
         Expert identifier is unique for each final key type, but not across different final key types.
     """
 
-    def init(self) -> Self:
+    def init(self) -> None:
         # Validate entry_id inside a key but not inside a record where it will be set based on other fields
         if is_key(self):
             if "(" not in self.entry_id or ")" not in self.entry_id:
@@ -48,6 +48,3 @@ Format 2: text digest (locale, md5 hash of data)
 EntryId: {self.entry_id}
 """
                 )
-
-        # Return self to enable method chaining
-        return self

@@ -32,7 +32,7 @@ class CompletionKey(KeyMixin):
     def get_key_type(cls) -> Type:
         return CompletionKey
 
-    def init(self) -> Self:
+    def init(self) -> None:
         # Validate entry_id inside a key but not inside a record where it will be set based on other fields
         if is_key(self):
             if "(" not in self.completion_id or ")" not in self.completion_id:
@@ -44,6 +44,3 @@ Format 2: digest (llm, trial_id, md5)
 CompletionId: {self.completion_id}
 """
                 )
-
-        # Return self to enable method chaining
-        return self

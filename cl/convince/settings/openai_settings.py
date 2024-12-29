@@ -33,14 +33,12 @@ class OpenaiSettings(Settings):
         for example 'https://api.fireworks.ai/inference/v1'.
     """
 
-    def init(self) -> Self:
-        """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
         if self.api_key is not None and not isinstance(self.api_key, str):
             raise RuntimeError(f"{type(self).__name__} field 'api_key' must be a string.")
         if self.api_base_url is not None and not isinstance(self.api_base_url, str):
             raise RuntimeError(f"{type(self).__name__} field 'api_base_url' must be None or a string.")
-        # Return self to enable method chaining
-        return self
 
     @classmethod
     def get_prefix(cls) -> str:

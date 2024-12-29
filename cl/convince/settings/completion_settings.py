@@ -32,8 +32,8 @@ class CompletionSettings(Settings):
     def get_prefix(cls) -> str:
         return "convince_completion"
 
-    def init(self) -> Self:
-        """Similar to __init__ but can use fields set after construction, return self to enable method chaining."""
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
 
         if self.load_from_csv is None:
             # Defaults to True on Windows, required on other OS
@@ -55,6 +55,3 @@ class CompletionSettings(Settings):
                     "Setting CL_CONVINCE_COMPLETION_SAVE_TO_CSV is required on non-Windows platforms.\n"
                     "Specify in settings.yaml or as an environment variable."
                 )
-
-        # Return self to enable method chaining
-        return self

@@ -44,7 +44,7 @@ class BaseEntry(BaseEntryKey, ABC):
     verified: bool | None = None
     """Flag indicating the entry is verified."""
 
-    def init(self) -> Self:
+    def init(self) -> None:
         """Generate entry_id from text, locale and data fields."""
 
         # Check text
@@ -65,9 +65,6 @@ class BaseEntry(BaseEntryKey, ABC):
             text_params=(self.locale.locale_id,),
             hash_params=(self.data,),
         )
-
-        # Return self to enable method chaining
-        return self
 
     def get_text(self) -> str:
         """Get the complete text of the entry."""
