@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing_extensions import Self
 from cl.runtime import RecordMixin
 from cl.runtime.primitive.timestamp import Timestamp
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.convince.retrievers.retrieval_key import RetrievalKey
 from cl.convince.retrievers.retriever_key import RetrieverKey
 
@@ -25,7 +25,7 @@ from cl.convince.retrievers.retriever_key import RetrieverKey
 class Retrieval(RetrievalKey, RecordMixin[RetrievalKey]):  # TODO: Derive from Task
     """Records inputs and results of a retrieval."""
 
-    retriever: RetrieverKey = missing()
+    retriever: RetrieverKey = required()
     """Retriever which generated this retrieval."""
 
     trial_id: str | None = None

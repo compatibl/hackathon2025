@@ -23,7 +23,7 @@ from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.entries.base_entry_key import BaseEntryKey
 
@@ -32,10 +32,10 @@ from cl.convince.entries.base_entry_key import BaseEntryKey
 class BaseEntry(BaseEntryKey, ABC):
     """Contains description, body and supporting data of user entry along with the entry processing result."""
 
-    text: str = missing()
+    text: str = required()
     """Description exactly as provided by the user (included in MD5 hash)."""
 
-    locale: LocaleKey = missing()
+    locale: LocaleKey = required()
     """Locale in BCP 47 language-country format, for example en-US (included in MD5 hash)."""
 
     data: str | None = None

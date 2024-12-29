@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing_extensions import Self
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.llms.completion_key import CompletionKey
 from cl.convince.llms.llm_key import LlmKey
@@ -31,16 +31,16 @@ _TRIAL_ID_RE = re.compile(r"TrialID:\s*(\S+)")
 class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
     """Provides an API for single query and chat completion."""
 
-    llm: LlmKey = missing()
+    llm: LlmKey = required()
     """LLM for which the completion is recorded."""
 
-    query: str = missing()
+    query: str = required()
     """Query for which the completion is recorded."""
 
-    completion: str = missing()
+    completion: str = required()
     """Completion returned by the LLM."""
 
-    timestamp: str = missing()
+    timestamp: str = required()
     """
     Globally unique UUIDv7 (RFC-9562) timestamp in time-ordered dash-delimited string format with additional
     strict time ordering guarantees within the same process, thread and context.

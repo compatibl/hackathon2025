@@ -15,7 +15,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing_extensions import Self
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.convince.content.content import Content
 
 
@@ -23,7 +23,7 @@ from cl.convince.content.content import Content
 class JsonContent(Content):
     """Single-page content in text format."""
 
-    json_bytes: bytes = missing()
+    json_bytes: bytes = required()
     """JSON document as bytes without escaping Unicode characters."""
 
     @abstractmethod

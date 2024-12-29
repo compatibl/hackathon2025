@@ -14,7 +14,7 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
@@ -22,5 +22,5 @@ from cl.runtime.records.key_mixin import KeyMixin
 class ExpertKey(KeyMixin, ABC):
     """Base class for the algorithms that perform entry comprehension."""
 
-    expert_id: str = missing()
+    expert_id: str = required()
     """Expert identifier is unique for each final key type, but not across different final key types."""

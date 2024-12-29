@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.convince.prompts.prompt import Prompt
 
 
@@ -21,5 +21,5 @@ from cl.convince.prompts.prompt import Prompt
 class TextPrompt(Prompt):
     """Text prompt with no parameter substitution."""
 
-    text: str = missing()
+    text: str = required()
     """Text of the prompt."""

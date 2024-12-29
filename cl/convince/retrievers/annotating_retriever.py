@@ -21,7 +21,7 @@ from cl.runtime.contexts.trial_context import TrialContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.llms.llm import Llm
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
@@ -59,10 +59,10 @@ Parameter description: ```{ParamDescription}```
 class AnnotatingRetriever(Retriever):
     """Instructs the model to surround the requested parameter by curly braces and uses the annotations to retrieve."""
 
-    prompt: PromptKey = missing()
+    prompt: PromptKey = required()
     """Prompt used to perform the retrieval."""
 
-    max_retries: int = missing()
+    max_retries: int = required()
     """How many times to retry the annotation in case changes other than braces are detected."""
 
     def init(self) -> Self:

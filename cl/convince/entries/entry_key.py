@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Type
 from typing_extensions import Self
 from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import is_key
 
@@ -29,7 +29,7 @@ _MD5_HEX_RE = re.compile(r"^[0-9a-f]+$")
 class EntryKey(KeyMixin):
     """Contains description, body and supporting data of user entry along with the entry processing result."""
 
-    entry_id: str = missing()
+    entry_id: str = required()
     """Based on record type, description and MD5 hash of body and data if present."""
 
     @classmethod

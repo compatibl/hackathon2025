@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing_extensions import Self
 from cl.runtime.contexts.context import Context
 from cl.runtime.parsers.locale_key import LocaleKey
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.convince.llms.llm_key import LlmKey
 from cl.convince.settings.llm_settings import LlmSettings
 
@@ -25,13 +25,13 @@ from cl.convince.settings.llm_settings import LlmSettings
 class LlmContext(Context):
     """LLM defaults."""
 
-    locale: LocaleKey = missing()
+    locale: LocaleKey = required()
     """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
 
-    full_llm: LlmKey = missing()
+    full_llm: LlmKey = required()
     """Default full LLM."""
 
-    mini_llm: LlmKey = missing()
+    mini_llm: LlmKey = required()
     """Default mini LLM."""
 
     @classmethod

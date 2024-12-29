@@ -15,7 +15,7 @@
 from abc import ABC
 from dataclasses import dataclass
 from cl.runtime.experiments.binary_experiment import BinaryExperiment
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.convince.llms.llm_key import LlmKey
 
 
@@ -23,11 +23,11 @@ from cl.convince.llms.llm_key import LlmKey
 class LlmCompletionExperiment(BinaryExperiment, ABC):
     """A binary LLM experiment where pass means returning the expected completion."""
 
-    llm: LlmKey = missing()
+    llm: LlmKey = required()
     """LLM used to perform the experiment."""
 
-    query: str = missing()
+    query: str = required()
     """Query passed to the LLM."""
 
-    expected_completion: str = missing()
+    expected_completion: str = required()
     """Expected completion (the comparison ignores case and whitespace)."""

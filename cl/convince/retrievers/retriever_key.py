@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
@@ -22,7 +22,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 class RetrieverKey(KeyMixin):
     """Retrieves the requested data from the text."""
 
-    retriever_id: str = missing()
+    retriever_id: str = required()
     """Unique retriever identifier defaults to Timestamp if not specified."""
 
     @classmethod

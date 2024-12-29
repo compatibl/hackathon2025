@@ -24,7 +24,7 @@ from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.entries.entry_key import EntryKey
@@ -35,13 +35,13 @@ from cl.convince.settings.llm_settings import LlmSettings
 class Entry(EntryKey, RecordMixin[EntryKey], ABC):
     """Contains description, body and supporting data of user entry along with the entry processing result."""
 
-    entry_type: str = missing()
+    entry_type: str = required()
     """Entry type string is set in 'init' method of a descendant of this class."""
 
-    text: str = missing()
+    text: str = required()
     """Description exactly as provided by the user (included in MD5 hash)."""
 
-    locale: LocaleKey = missing()
+    locale: LocaleKey = required()
     """Locale in BCP 47 ll-CC where ll is language and CC is country (included in MD5 hash)."""
 
     data: str | None = None

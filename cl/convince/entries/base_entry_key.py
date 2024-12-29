@@ -16,7 +16,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing_extensions import Self
 from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import is_key
 
@@ -25,7 +25,7 @@ from cl.runtime.records.protocols import is_key
 class BaseEntryKey(KeyMixin, ABC):
     """Contains description, body and supporting data of user entry along with the entry processing result."""
 
-    entry_id: str = missing()
+    entry_id: str = required()
     """
     Entry identifier consists of the text digest, locale and MD5 hash of data if present:
     

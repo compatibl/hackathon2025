@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from typing import List
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.dataclasses_extensions import required
 from cl.convince.retrievers.retrieval import Retrieval
 
 
@@ -22,13 +22,13 @@ from cl.convince.retrievers.retrieval import Retrieval
 class MultipleChoiceRetrieval(Retrieval):
     """Retrieval type returned by AnnotatingRetriever."""
 
-    input_text: str = missing()
+    input_text: str = required()
     """Text from which the parameter is retrieved (input)."""
 
-    param_description: str = missing()
+    param_description: str = required()
     """Description of the retrieved parameter (input)."""
 
-    valid_choices: List[str] = missing()
+    valid_choices: List[str] = required()
     """Valid choices for the retrieved parameter (input)."""
 
     success: str | None = None
