@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pytest
-from cl.convince.context.llm_context import LlmContext
+from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.settings.llm_settings import LlmSettings
 
 

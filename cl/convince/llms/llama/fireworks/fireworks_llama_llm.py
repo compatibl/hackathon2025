@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 import fireworks.client  # noqa
-from cl.runtime.context.context_util import UserContextUtil
+from cl.runtime.contexts.context_util import UserContextUtil
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.convince.llms.llama.llama_llm import LlamaLlm
 from cl.convince.settings.fireworks_settings import FireworksSettings

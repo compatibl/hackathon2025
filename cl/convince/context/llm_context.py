@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from typing_extensions import Self
-from cl.runtime.context.base_context import BaseContext
+from cl.runtime.contexts.context import Context
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.records.dataclasses_extensions import missing
 from cl.convince.llms.llm_key import LlmKey
@@ -22,7 +22,7 @@ from cl.convince.settings.llm_settings import LlmSettings
 
 
 @dataclass(slots=True, kw_only=True)
-class LlmContext(BaseContext):
+class LlmContext(Context):
     """LLM defaults."""
 
     locale: LocaleKey = missing()

@@ -15,7 +15,7 @@
 import collections
 import os
 from typing import Iterable
-from cl.runtime.context.trial_context import TrialContext
+from cl.runtime.contexts.trial_context import TrialContext
 
 
 class CompletionUtil:

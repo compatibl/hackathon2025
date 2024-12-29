@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 import google.generativeai as gemini  # noqa
-from cl.runtime.context.context_util import UserContextUtil
+from cl.runtime.contexts.context_util import UserContextUtil
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.convince.llms.llm import Llm
 from cl.convince.settings.google_settings import GoogleSettings
