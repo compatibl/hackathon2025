@@ -61,6 +61,14 @@ class LlmContext(BaseContext):
         return self
 
     @classmethod
+    def get_locale(cls) -> LocaleKey:
+        """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
+        if (result := cls.get_locale_or_none()) is not None:
+            return result
+        else:
+            raise RuntimeError("LLM locale is not specified in LLmContext or LlmSettings.")
+
+    @classmethod
     def get_locale_or_none(cls) -> LocaleKey | None:
         """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
         if (context := cls.current_or_none()) is not None and context.locale is not None:
@@ -72,14 +80,15 @@ class LlmContext(BaseContext):
         else:
             # If neither is defined, return None
             return None
-
+        
     @classmethod
-    def get_locale(cls) -> LocaleKey:
-        """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
-        if (result := cls.get_locale_or_none()) is not None:
+    def get_full_llm(cls) -> LlmKey:
+        """Default full LLM."""
+        if (result := cls.get_full_llm_or_none()) is not None:
             return result
         else:
-            raise RuntimeError("LLM locale is not specified in LLmContext or LlmSettings.")
+            # If neither is defined, error message
+            raise RuntimeError("Full LLM is not specified in LLmContext or LlmSettings.")
 
     @classmethod
     def get_full_llm_or_none(cls) -> LlmKey | None:
@@ -95,13 +104,13 @@ class LlmContext(BaseContext):
             return None
         
     @classmethod
-    def get_full_llm(cls) -> LlmKey:
-        """Default full LLM."""
-        if (result := cls.get_full_llm_or_none()) is not None:
+    def get_mini_llm(cls) -> LlmKey:
+        """Default mini LLM."""
+        if (result := cls.get_mini_llm_or_none()) is not None:
             return result
         else:
             # If neither is defined, error message
-            raise RuntimeError("Full LLM is not specified in LLmContext or LlmSettings.")
+            raise RuntimeError("Mini LLM is not specified in LLmContext or LlmSettings.")
 
     @classmethod
     def get_mini_llm_or_none(cls) -> LlmKey | None:
@@ -115,12 +124,3 @@ class LlmContext(BaseContext):
         else:
             # If neither is defined, return None
             return None
-        
-    @classmethod
-    def get_mini_llm(cls) -> LlmKey:
-        """Default mini LLM."""
-        if (result := cls.get_mini_llm_or_none()) is not None:
-            return result
-        else:
-            # If neither is defined, error message
-            raise RuntimeError("Mini LLM is not specified in LLmContext or LlmSettings.")
