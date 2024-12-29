@@ -25,7 +25,7 @@ _MD5_HEX_RE = re.compile(r"^[0-9a-f]+$")
 """Regex for MD5 hex."""
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True)
 class EntryKey(KeyMixin):
     """Contains description, body and supporting data of user entry along with the entry processing result."""
 

@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import is_key
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True)
 class BaseEntryKey(KeyMixin, ABC):
     """Contains description, body and supporting data of user entry along with the entry processing result."""
 

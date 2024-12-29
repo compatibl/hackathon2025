@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import is_key
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True)
 class CompletionKey(KeyMixin):
     """Record of a previous LLM completion used to avoid making repeated LLM calls for the same query and trial."""
 
