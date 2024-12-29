@@ -139,7 +139,7 @@ class AnnotatingRetriever(Retriever):
                         raise UserError(retrieval.justification)
 
                     # Return None if not found
-                    success = BoolUtil.parse_required_bool(retrieval.success, field_name="success")
+                    success = BoolUtil.parse(retrieval.success, name="success")
                     if not success:
                         # Parameter is not found
                         if is_required:

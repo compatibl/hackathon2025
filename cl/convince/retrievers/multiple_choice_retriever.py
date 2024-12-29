@@ -152,7 +152,7 @@ class MultipleChoiceRetriever(Retriever):
                         retrieval.param_value = retrieval.param_value.strip()
 
                     # Self-reported success or failure
-                    success = BoolUtil.parse_required_bool(retrieval.success, field_name="success")
+                    success = BoolUtil.parse(retrieval.success, name="success")
                     if not success:
                         # Parameter is not found, continue with the next trial
                         continue

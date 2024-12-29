@@ -57,7 +57,7 @@ class BaseEntry(BaseEntryKey, ABC):
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):
-            self.verified = BoolUtil.parse_optional_bool(self.verified, field_name="verified")
+            self.verified = BoolUtil.parse_or_none(self.verified, name="verified")
 
         # Generate digest if multiline or more than 80 characters
         self.entry_id = StringUtil.digest(

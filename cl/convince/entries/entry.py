@@ -66,7 +66,7 @@ class Entry(EntryKey, RecordMixin[EntryKey], ABC):
 
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):
-            self.verified = BoolUtil.parse_optional_bool(self.verified, field_name="verified")
+            self.verified = BoolUtil.parse_or_none(self.verified, name="verified")
 
         # Base type resolves the ambiguity of different entry types with the same text
         base_type = self.get_base_type()
