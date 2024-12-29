@@ -30,8 +30,8 @@ class CompletionUtil:
 
         # Get combined trial_id from all previous 'with TrialContext(...)' clauses
         # and add it to the beginning of formatted query
-        if (trial := TrialContext.get_trial_or_none()) is not None:
-            result = f"TrialID: {trial.trial_id}\n{result}"
+        if (trial_id := TrialContext.get_trial_or_none()) is not None:
+            result = f"TrialID: {trial_id}\n{result}"
 
         # Normalize EOL
         result = cls.to_python_eol(result)
