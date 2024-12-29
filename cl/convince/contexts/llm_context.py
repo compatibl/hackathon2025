@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing_extensions import Self
 from cl.runtime.contexts.context import Context
 from cl.runtime.parsers.locale_key import LocaleKey
-from cl.runtime.records.dataclasses_extensions import required
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.llms.llm_key import LlmKey
 from cl.convince.settings.llm_settings import LlmSettings
 

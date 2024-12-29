@@ -15,7 +15,7 @@
 from abc import ABC
 from dataclasses import dataclass
 from cl.runtime.experiments.binary_experiment import BinaryExperiment
-from cl.runtime.records.dataclasses_extensions import required
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.llms.llm_key import LlmKey
 
 

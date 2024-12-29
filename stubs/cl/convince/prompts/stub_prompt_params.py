@@ -15,7 +15,7 @@
 from dataclasses import dataclass
 from typing import List
 from cl.runtime import RecordMixin
-from cl.runtime.records.dataclasses_extensions import required
+from cl.runtime.records.for_dataclasses.extensions import required
 from stubs.cl.convince.prompts.stub_prompt_params_key import StubPromptParamsKey
 
 

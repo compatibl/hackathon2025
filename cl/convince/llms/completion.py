@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing_extensions import Self
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.dataclasses_extensions import required
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.llms.completion_key import CompletionKey
 from cl.convince.llms.llm_key import LlmKey

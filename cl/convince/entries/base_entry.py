@@ -23,7 +23,7 @@ from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.dataclasses_extensions import required
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.entries.base_entry_key import BaseEntryKey
 

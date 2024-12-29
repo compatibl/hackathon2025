@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing_extensions import Self
 from cl.runtime import RecordMixin
 from cl.runtime.primitive.timestamp import Timestamp
-from cl.runtime.records.dataclasses_extensions import required
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.retrievers.retrieval_key import RetrievalKey
 from cl.convince.retrievers.retriever_key import RetrieverKey
 

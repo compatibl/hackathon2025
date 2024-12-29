@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from typing import List
-from cl.runtime.records.dataclasses_extensions import required
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.retrievers.multiple_choice_retrieval import Retrieval
 
 

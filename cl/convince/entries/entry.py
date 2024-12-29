@@ -24,7 +24,7 @@ from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.dataclasses_extensions import required
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.entries.entry_key import EntryKey
