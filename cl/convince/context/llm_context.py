@@ -72,7 +72,7 @@ class LlmContext(BaseContext):
     def get_locale_or_none(cls) -> LocaleKey | None:
         """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
         if (context := cls.current_or_none()) is not None and context.locale is not None:
-            # Use the value from context if not None
+            # Use the value from the current context if not None
             return context.locale
         elif (settings := LlmSettings.instance()).locale is not None:
             # Otherwise use the value from settings if not None
@@ -94,7 +94,7 @@ class LlmContext(BaseContext):
     def get_full_llm_or_none(cls) -> LlmKey | None:
         """Default full LLM."""
         if (context := cls.current_or_none()) is not None and context.full_llm is not None:
-            # Use the value from context if not None
+            # Use the value from the current context if not None
             return context.full_llm
         elif (settings := LlmSettings.instance()).full is not None:
             # Otherwise use the value from settings if not None
@@ -116,7 +116,7 @@ class LlmContext(BaseContext):
     def get_mini_llm_or_none(cls) -> LlmKey | None:
         """Default mini LLM."""
         if (context := cls.current_or_none()) is not None and context.mini_llm is not None:
-            # Use the value from context if not None
+            # Use the value from the current context if not None
             return context.mini_llm
         elif (settings := LlmSettings.instance()).mini is not None:
             # Otherwise use the value from settings if not None
