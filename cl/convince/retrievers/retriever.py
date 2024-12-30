@@ -29,9 +29,6 @@ class Retriever(RetrieverKey, RecordMixin[RetrieverKey], ABC):
 
     def init(self) -> None:
         """Similar to __init__ but can use fields set after construction."""
-
-        def init(self) -> None:
-            """Similar to __init__ but can use fields set after construction."""
+        if self.retriever_id is None:
             # Use timestamp for temporary objects where identifier is not specified
-            if self.retriever_id is None:
-                self.retriever_id = Timestamp.create()
+            self.retriever_id = Timestamp.create()

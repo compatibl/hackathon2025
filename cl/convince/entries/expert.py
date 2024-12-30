@@ -24,6 +24,6 @@ class Expert(ExpertKey, ABC):
 
     def init(self) -> None:
         """Similar to __init__ but can use fields set after construction."""
-        # Use timestamp for temporary objects where identifier is not specified
         if self.expert_id is None:
+            # Use timestamp for temporary objects where identifier is not specified
             self.expert_id = Timestamp.create()
