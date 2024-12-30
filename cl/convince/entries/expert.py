@@ -15,8 +15,15 @@
 from abc import ABC
 from dataclasses import dataclass
 from cl.convince.entries.expert_key import ExpertKey
+from cl.runtime.primitive.timestamp import Timestamp
 
 
 @dataclass(slots=True, kw_only=True)
 class Expert(ExpertKey, ABC):
     """Base class for the algorithms that perform entry comprehension."""
+
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
+        # Use timestamp for temporary objects where identifier is not specified
+        if self.expert_id is None:
+            self.expert_id = Timestamp.create()
