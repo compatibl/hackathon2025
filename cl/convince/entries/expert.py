@@ -27,3 +27,4 @@ class Expert(ExpertKey, ABC):
         if self.expert_id is None:
             # Use timestamp for temporary objects where identifier is not specified
             self.expert_id = Timestamp.create()
+

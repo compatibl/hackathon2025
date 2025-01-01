@@ -30,25 +30,24 @@ def test_create_key():
 
     # Fields
     locale = LocaleKey(locale_id="en-GB")
-    expert = CcyExpertKey(expert_id="Sample Expert")
 
     # Check with type and description only
-    entry = CcyEntry(text="Sample Text", locale=locale, expert=expert)
+    entry = CcyEntry(text="Sample Text", locale=locale)
     entry.init_all()
     guard.write(entry.entry_id)
 
     # Check with body
-    entry = CcyEntry(text=" ".join(20 * ["Long Text"]), locale=locale, expert=expert)
+    entry = CcyEntry(text=" ".join(20 * ["Long Text"]), locale=locale)
     entry.init_all()
     guard.write(entry.entry_id)
 
     # Check with data
-    entry = CcyEntry(text="Multiline\nText", locale=locale, expert=expert)
+    entry = CcyEntry(text="Multiline\nText", locale=locale)
     entry.init_all()
     guard.write(entry.entry_id)
 
     # Check with both
-    entry = CcyEntry(text="Sample Text", locale=locale, expert=expert, data="Sample Data")
+    entry = CcyEntry(text="Sample Text", locale=locale, data="Sample Data")
     entry.init_all()
     guard.write(entry.entry_id)
 
