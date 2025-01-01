@@ -166,7 +166,7 @@ class CompletionCache:
         completion_key = Completion(llm=LlmKey(llm_id=self.channel), query=query).get_key()
 
         # Return completion string from DB or None if the record is not found
-        completion = DbContext.load_one(Completion, completion_key, is_record_optional=True)
+        completion = DbContext.load_one_or_none(Completion, completion_key)
         result = completion.completion if completion is not None else None
         return result
 
