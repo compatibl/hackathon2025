@@ -26,6 +26,7 @@ from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.entries.base_entry_key import BaseEntryKey
+from cl.runtime.records.type_util import TypeUtil
 
 
 @dataclass(slots=True, kw_only=True)
@@ -49,7 +50,7 @@ class BaseEntry(BaseEntryKey, ABC):
 
         # Check text
         if StringUtil.is_empty(self.text):
-            raise UserError(f"Empty 'text' field in {type(self).__name__}.")
+            raise UserError(f"Empty 'text' field in {TypeUtil.name(self)}.")
 
         # If locale is None, get it from LlmContext
         if self.locale is None:
@@ -77,7 +78,7 @@ class BaseEntry(BaseEntryKey, ABC):
     # TODO: Restore abstract when implemented for all entries
     def run_generate(self) -> None:
         """Generate or regenerate the proposed value."""
-        raise UserError(f"Propose handler is not yet implemented for {type(self).__name__}.")
+        raise UserError(f"Propose handler is not yet implemented for {TypeUtil.name(self)}.")
 
     def run_reset(self) -> None:
         """Clear all output fields and the verification flag."""

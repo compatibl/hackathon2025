@@ -14,6 +14,8 @@
 
 from dataclasses import dataclass
 from typing_extensions import Self
+
+from cl.runtime.records.type_util import TypeUtil
 from cl.runtime.settings.settings import Settings
 
 
@@ -27,7 +29,7 @@ class AnthropicSettings(Settings):
     def init(self) -> None:
         """Similar to __init__ but can use fields set after construction."""
         if self.api_key is not None and not isinstance(self.api_key, str):
-            raise RuntimeError(f"{type(self).__name__} field 'api_key' must be a string.")
+            raise RuntimeError(f"{TypeUtil.name(self)} field 'api_key' must be a string.")
 
     @classmethod
     def get_prefix(cls) -> str:

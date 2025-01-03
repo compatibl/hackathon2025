@@ -22,6 +22,7 @@ from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.llms.completion_key import CompletionKey
 from cl.convince.llms.llm_key import LlmKey
+from cl.runtime.records.type_util import TypeUtil
 
 _TRIAL_ID_RE = re.compile(r"TrialID:\s*(\S+)")
 """Regex for TrialID."""
@@ -52,9 +53,9 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
     def get_key(self) -> CompletionKey:
         # Check that the fields required to compute the key are set
         if self.llm is None:
-            raise UserError(f"Empty 'llm' field in {type(self).__name__}.")
+            raise UserError(f"Empty 'llm' field in {TypeUtil.name(self)}.")
         if StringUtil.is_empty(self.query):
-            raise UserError(f"Empty 'query' field in {type(self).__name__}.")
+            raise UserError(f"Empty 'query' field in {TypeUtil.name(self)}.")
 
         # Create a unique identifier using StringUtil.digest, this will
         # add MD5 hash if multiline or more than 80 characters
@@ -69,9 +70,9 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
 
         # Check that the remaining required fields are set
         if StringUtil.is_empty(self.completion):
-            raise UserError(f"Empty 'completion' field in {type(self).__name__}.")
+            raise UserError(f"Empty 'completion' field in {TypeUtil.name(self)}.")
         if StringUtil.is_empty(self.timestamp):
-            raise UserError(f"Empty 'timestamp' field in {type(self).__name__}.")
+            raise UserError(f"Empty 'timestamp' field in {TypeUtil.name(self)}.")
 
         # Extract TrialID from the query if present
         # TODO: Review if it is preferable to add it to the query here instead

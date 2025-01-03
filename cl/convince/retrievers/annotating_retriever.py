@@ -31,6 +31,7 @@ from cl.convince.retrievers.annotating_retrieval import AnnotatingRetrieval
 from cl.convince.retrievers.retrieval import Retrieval
 from cl.convince.retrievers.retriever import Retriever
 from cl.convince.retrievers.retriever_util import RetrieverUtil
+from cl.runtime.records.type_util import TypeUtil
 
 _TRIPLE_BACKTICKS_RE = re.compile(r"```(.*?)```", re.DOTALL)
 """Regex for text between triple backticks."""
@@ -70,7 +71,7 @@ class AnnotatingRetriever(Retriever):
         if self.prompt is None:
             self.prompt = FormattedPrompt(
                 prompt_id="AnnotatingRetriever",
-                params_type=Retrieval.__name__,
+                params_type=TypeUtil.name(Retrieval),
                 template=_TEMPLATE,
             )  # TODO: Review the handling of defaults
 

@@ -30,6 +30,7 @@ from cl.convince.prompts.prompt_key import PromptKey
 from cl.convince.retrievers.multiple_choice_retrieval import MultipleChoiceRetrieval
 from cl.convince.retrievers.retriever import Retriever
 from cl.convince.retrievers.retriever_util import RetrieverUtil
+from cl.runtime.records.type_util import TypeUtil
 
 _TRIPLE_BACKTICKS_RE = re.compile(r"```(.*?)```", re.DOTALL)
 """Regex for text between triple backticks."""
@@ -77,7 +78,7 @@ class MultipleChoiceRetriever(Retriever):
         if self.prompt is None:
             self.prompt = FormattedPrompt(
                 prompt_id="MultipleChoiceRetriever",
-                params_type=MultipleChoiceRetrieval.__name__,  # TODO: More detailed error message for mismatch
+                params_type=TypeUtil.name(MultipleChoiceRetrieval),  # TODO: More detailed error message for mismatch
                 template=_TEMPLATE,
             )  # TODO: Review the handling of defaults
 
