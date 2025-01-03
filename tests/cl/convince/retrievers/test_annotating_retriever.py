@@ -19,7 +19,6 @@ from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.testing.pytest.pytest_fixtures import testing_db
 from cl.runtime.testing.regression_guard import RegressionGuard
 from cl.convince.contexts.llm_context import LlmContext
-from cl.convince.entries.entry import Entry
 from cl.convince.llms.claude.claude_llm import ClaudeLlm
 from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llama.llama_llm import LlamaLlm

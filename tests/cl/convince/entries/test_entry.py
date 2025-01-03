@@ -13,18 +13,15 @@
 # limitations under the License.
 
 import pytest
-from cl.tradeentry.entries.ccy_entry import CcyEntry
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.testing.regression_guard import RegressionGuard
-from cl.convince.entries.entry_key import EntryKey
-from cl.tradeentry.entries.ccy_expert import CcyExpert
-from cl.tradeentry.entries.ccy_expert_key import CcyExpertKey
-from cl.tradeentry.entries.multiple_choice_ccy_expert import MultipleChoiceCcyExpert
+from stubs.cl.convince.entries.stub_entry import StubEntry
+from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
 
 
-def test_create_key():
-    """Test EntryKey.create_key method."""
+def test_init():
+    """Test StubEntryKey.create_key method."""
 
     guard = RegressionGuard()
 
@@ -32,22 +29,22 @@ def test_create_key():
     locale = LocaleKey(locale_id="en-GB")
 
     # Check with type and description only
-    entry = CcyEntry(text="Sample Text", locale=locale)
+    entry = StubEntry(text="Sample Text", locale=locale)
     entry.init_all()
     guard.write(entry.entry_id)
 
     # Check with body
-    entry = CcyEntry(text=" ".join(20 * ["Long Text"]), locale=locale)
+    entry = StubEntry(text=" ".join(20 * ["Long Text"]), locale=locale)
     entry.init_all()
     guard.write(entry.entry_id)
 
     # Check with data
-    entry = CcyEntry(text="Multiline\nText", locale=locale)
+    entry = StubEntry(text="Multiline\nText", locale=locale)
     entry.init_all()
     guard.write(entry.entry_id)
 
     # Check with both
-    entry = CcyEntry(text="Sample Text", locale=locale, data="Sample Data")
+    entry = StubEntry(text="Sample Text", locale=locale, data="Sample Data")
     entry.init_all()
     guard.write(entry.entry_id)
 
@@ -56,21 +53,21 @@ def test_create_key():
 
 
 def test_check_entry_id():
-    """Test EntryKey.check_entry_id method."""
+    """Test StubEntryKey.check_entry_id method."""
 
     # Valid without hash
-    EntryKey(entry_id="text (type, en-US)").init_all()
+    StubEntryKey(entry_id="text (type, en-US)").init_all()
 
     # Valid with hash
-    EntryKey(entry_id="text (type, en-US, 00000000000000000000000000000000)").init_all()
+    StubEntryKey(entry_id="text (type, en-US, 00000000000000000000000000000000)").init_all()
 
     # Not valid
     with pytest.raises(UserError):
-        EntryKey(entry_id="text").init_all()
+        StubEntryKey(entry_id="text").init_all()
     with pytest.raises(UserError):
-        EntryKey(entry_id="text(").init_all()
+        StubEntryKey(entry_id="text(").init_all()
     with pytest.raises(UserError):
-        EntryKey(entry_id="text)").init_all()
+        StubEntryKey(entry_id="text)").init_all()
 
 
 if __name__ == "__main__":

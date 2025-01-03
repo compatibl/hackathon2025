@@ -14,17 +14,13 @@
 
 from dataclasses import dataclass
 from typing import Type
-from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.key_mixin import KeyMixin
+from cl.convince.entries.base_entry_key import BaseEntryKey
 
 
 @dataclass(slots=True)
-class EntryTypeKey(KeyMixin):
-    """Unique entry type is assigned to each purpose of user input."""
-
-    entry_type_id: str = required()
-    """Unique entry type identifier."""
+class StubEntryKey(BaseEntryKey):
+    """Contains text, locale and supporting data of user entry along with the entry processing result."""
 
     @classmethod
     def get_key_type(cls) -> Type:
-        return EntryTypeKey
+        return StubEntryKey
