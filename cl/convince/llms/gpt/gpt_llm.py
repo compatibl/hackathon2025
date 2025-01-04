@@ -19,9 +19,9 @@ from typing_extensions import Self
 from cl.runtime.contexts.context_util import UserContextUtil
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.float_util import FloatUtil
+from cl.runtime.records.type_util import TypeUtil
 from cl.convince.llms.llm import Llm
 from cl.convince.settings.openai_settings import OpenaiSettings
-from cl.runtime.records.type_util import TypeUtil
 
 
 @dataclass(slots=True, kw_only=True)

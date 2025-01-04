@@ -22,6 +22,7 @@ from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.type_util import TypeUtil
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.llms.llm import Llm
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
@@ -31,7 +32,6 @@ from cl.convince.retrievers.annotating_retrieval import AnnotatingRetrieval
 from cl.convince.retrievers.retrieval import Retrieval
 from cl.convince.retrievers.retriever import Retriever
 from cl.convince.retrievers.retriever_util import RetrieverUtil
-from cl.runtime.records.type_util import TypeUtil
 
 _TRIPLE_BACKTICKS_RE = re.compile(r"```(.*?)```", re.DOTALL)
 """Regex for text between triple backticks."""

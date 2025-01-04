@@ -77,7 +77,7 @@ class LlmContext(Context):
         else:
             # If neither is defined, return None
             return None
-        
+
     @classmethod
     def get_full_llm(cls) -> LlmKey:
         """Default full LLM."""
@@ -99,7 +99,7 @@ class LlmContext(Context):
         else:
             # If neither is defined, return None
             return None
-        
+
     @classmethod
     def get_mini_llm(cls) -> LlmKey:
         """Default mini LLM."""

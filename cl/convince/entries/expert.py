@@ -14,8 +14,8 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from cl.convince.entries.expert_key import ExpertKey
 from cl.runtime.primitive.timestamp import Timestamp
+from cl.convince.entries.expert_key import ExpertKey
 
 
 @dataclass(slots=True, kw_only=True)
@@ -27,4 +27,3 @@ class Expert(ExpertKey, ABC):
         if self.expert_id is None:
             # Use timestamp for temporary objects where identifier is not specified
             self.expert_id = Timestamp.create()
-

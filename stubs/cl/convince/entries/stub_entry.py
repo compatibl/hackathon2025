@@ -13,15 +13,14 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.contexts.db_context import DbContext
-from cl.runtime.records.for_dataclasses.extensions import required
-from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
-
-from typing import Type
 from typing import TYPE_CHECKING
+from typing import Type
 from cl.runtime import RecordMixin
-from cl.convince.entries.base_entry import BaseEntry
+from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.records.empty_mixin import EmptyMixin
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.convince.entries.base_entry import BaseEntry
+from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
 
 _FINAL_KEY = StubEntryKey if TYPE_CHECKING else EmptyMixin
 """Add final key type as an additional base only when type checking to avoid multiple inheritance of dataclasses."""

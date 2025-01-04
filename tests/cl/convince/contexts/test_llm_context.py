@@ -25,5 +25,6 @@ def test_llm_context():
     assert LlmContext.get_full_llm().llm_id == settings.full
     assert LlmContext.get_mini_llm().llm_id == settings.mini
 
+
 if __name__ == "__main__":
     pytest.main([__file__])
