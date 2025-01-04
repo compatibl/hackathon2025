@@ -16,7 +16,7 @@ import pytest
 import datetime as dt
 from random import Random
 from cl.runtime.primitive.date_util import DateUtil
-from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db
+from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db  # noqa
 from cl.runtime.testing.regression_guard import RegressionGuard
 from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms
 
