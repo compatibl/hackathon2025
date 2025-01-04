@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing_extensions import Self
 from cl.runtime.parsers.locale import Locale
-from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.settings.settings import Settings
 
 

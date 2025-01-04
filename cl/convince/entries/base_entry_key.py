@@ -14,7 +14,6 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from typing_extensions import Self
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin

@@ -18,7 +18,6 @@ from typing import Type
 from cl.runtime import RecordMixin
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.records.empty_mixin import EmptyMixin
-from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.entries.base_entry import BaseEntry
 from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
 

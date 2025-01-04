@@ -15,7 +15,6 @@
 import re
 from dataclasses import dataclass
 from typing import List
-from typing_extensions import Self
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.contexts.trial_context import TrialContext
 from cl.runtime.log.exceptions.user_error import UserError
