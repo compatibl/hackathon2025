@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.testing.pytest.pytest_fixtures import testing_db
+from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db
 from cl.convince.llms.gemini.gemini_llm import GeminiLlm
 
 
-def test_smoke(testing_db):
+def test_smoke(pytest_default_db):
     """Test GeminiLlm class."""
     llms = [
         GeminiLlm(llm_id="gemini-1.5-flash"),

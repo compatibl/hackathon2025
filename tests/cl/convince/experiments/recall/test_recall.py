@@ -16,7 +16,7 @@ import pytest
 import datetime as dt
 from random import Random
 from cl.runtime.primitive.date_util import DateUtil
-from cl.runtime.testing.pytest.pytest_fixtures import testing_db
+from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db
 from cl.runtime.testing.regression_guard import RegressionGuard
 from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms
 
@@ -40,17 +40,17 @@ def _test_recall(text: str):
     guard.verify_all()
 
 
-def test_well_known_phrase(testing_db):
+def test_well_known_phrase(pytest_default_db):
     """Test a well-known recall string."""
     _test_recall("A quick brown fox jumps over the lazy dog")
 
 
-def test_modified_well_known_phrase(testing_db):
+def test_modified_well_known_phrase(pytest_default_db):
     """Test the specified recall string."""
     _test_recall("A quick brown fox jumps over a lazy dog")
 
 
-def test_date_list(testing_db):
+def test_date_list(pytest_default_db):
     """Test random dates."""
     origin_date = dt.date(2003, 4, 21)
     date_count = 10

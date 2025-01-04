@@ -14,8 +14,8 @@
 
 import pytest
 from cl.runtime.plots.group_bar_plot import GroupBarPlot
-from cl.runtime.testing.pytest.pytest_fixtures import testing_db
-from cl.runtime.testing.pytest.pytest_fixtures import testing_work_dir
+from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db
+from cl.runtime.testing.pytest.pytest_fixtures import pytest_work_dir
 from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms
 
 
@@ -35,7 +35,7 @@ def _get_extended_prompt(i: int):
     )
 
 
-def test_verbosity(testing_work_dir, testing_db):
+def test_verbosity(pytest_work_dir, pytest_default_db):
     """Test for verbosity."""
     reps = 2
     plot = GroupBarPlot(plot_id="verbosity")
