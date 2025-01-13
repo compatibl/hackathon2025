@@ -32,15 +32,15 @@ class Llm(LlmKey, RecordMixin[LlmKey], ABC):
     def get_key(self) -> LlmKey:
         return LlmKey(llm_id=self.llm_id)
 
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
+        self._completion_cache = CompletionCache(channel=self.llm_id).init_all()
+
     def completion(self, query: str) -> str:
         """Text-in, text-out single query completion without model-specific tags (uses response caching)."""
 
         # Get cache key with trial_id, EOL normalization, and stripped leading and trailing whitespace
         query_with_trial_id = CompletionUtil.format_query(query)
-
-        # Create completion cache if does not exist
-        if self._completion_cache is None:
-            self._completion_cache = CompletionCache(channel=self.llm_id)
 
         # Try to find in completion cache by cache_key, make cloud provider call only if not found
         if (result := self._completion_cache.get(query_with_trial_id)) is None:
