@@ -20,7 +20,7 @@ from cl.convince.llms.claude.claude_llm import ClaudeLlm
 def test_smoke(pytest_default_db):
     """Test ClaudeLlm class."""
     llms = [
-        ClaudeLlm(llm_id="claude-3-haiku-20240307"),
+        ClaudeLlm(llm_id="claude-3-haiku-20240307").init_all(),
     ]
     for llm in llms:
         assert "4" in llm.completion("2 times 2?")

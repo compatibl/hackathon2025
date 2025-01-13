@@ -22,20 +22,20 @@ from cl.convince.llms.llm import Llm
 def get_stub_mini_llms() -> List[Llm]:
     """Mini-LLMs for proof of concept tests."""
     return [
-        FireworksLlamaLlm(llm_id="llama-v3-8b-instruct"),
-        GptLlm(llm_id="gpt-4o-mini"),
+        FireworksLlamaLlm(llm_id="llama-v3-8b-instruct").init_all(),
+        GptLlm(llm_id="gpt-4o-mini").init_all(),
     ]
 
 
 def get_stub_full_llms() -> List[Llm]:
     """Full (but not extravagant) LLMs for prompt design tests."""
     return [
-        ClaudeLlm(llm_id="claude-3-5-sonnet-20240620"),
-        FireworksLlamaLlm(llm_id="llama-v3-70b-instruct"),
-        GptLlm(llm_id="gpt-4o"),
+        ClaudeLlm(llm_id="claude-3-5-sonnet-20240620").init_all(),
+        FireworksLlamaLlm(llm_id="llama-v3-70b-instruct").init_all(),
+        GptLlm(llm_id="gpt-4o").init_all(),
     ]
 
 
 def get_stub_full_llm() -> Llm:
     """Full (but not extravagant) LLM for prompt design tests."""
-    return GptLlm(llm_id="gpt-4o")
+    return GptLlm(llm_id="gpt-4o").init_all()
