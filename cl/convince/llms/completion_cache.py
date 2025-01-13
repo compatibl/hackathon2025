@@ -18,6 +18,8 @@ from dataclasses import dataclass
 from typing import Any
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.contexts.env_util import EnvUtil
+from cl.runtime.records.for_dataclasses.freezable import Freezable
+from cl.runtime.records.init_mixin import InitMixin
 from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
 from cl.convince.llms.completion import Completion
@@ -40,7 +42,7 @@ def _error_extension_not_supported(ext: str) -> Any:
 
 
 @dataclass(slots=True, kw_only=True)
-class CompletionCache:
+class CompletionCache(Freezable, InitMixin):
     """
     Cache LLM completions for reducing AI cost (disable when testing the LLM itself)
 
@@ -63,11 +65,8 @@ class CompletionCache:
     _completions_loaded: bool = False
     """Flag indicating stored completions were loaded."""
 
-    def __post_init__(self):  # TODO: Refactor to avoid __post_init__
-        """
-        Load the completions file from disk once on construction. New completions added to this instance
-        are written to disk but not reused.
-        """
+    def init(self) -> None:
+        """Similar to __init__ but can use fields set after construction."""
 
         # Find base_path=dir_path/test_module by examining call stack for test function signature test_*
         # Directory 'project_root/completions' is used when not running under a test
