@@ -42,7 +42,7 @@ def _error_extension_not_supported(ext: str) -> Any:
 
 
 @dataclass(slots=True, kw_only=True)
-class CompletionCache(Freezable, InitMixin):
+class CompletionCache(Freezable):
     """
     Cache LLM completions for reducing AI cost (disable when testing the LLM itself)
 
