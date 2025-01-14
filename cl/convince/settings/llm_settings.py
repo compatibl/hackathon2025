@@ -41,4 +41,4 @@ class LlmSettings(Settings):
         """Similar to __init__ but can use fields set after construction."""
 
         # Validate locale format by running init_all for a locale object
-        Locale(locale_id=self.locale).init_all()
+        Locale(locale_id=self.locale).build()

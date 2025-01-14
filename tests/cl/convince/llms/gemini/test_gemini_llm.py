@@ -20,7 +20,7 @@ from cl.convince.llms.gemini.gemini_llm import GeminiLlm
 def test_smoke(pytest_default_db):
     """Test GeminiLlm class."""
     llms = [
-        GeminiLlm(llm_id="gemini-1.5-flash").init_all(),
+        GeminiLlm(llm_id="gemini-1.5-flash").build(),
     ]
     for llm in llms:
         assert "4" in llm.completion("2 times 2?")

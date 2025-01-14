@@ -30,22 +30,22 @@ def test_init():
 
     # Check with type and description only
     entry = StubEntry(text="Sample Text", locale=locale)
-    entry.init_all()
+    entry.build()
     guard.write(entry.entry_id)
 
     # Check with body
     entry = StubEntry(text=" ".join(20 * ["Long Text"]), locale=locale)
-    entry.init_all()
+    entry.build()
     guard.write(entry.entry_id)
 
     # Check with data
     entry = StubEntry(text="Multiline\nText", locale=locale)
-    entry.init_all()
+    entry.build()
     guard.write(entry.entry_id)
 
     # Check with both
     entry = StubEntry(text="Sample Text", locale=locale, data="Sample Data")
-    entry.init_all()
+    entry.build()
     guard.write(entry.entry_id)
 
     # Verify
@@ -56,18 +56,18 @@ def test_check_entry_id():
     """Test StubEntryKey.check_entry_id method."""
 
     # Valid without hash
-    StubEntryKey(entry_id="text (type, en-US)").init_all()
+    StubEntryKey(entry_id="text (type, en-US)").build()
 
     # Valid with hash
-    StubEntryKey(entry_id="text (type, en-US, 00000000000000000000000000000000)").init_all()
+    StubEntryKey(entry_id="text (type, en-US, 00000000000000000000000000000000)").build()
 
     # Not valid
     with pytest.raises(UserError):
-        StubEntryKey(entry_id="text").init_all()
+        StubEntryKey(entry_id="text").build()
     with pytest.raises(UserError):
-        StubEntryKey(entry_id="text(").init_all()
+        StubEntryKey(entry_id="text(").build()
     with pytest.raises(UserError):
-        StubEntryKey(entry_id="text)").init_all()
+        StubEntryKey(entry_id="text)").build()
 
 
 if __name__ == "__main__":

@@ -20,12 +20,12 @@ from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaL
 def test_smoke(pytest_default_db):
     """Test FireworksLlamaLlm class."""
     llms = [
-        FireworksLlamaLlm(llm_id="llama-v3-8b-instruct").init_all(),
+        FireworksLlamaLlm(llm_id="llama-v3-8b-instruct").build(),
         FireworksLlamaLlm(
             llm_id="llama-v3-8b-instruct-0.2",
             model_name="llama-v3-8b-instruct",
             temperature=0.2,
-        ).init_all(),
+        ).build(),
     ]
     for llm in llms:
         assert "4" in llm.completion("2 times 2?")

@@ -34,7 +34,7 @@ class Llm(LlmKey, RecordMixin[LlmKey], ABC):
 
     def init(self) -> None:
         """Similar to __init__ but can use fields set after construction."""
-        self._completion_cache = CompletionCache(channel=self.llm_id).init_all()
+        self._completion_cache = CompletionCache(channel=self.llm_id).build()
 
     def completion(self, query: str) -> str:
         """Text-in, text-out single query completion without model-specific tags (uses response caching)."""
