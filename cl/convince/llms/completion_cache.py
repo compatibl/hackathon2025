@@ -19,7 +19,6 @@ from typing import Any
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.contexts.env_util import EnvUtil
 from cl.runtime.records.for_dataclasses.freezable import Freezable
-from cl.runtime.records.init_mixin import InitMixin
 from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
 from cl.convince.llms.completion import Completion
