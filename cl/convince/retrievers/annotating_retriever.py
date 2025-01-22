@@ -104,16 +104,17 @@ class AnnotatingRetriever(Retriever):
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
 
-                # Create a retrieval record and populate it with inputs, each trial will have a new one
-                retrieval = AnnotatingRetrieval(
-                    retriever=self.get_key(),
-                    trial_id=trial_context.trial_id,
-                    input_text=input_text,
-                    param_description=param_description,
-                    is_required=is_required,
-                    param_samples=param_samples,
-                )
                 try:
+                    # Create a retrieval record and populate it with inputs, each trial will have a new one
+                    retrieval = AnnotatingRetrieval(
+                        retriever=self.get_key(),
+                        trial_id=trial_context.trial_id,
+                        input_text=input_text,
+                        param_description=param_description,
+                        is_required=is_required,
+                        param_samples=param_samples,
+                    )
+
                     # Create a brace extraction prompt using input parameters
                     rendered_prompt = prompt.render(params=retrieval)
 
@@ -126,13 +127,7 @@ class AnnotatingRetriever(Retriever):
                         retrieval.success = json_result.get("success", None)
                         retrieval.annotated_text = json_result.get("annotated_text", None)
                         retrieval.justification = json_result.get("justification", None)
-                        DbContext.save_one(retrieval)
                     else:
-                        retrieval.success = "N"
-                        retrieval.justification = (
-                            f"Could not extract JSON from the LLM response. " f"LLM response:\n{completion}\n"
-                        )
-                        DbContext.save_one(retrieval)
                         raise UserError(retrieval.justification)
 
                     # Return None if not found
@@ -182,26 +177,29 @@ class AnnotatingRetriever(Retriever):
                     # Combine and return from inside the loop
                     # TODO: Determine if numbered combination works better
                     retrieval.output_text = " ".join(matches)
+                    retrieval.build()
                     DbContext.save_one(retrieval)
 
                     # Return only the parameter value
                     return retrieval.output_text
 
                 except Exception as e:
+                    retrieval.success = "N"
+                    retrieval.justification = str(e)
+                    retrieval.build()
+                    DbContext.save_one(retrieval)
                     if is_last_trial:
                         # Rethrow only when the last trial is reached
-                        retrieval.success = "N"
-                        retrieval.justification = str(e)
-                        DbContext.save_one(retrieval)
                         raise UserError(
                             f"Unable to extract parameter from the input text after {self.max_retries} retries.\n"
                             f"Input text: {input_text}\n"
                             f"Parameter description: {param_description}\n"
                             f"Last trial error information: {str(e)}\n"
                         )
-                    else:
-                        # Otherwise continue
-                        pass
+                else:
+                    retrieval.success = "Y"
+                    retrieval.build()
+                    DbContext.save_one(retrieval)
 
         # The method should always return from the loop, adding as a backup in case this changes in the future
         raise UserError(
