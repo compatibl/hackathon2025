@@ -43,8 +43,7 @@ class StubEntry(BaseEntry, _FINAL_KEY, RecordMixin[StubEntryKey]):
         """Retrieve parameters from this entry and save the resulting entries."""
 
         # Load expert from storage if specified as a key
-        ccy_expert_key = CcyExpertKey(expert_id="Default")  # TODO: Define a method to return default identifier
-        ccy_expert = DbContext.load_one(CcyExpert, ccy_expert_key)
+        raise NotImplemented()
 
         # Populate output fields of self
         ccy_expert.populate(self)
