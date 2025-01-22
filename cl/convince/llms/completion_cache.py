@@ -16,6 +16,8 @@ import csv
 import os
 from dataclasses import dataclass
 from typing import Any
+
+from cl.convince.llms.completion_key_gen import CompletionKeyGen
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.contexts.env_util import EnvUtil
 from cl.runtime.records.for_dataclasses.freezable import Freezable
@@ -160,7 +162,7 @@ class CompletionCache(Freezable):
         """Return completion for the specified query if found and None otherwise."""
 
         # Set only those fields that are required for computing the key
-        completion_key = Completion(llm=LlmKey(llm_id=self.channel), query=query).get_key()
+        completion_key = CompletionKeyGen(llm=LlmKey(llm_id=self.channel), query=query).build().get_key()
 
         # Return completion string from DB or None if the record is not found
         completion = DbContext.load_one_or_none(Completion, completion_key)

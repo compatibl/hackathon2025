@@ -15,6 +15,8 @@
 import re
 from abc import ABC
 from dataclasses import dataclass
+
+from cl.convince.llms.completion_key_gen import CompletionKeyGen
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
@@ -28,14 +30,8 @@ _TRIAL_ID_RE = re.compile(r"TrialID:\s*(\S+)")
 
 
 @dataclass(slots=True, kw_only=True)
-class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
+class Completion(CompletionKeyGen, RecordMixin[CompletionKey], ABC):
     """Provides an API for single query and chat completion."""
-
-    llm: LlmKey = required()
-    """LLM for which the completion is recorded."""
-
-    query: str = required()
-    """Query for which the completion is recorded."""
 
     completion: str = required()
     """Completion returned by the LLM."""
@@ -54,16 +50,6 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
 
     def init(self) -> None:
         """Generate entry_id from llm_id, trial_id and query fields."""
-
-        # Check that all of the fields required to compute completion_id are set
-        if self.llm is None:
-            raise UserError(f"Empty 'llm' field in {TypeUtil.name(self)}.")
-        if StringUtil.is_empty(self.query):
-            raise UserError(f"Empty 'query' field in {TypeUtil.name(self)}.")
-
-        # Create a unique identifier using StringUtil.digest, this will
-        # add MD5 hash if multiline or more than 80 characters
-        self.completion_id = StringUtil.digest(self.query, text_params=(self.llm.llm_id,))
 
         # Check that the remaining required fields are set
         if StringUtil.is_empty(self.completion):
