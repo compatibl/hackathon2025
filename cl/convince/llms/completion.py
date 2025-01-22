@@ -50,7 +50,12 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
     """Trial identifier for which the completion is recorded."""
 
     def get_key(self) -> CompletionKey:
-        # Check that the fields required to compute the key are set
+        return CompletionKey(completion_id=self.completion_id)
+
+    def init(self) -> None:
+        """Generate entry_id from llm_id, trial_id and query fields."""
+
+        # Check that all of the fields required to compute completion_id are set
         if self.llm is None:
             raise UserError(f"Empty 'llm' field in {TypeUtil.name(self)}.")
         if StringUtil.is_empty(self.query):
@@ -59,13 +64,6 @@ class Completion(CompletionKey, RecordMixin[CompletionKey], ABC):
         # Create a unique identifier using StringUtil.digest, this will
         # add MD5 hash if multiline or more than 80 characters
         self.completion_id = StringUtil.digest(self.query, text_params=(self.llm.llm_id,))
-        return CompletionKey(completion_id=self.completion_id)
-
-    def init(self) -> None:
-        """Generate entry_id from llm_id, trial_id and query fields."""
-
-        # Check that the fields required to compute the key are set and assign the primary key fields
-        self.get_key()
 
         # Check that the remaining required fields are set
         if StringUtil.is_empty(self.completion):
