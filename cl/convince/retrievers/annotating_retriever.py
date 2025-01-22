@@ -128,7 +128,10 @@ class AnnotatingRetriever(Retriever):
                         retrieval.annotated_text = json_result.get("annotated_text", None)
                         retrieval.justification = json_result.get("justification", None)
                     else:
-                        raise UserError(retrieval.justification)
+                        raise UserError(f"Unable to retrieve a parameter from the following input:\n"
+                                        f"Parameter: {param_description}\n"
+                                        f"Input: {input_text}\n"
+                                        f"LLM response: {completion}\n")
 
                     # Return None if not found
                     success = BoolUtil.parse(retrieval.success, name="success")

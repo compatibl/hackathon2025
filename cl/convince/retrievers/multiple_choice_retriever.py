@@ -111,16 +111,16 @@ class MultipleChoiceRetriever(Retriever):
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
 
-                # Create a retrieval record
-                retrieval = MultipleChoiceRetrieval(
-                    retriever=self.get_key(),
-                    trial_id=trial_context.trial_id,
-                    input_text=input_text,
-                    param_description=param_description,
-                    valid_choices=valid_choices,
-                )
-
                 try:
+                    # Create a retrieval record
+                    retrieval = MultipleChoiceRetrieval(
+                        retriever=self.get_key(),
+                        trial_id=trial_context.trial_id,
+                        input_text=input_text,
+                        param_description=param_description,
+                        valid_choices=valid_choices,
+                    )
+
                     # Create braces extraction prompt
                     rendered_prompt = prompt.render(params=retrieval)
 
@@ -133,14 +133,11 @@ class MultipleChoiceRetriever(Retriever):
                         retrieval.success = json_result.get("success", None)
                         retrieval.param_value = json_result.get("param_value", None)
                         retrieval.justification = json_result.get("justification", None)
-                        DbContext.save_one(retrieval)
                     else:
-                        retrieval.success = "N"
-                        retrieval.justification = (
-                            f"Could not extract JSON from the LLM response. " f"LLM response:\n{completion}\n"
-                        )
-                        DbContext.save_one(retrieval)
-                        raise UserError(retrieval.justification)
+                        raise UserError(f"Unable to retrieve a parameter from the following input:\n"
+                                        f"Parameter: {param_description}\n"
+                                        f"Input: {input_text}\n"
+                                        f"LLM response: {completion}\n")
 
                     # Normalize output
                     if retrieval.success is not None:
@@ -180,6 +177,7 @@ class MultipleChoiceRetriever(Retriever):
                 except Exception as e:
                     retrieval.success = "N"
                     retrieval.justification = str(e)
+                    retrieval.build()
                     DbContext.save_one(retrieval)
                     if is_last_trial:
                         # Rethrow only when the last trial is reached
@@ -189,9 +187,10 @@ class MultipleChoiceRetriever(Retriever):
                             f"Parameter description: {param_description}\n"
                             f"Last trial error information: {retrieval.justification}\n"
                         )
-                    else:
-                        # Otherwise continue
-                        pass
+                else:
+                    retrieval.success = "Y"
+                    retrieval.build()
+                    DbContext.save_one(retrieval)
 
         # The method should always return from the loop, adding as a backup in case this changes in the future
         raise UserError(
