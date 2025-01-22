@@ -29,22 +29,22 @@ def test_init():
     locale = LocaleKey(locale_id="en-GB")
 
     # Check with type and description only
-    entry = StubEntry(text="Sample Text", locale=locale)
+    entry = StubEntry(text="Sample Text", locale=locale).build()
     entry.build()
     guard.write(entry.entry_id)
 
     # Check with body
-    entry = StubEntry(text=" ".join(20 * ["Long Text"]), locale=locale)
+    entry = StubEntry(text=" ".join(20 * ["Long Text"]), locale=locale).build()
     entry.build()
     guard.write(entry.entry_id)
 
     # Check with data
-    entry = StubEntry(text="Multiline\nText", locale=locale)
+    entry = StubEntry(text="Multiline\nText", locale=locale).build()
     entry.build()
     guard.write(entry.entry_id)
 
     # Check with both
-    entry = StubEntry(text="Sample Text", locale=locale, data="Sample Data")
+    entry = StubEntry(text="Sample Text", locale=locale, data="Sample Data").build()
     entry.build()
     guard.write(entry.entry_id)
 

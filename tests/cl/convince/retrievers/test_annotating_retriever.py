@@ -46,7 +46,7 @@ def _test_extract(input_text: str, param_description: str, param_samples: List[s
     param_samples_str = "".join(f"  - {x}\n" for x in param_samples) if param_samples is not None else None
     stub_full_llms = get_stub_full_llms()
     for llm in stub_full_llms:
-        with LlmContext(full_llm=llm):
+        with LlmContext(full_llm=llm).build():
             retriever = AnnotatingRetriever(
                 retriever_id="test_annotating_retriever",
             )
