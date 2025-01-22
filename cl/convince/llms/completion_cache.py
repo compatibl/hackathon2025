@@ -108,7 +108,7 @@ class CompletionCache(Freezable):
             query=query,
             completion=completion,
             timestamp=request_id,
-        )
+        ).build()
 
         # Save completions to DB (including preloads) outside a test
         DbContext.save_one(completion_record)
@@ -197,7 +197,7 @@ class CompletionCache(Freezable):
                             query=row[1],
                             completion=row[2],
                             timestamp=row[0],
-                        )
+                        ).build()
                         for row_ in reader
                         if (row := CompletionUtil.to_python_eol(row_))
                     ]
