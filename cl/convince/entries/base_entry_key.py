@@ -16,12 +16,13 @@ from abc import ABC
 from dataclasses import dataclass
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.freezable import Freezable
 from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import is_key
 
 
 @dataclass(slots=True)
-class BaseEntryKey(KeyMixin, ABC):
+class BaseEntryKey(Freezable, KeyMixin, ABC):
     """Contains description, body and supporting data of user entry along with the entry processing result."""
 
     entry_id: str = required()
