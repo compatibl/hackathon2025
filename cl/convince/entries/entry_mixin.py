@@ -24,7 +24,7 @@ class EntryMixin:
     """Contains description, body and supporting data of user entry along with the entry processing result."""
 
     def init(self) -> None:
-        """Generate entry_id from text, locale and data fields."""
+        """Similar to __init__ but can use fields set after construction."""
 
         # Check text
         if StringUtil.is_empty(self.text):
@@ -37,13 +37,6 @@ class EntryMixin:
         # Convert field types if necessary
         if self.verified is not None and isinstance(self.verified, str):
             self.verified = BoolUtil.parse_or_none(self.verified, name="verified")
-
-        # Generate digest if multiline or more than 80 characters
-        self.entry_id = StringUtil.digest(
-            self.text,
-            text_params=(self.locale.locale_id,),
-            hash_params=(self.data,),
-        )
 
     def get_text(self) -> str:
         """Get the complete text of the entry."""
@@ -62,7 +55,7 @@ class EntryMixin:
         """Clear all output fields and the verification flag."""
         if self.verified:
             raise UserError(
-                f"Entry {self.entry_id} is marked as verified, run Unmark Verified before running Reset. "
+                f"{TypeUtil.name(self)} is marked as verified, run Unmark Verified before running Reset. "
                 f"This is a safety feature to prevent overwriting verified entries."
             )
 

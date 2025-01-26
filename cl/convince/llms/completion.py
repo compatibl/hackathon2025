@@ -49,7 +49,7 @@ class Completion(CompletionKeyGen, RecordMixin[CompletionKey], ABC):
         return CompletionKey(completion_id=self.completion_id)
 
     def init(self) -> None:
-        """Generate entry_id from llm_id, trial_id and query fields."""
+        """Generate completion_id from llm_id, trial_id and query fields."""
 
         # Check that the remaining required fields are set
         if StringUtil.is_empty(self.completion):
