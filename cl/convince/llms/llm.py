@@ -42,6 +42,11 @@ class Llm(LlmKey, RecordMixin[LlmKey], ABC):
         # Get cache key with trial_id, EOL normalization, and stripped leading and trailing whitespace
         query_with_trial_id = CompletionUtil.format_query(query)
 
+        if not self._completion_cache:
+            # Initialize completion cache on first use, error message if self is not yet frozen
+            self.check_frozen()
+            self._completion_cache = CompletionCache(channel=self.llm_id).build()
+
         # Try to find in completion cache by cache_key, make cloud provider call only if not found
         if (result := self._completion_cache.get(query_with_trial_id)) is None:
             # Request identifier is UUIDv7 timestamp in time-ordered dash-delimited format
