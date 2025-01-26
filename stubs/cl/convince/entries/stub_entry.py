@@ -13,40 +13,17 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
-from typing import Type
 from cl.runtime import RecordMixin
-from cl.runtime.contexts.db_context import DbContext
-from cl.runtime.records.empty_mixin import EmptyMixin
-from cl.convince.entries.base_entry import BaseEntry
+from cl.runtime.records.for_dataclasses.extensions import required
 from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
-
-_FINAL_KEY = StubEntryKey if TYPE_CHECKING else EmptyMixin
-"""Add final key type as an additional base only when type checking to avoid multiple inheritance of dataclasses."""
 
 
 @dataclass(slots=True, kw_only=True)
-class StubEntry(BaseEntry, _FINAL_KEY, RecordMixin[StubEntryKey]):
+class StubEntry(StubEntryKey, RecordMixin[StubEntryKey]):
     """Maps currency string specified by the user to the ISO-4217 three-letter currency code."""
 
-    value: str | None = None
+    result: str = required()
     """Value (output)."""
 
-    @classmethod
-    def get_key_type(cls) -> Type:
-        return StubEntryKey
-
     def get_key(self) -> StubEntryKey:
-        return StubEntryKey(entry_id=self.entry_id)
-
-    def run_generate(self) -> None:
-        """Retrieve parameters from this entry and save the resulting entries."""
-
-        # Load expert from storage if specified as a key
-        raise NotImplemented()
-
-        # Populate output fields of self
-        ccy_expert.populate(self)
-
-        # Save self to DB
-        DbContext.save_one(self)
+        return StubEntryKey(text=self.text)

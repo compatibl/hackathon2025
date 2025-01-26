@@ -12,34 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC
-from dataclasses import dataclass
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.type_util import TypeUtil
 from cl.convince.contexts.llm_context import LlmContext
-from cl.convince.entries.base_entry_key import BaseEntryKey
 
 
-@dataclass(slots=True, kw_only=True)
-class BaseEntry(BaseEntryKey, ABC):
+class EntryMixin:
     """Contains description, body and supporting data of user entry along with the entry processing result."""
-
-    text: str = required()
-    """Description exactly as provided by the user (included in MD5 hash)."""
-
-    locale: LocaleKey = required()
-    """Locale in BCP 47 language-country format, for example en-US (included in MD5 hash)."""
-
-    data: str | None = None
-    """Optional supporting data in YAML format (included in MD5 hash)."""
-
-    verified: bool | None = None
-    """Flag indicating the entry is verified."""
 
     def init(self) -> None:
         """Generate entry_id from text, locale and data fields."""
@@ -80,7 +62,7 @@ class BaseEntry(BaseEntryKey, ABC):
         """Clear all output fields and the verification flag."""
         if self.verified:
             raise UserError(
-                f"BaseEntry {self.entry_id} is marked as verified, run Unmark Verified before running Reset. "
+                f"Entry {self.entry_id} is marked as verified, run Unmark Verified before running Reset. "
                 f"This is a safety feature to prevent overwriting verified entries."
             )
 

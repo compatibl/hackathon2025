@@ -14,12 +14,17 @@
 
 from dataclasses import dataclass
 from typing import Type
-from cl.convince.entries.base_entry_key import BaseEntryKey
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.freezable import Freezable
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class StubEntryKey(BaseEntryKey):
+class StubEntryKey(Freezable, KeyMixin):
     """Contains text, locale and supporting data of user entry along with the entry processing result."""
+    
+    text: str = required()
+    """Full text of the entry."""
 
     @classmethod
     def get_key_type(cls) -> Type:
