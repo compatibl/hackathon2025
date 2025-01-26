@@ -12,18 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC
+from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from cl.runtime.primitive.timestamp import Timestamp
-from cl.convince.entries.expert_key import ExpertKey
+from typing import Generic, List, TypeVar
+from cl.runtime.contexts.db_context import DbContext
+
+TEntry = TypeVar("TEntry")
+"""Generic type parameter for a record."""
 
 
 @dataclass(slots=True, kw_only=True)
-class Expert(ExpertKey, ABC):
-    """Base class for the algorithms that perform entry comprehension."""
+class ExpertMixin(Generic[TEntry], ABC):
+    """Generic mixin for the expert classes parameterized by the entry type."""
 
-    def init(self) -> None:
-        """Similar to __init__ but can use fields set after construction."""
-        if self.expert_id is None:
-            # Use timestamp for temporary objects where identifier is not specified
-            self.expert_id = Timestamp.create()
+    @abstractmethod
+    def generate(self, text: str) -> TEntry:
+        """Return entry record for the specified entry text."""
+
+    def run_generate_one(self, text: str) -> None:
+        """Save entry record for the specified entry text."""
+        result = self.generate(text)
+        DbContext.save_one(result)
+
+    def run_generate_many(self, texts: List[str]) -> None:
+        """Save entry records for the specified entry texts."""
+        results = [self.generate(text) for text in texts]  # TODO: Implement via workflow
+        DbContext.save_many(results)
