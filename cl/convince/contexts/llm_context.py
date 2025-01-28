@@ -94,7 +94,7 @@ class LlmContext(Context):
             return context.full_llm
         elif (settings := LlmSettings.instance()).full is not None:
             # Otherwise use the value from settings if not None
-            return LlmKey(llm_id=settings.full)
+            return LlmKey(llm_id=settings.full).build()
         else:
             # If neither is defined, return None
             return None
