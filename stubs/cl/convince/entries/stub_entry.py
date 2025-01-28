@@ -26,4 +26,4 @@ class StubEntry(StubEntryKey, RecordMixin[StubEntryKey]):
     """Value specified by the entry."""
 
     def get_key(self) -> StubEntryKey:
-        return StubEntryKey(text=self.text)
+        return StubEntryKey(text=self.text).build()

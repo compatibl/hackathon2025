@@ -45,4 +45,4 @@ class StubPromptParams(StubPromptParamsKey, RecordMixin[StubPromptParamsKey]):
     """Optional float field."""
 
     def get_key(self) -> StubPromptParamsKey:
-        return StubPromptParamsKey(prompt_params_id=self.prompt_params_id)
+        return StubPromptParamsKey(prompt_params_id=self.prompt_params_id).build()

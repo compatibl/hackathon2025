@@ -23,4 +23,4 @@ class Prompt(PromptKey, RecordMixin[PromptKey], ABC):
     """Parameterized LLM prompt template rendered using a parameters object."""
 
     def get_key(self) -> PromptKey:
-        return PromptKey(prompt_id=self.prompt_id)
+        return PromptKey(prompt_id=self.prompt_id).build()

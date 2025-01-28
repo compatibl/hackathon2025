@@ -30,7 +30,7 @@ class Llm(LlmKey, RecordMixin[LlmKey], ABC):
     """Completion cache is used to return cached LLM responses."""
 
     def get_key(self) -> LlmKey:
-        return LlmKey(llm_id=self.llm_id)
+        return LlmKey(llm_id=self.llm_id).build()
 
     def init(self) -> None:
         """Similar to __init__ but can use fields set after construction."""

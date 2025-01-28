@@ -24,7 +24,7 @@ class Retriever(RetrieverKey, RecordMixin[RetrieverKey], ABC):
     """Retrieves the requested data from the text."""
 
     def get_key(self) -> RetrieverKey:
-        return RetrieverKey(retriever_id=self.retriever_id)
+        return RetrieverKey(retriever_id=self.retriever_id).build()
 
     def init(self) -> None:
         """Similar to __init__ but can use fields set after construction."""

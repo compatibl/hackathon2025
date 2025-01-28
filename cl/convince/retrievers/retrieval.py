@@ -31,7 +31,7 @@ class Retrieval(RetrievalKey, RecordMixin[RetrievalKey]):  # TODO: Derive from T
     """Optional trial identifier when running multiple trials, included in model input to prevent completion caching."""
 
     def get_key(self) -> RetrievalKey:
-        return RetrievalKey(retrieval_id=self.retrieval_id)
+        return RetrievalKey(retrieval_id=self.retrieval_id).build()
 
     def init(self) -> None:
         """Similar to __init__ but can use fields set after construction."""

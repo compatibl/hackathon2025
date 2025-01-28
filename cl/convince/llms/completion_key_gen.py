@@ -34,7 +34,7 @@ class CompletionKeyGen(CompletionKey, RecordMixin[CompletionKey], ABC):
     """Query for which the completion is recorded."""
 
     def get_key(self) -> CompletionKey:
-        return CompletionKey(completion_id=self.completion_id)
+        return CompletionKey(completion_id=self.completion_id).build()
 
     def init(self) -> None:
         """Generate completion_id from llm_id, trial_id and query fields."""

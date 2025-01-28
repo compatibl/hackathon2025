@@ -34,4 +34,4 @@ class Content(ContentKey, RecordMixin[ContentKey], ABC):
         """Convert from string format."""
 
     def get_key(self) -> ContentKey:
-        return ContentKey(content_id=self.content_id)
+        return ContentKey(content_id=self.content_id).build()
