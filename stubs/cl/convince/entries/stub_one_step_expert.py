@@ -13,17 +13,15 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
-from cl.runtime.records.for_dataclasses.extensions import required
-from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
+from stubs.cl.convince.entries.stub_entry import StubEntry
+from stubs.cl.convince.entries.stub_expert import StubExpert
 
 
 @dataclass(slots=True, kw_only=True)
-class StubEntry(StubEntryKey, RecordMixin[StubEntryKey]):
-    """Stub entry."""
+class StubOneStepExpert(StubExpert):
+    """One-step implementation of StubExpert."""
 
-    result: str = required()
-    """Value specified by the entry."""
+    def generate(self, text: str) -> StubEntry:
+        """Return entry record for the specified entry text."""
+        raise NotImplementedError()
 
-    def get_key(self) -> StubEntryKey:
-        return StubEntryKey(text=self.text)

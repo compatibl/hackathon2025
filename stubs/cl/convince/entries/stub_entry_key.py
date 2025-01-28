@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 
 @dataclass(slots=True)
 class StubEntryKey(Freezable, KeyMixin):
-    """Contains text, locale and supporting data of user entry along with the entry processing result."""
+    """Stub entry."""
     
     text: str = required()
     """Full text of the entry."""

@@ -13,17 +13,19 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
+from typing import Type
 from cl.runtime.records.for_dataclasses.extensions import required
-from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
+from cl.runtime.records.for_dataclasses.freezable import Freezable
+from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class StubEntry(StubEntryKey, RecordMixin[StubEntryKey]):
-    """Stub entry."""
+@dataclass(slots=True)
+class StubExpertKey(Freezable, KeyMixin):
+    """Stub expert."""
 
-    result: str = required()
-    """Value specified by the entry."""
+    stub_expert_id: str = required()
+    """Unique identifier for this expert type."""
 
-    def get_key(self) -> StubEntryKey:
-        return StubEntryKey(text=self.text)
+    @classmethod
+    def get_key_type(cls) -> Type:
+        return StubExpertKey

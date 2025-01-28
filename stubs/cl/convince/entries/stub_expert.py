@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABC
 from dataclasses import dataclass
+from cl.convince.entries.expert_mixin import ExpertMixin
 from cl.runtime import RecordMixin
-from cl.runtime.records.for_dataclasses.extensions import required
-from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
+from stubs.cl.convince.entries.stub_entry import StubEntry
+from stubs.cl.convince.entries.stub_expert_key import StubExpertKey
 
 
 @dataclass(slots=True, kw_only=True)
-class StubEntry(StubEntryKey, RecordMixin[StubEntryKey]):
-    """Stub entry."""
+class StubExpert(StubExpertKey, ExpertMixin[StubEntry], RecordMixin[StubExpertKey], ABC):
+    """Stub expert."""
 
-    result: str = required()
-    """Value specified by the entry."""
-
-    def get_key(self) -> StubEntryKey:
-        return StubEntryKey(text=self.text)
+    def get_key(self) -> StubExpertKey:
+        return StubExpertKey(stub_expert_id=self.stub_expert_id)
