@@ -16,14 +16,13 @@ import csv
 import os
 from dataclasses import dataclass
 from typing import Any
-
-from cl.convince.llms.completion_key_gen import CompletionKeyGen
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.contexts.env_util import EnvUtil
 from cl.runtime.records.for_dataclasses.freezable import Freezable
 from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
 from cl.convince.llms.completion import Completion
+from cl.convince.llms.completion_key_gen import CompletionKeyGen
 from cl.convince.llms.completion_util import CompletionUtil
 from cl.convince.llms.llm_key import LlmKey
 from cl.convince.settings.completion_settings import CompletionSettings

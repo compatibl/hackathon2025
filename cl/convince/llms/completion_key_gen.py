@@ -23,7 +23,6 @@ from cl.convince.llms.completion_key import CompletionKey
 from cl.convince.llms.llm_key import LlmKey
 
 
-
 @dataclass(slots=True, kw_only=True)
 class CompletionKeyGen(CompletionKey, RecordMixin[CompletionKey], ABC):
     """Provides an API for single query and chat completion, this class is a key generator."""

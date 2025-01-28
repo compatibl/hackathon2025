@@ -14,8 +14,8 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from cl.convince.entries.expert_mixin import ExpertMixin
 from cl.runtime import RecordMixin
+from cl.convince.entries.expert_mixin import ExpertMixin
 from stubs.cl.convince.entries.stub_entry import StubEntry
 from stubs.cl.convince.entries.stub_expert_key import StubExpertKey
 

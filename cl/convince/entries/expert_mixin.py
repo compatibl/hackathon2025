@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import abstractmethod, ABC
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Generic, List, TypeVar
+from typing import Generic
+from typing import List
+from typing import TypeVar
 from cl.runtime.contexts.db_context import DbContext
 
 TEntry = TypeVar("TEntry")

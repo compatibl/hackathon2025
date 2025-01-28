@@ -22,7 +22,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 @dataclass(slots=True)
 class StubEntryKey(Freezable, KeyMixin):
     """Stub entry."""
-    
+
     text: str = required()
     """Full text of the entry."""
 

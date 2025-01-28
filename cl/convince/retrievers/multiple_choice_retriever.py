@@ -134,10 +134,12 @@ class MultipleChoiceRetriever(Retriever):
                         retrieval.param_value = json_result.get("param_value", None)
                         retrieval.justification = json_result.get("justification", None)
                     else:
-                        raise UserError(f"Unable to retrieve a parameter from the following input:\n"
-                                        f"Parameter: {param_description}\n"
-                                        f"Input: {input_text}\n"
-                                        f"LLM response: {completion}\n")
+                        raise UserError(
+                            f"Unable to retrieve a parameter from the following input:\n"
+                            f"Parameter: {param_description}\n"
+                            f"Input: {input_text}\n"
+                            f"LLM response: {completion}\n"
+                        )
 
                     # Normalize output
                     if retrieval.success is not None:

@@ -24,4 +24,3 @@ class StubOneStepExpert(StubExpert):
     def generate(self, text: str) -> StubEntry:
         """Return entry record for the specified entry text."""
         raise NotImplementedError()
-

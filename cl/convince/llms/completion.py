@@ -15,15 +15,13 @@
 import re
 from abc import ABC
 from dataclasses import dataclass
-
-from cl.convince.llms.completion_key_gen import CompletionKeyGen
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.records.type_util import TypeUtil
 from cl.convince.llms.completion_key import CompletionKey
-from cl.convince.llms.llm_key import LlmKey
+from cl.convince.llms.completion_key_gen import CompletionKeyGen
 
 _TRIAL_ID_RE = re.compile(r"TrialID:\s*(\S+)")
 """Regex for TrialID."""
