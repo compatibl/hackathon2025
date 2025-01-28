@@ -14,11 +14,12 @@
 
 from dataclasses import dataclass
 from typing import Type
+from cl.runtime.records.for_dataclasses.freezable import Freezable
 from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class StubPromptParamsKey(KeyMixin):
+class StubPromptParamsKey(Freezable, KeyMixin):
     """Stub prompt parameters of various primitive types."""
 
     prompt_params_id: str = "Default"

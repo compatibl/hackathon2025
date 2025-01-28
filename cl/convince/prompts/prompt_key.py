@@ -15,11 +15,12 @@
 from dataclasses import dataclass
 from typing import Type
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.freezable import Freezable
 from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class PromptKey(KeyMixin):
+class PromptKey(Freezable, KeyMixin):
     """Parameterized LLM prompt template rendered using a parameters object."""
 
     prompt_id: str = required()
