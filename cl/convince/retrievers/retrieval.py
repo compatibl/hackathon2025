@@ -33,7 +33,7 @@ class Retrieval(RetrievalKey, RecordMixin[RetrievalKey]):  # TODO: Derive from T
     def get_key(self) -> RetrievalKey:
         return RetrievalKey(retrieval_id=self.retrieval_id).build()
 
-    def init(self) -> None:
-        """Similar to __init__ but can use fields set after construction."""
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
         if self.retrieval_id is None:
             self.retrieval_id = Timestamp.create()

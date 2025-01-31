@@ -37,8 +37,8 @@ class LlmSettings(Settings):
     def get_prefix(cls) -> str:
         return "convince_llm"
 
-    def init(self) -> None:
-        """Similar to __init__ but can use fields set after construction."""
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
         # Validate locale format by running init_all for a locale object
         Locale(locale_id=self.locale).build()

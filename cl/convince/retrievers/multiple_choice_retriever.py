@@ -72,8 +72,8 @@ class MultipleChoiceRetriever(Retriever):
     max_retries: int = required()
     """How many times to retry the annotation in case changes other than braces are detected."""
 
-    def init(self) -> None:
-        """Similar to __init__ but can use fields set after construction."""
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
         if self.prompt is None:
             self.prompt = FormattedPrompt(
                 prompt_id="MultipleChoiceRetriever",

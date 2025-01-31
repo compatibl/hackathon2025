@@ -44,8 +44,8 @@ class LlmContext(Context):
         """
         return "LlmContext"
 
-    def init(self) -> None:
-        """Similar to __init__ but can use fields set after construction."""
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
         # Initialize empty fields in this context instance from the current context instance or settings,
         # except when self is already the current context

@@ -31,8 +31,8 @@ class CompletionSettings(Settings):
     def get_prefix(cls) -> str:
         return "convince_completion"
 
-    def init(self) -> None:
-        """Similar to __init__ but can use fields set after construction."""
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
         if self.load_from_csv is None:
             # Defaults to True on Windows, required on other OS

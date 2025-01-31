@@ -65,8 +65,8 @@ class CompletionCache(Freezable):
     _completions_loaded: bool = False
     """Flag indicating stored completions were loaded."""
 
-    def init(self) -> None:
-        """Similar to __init__ but can use fields set after construction."""
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
         # Find base_path=dir_path/test_module by examining call stack for test function signature test_*
         # Directory 'project_root/completions' is used when not running under a test

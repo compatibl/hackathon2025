@@ -32,7 +32,8 @@ class CompletionKey(Freezable, KeyMixin):
     def get_key_type(cls) -> Type:
         return CompletionKey
 
-    def init(self) -> None:
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
         # Validate completion_id inside a key but not inside a record where it will be set based on other fields
         # TODO: Use standard helper classes
         if is_key(self):
