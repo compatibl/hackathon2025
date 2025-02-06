@@ -25,8 +25,8 @@ TEntry = TypeVar("TEntry")
 
 
 @dataclass(slots=True, kw_only=True)
-class ExpertMixin(Generic[TEntry], ABC):
-    """Generic mixin for the expert classes parameterized by the entry type."""
+class ReaderMixin(Generic[TEntry], ABC):
+    """Generic mixin for the reader classes parameterized by the entry type."""
 
     @abstractmethod
     def generate(self, text: str) -> TEntry:

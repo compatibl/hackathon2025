@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from stubs.cl.convince.entries.stub_entry import StubEntry
-from stubs.cl.convince.entries.stub_expert import StubExpert
+from stubs.cl.convince.readers.stub_entry import StubEntry
+from stubs.cl.convince.readers.stub_reader import StubReader
 
 
 @dataclass(slots=True, kw_only=True)
-class StubOneStepExpert(StubExpert):
-    """One-step implementation of StubExpert."""
+class StubOneStepReader(StubReader):
+    """One-step implementation of StubReader."""
 
     def generate(self, text: str) -> StubEntry:
         """Return entry record for the specified entry text."""

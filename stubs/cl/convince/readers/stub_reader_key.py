@@ -20,12 +20,12 @@ from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class StubExpertKey(Freezable, KeyMixin):
-    """Stub expert."""
+class StubReaderKey(Freezable, KeyMixin):
+    """Stub reader."""
 
-    stub_expert_id: str = required()
-    """Unique identifier for this expert type."""
+    stub_reader_id: str = required()
+    """Unique identifier for this reader type."""
 
     @classmethod
     def get_key_type(cls) -> Type:
-        return StubExpertKey
+        return StubReaderKey

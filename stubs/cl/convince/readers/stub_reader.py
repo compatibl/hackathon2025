@@ -15,14 +15,14 @@
 from abc import ABC
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
-from cl.convince.entries.expert_mixin import ExpertMixin
-from stubs.cl.convince.entries.stub_entry import StubEntry
-from stubs.cl.convince.entries.stub_expert_key import StubExpertKey
+from cl.convince.readers.reader_mixin import ReaderMixin
+from stubs.cl.convince.readers.stub_entry import StubEntry
+from stubs.cl.convince.readers.stub_reader_key import StubReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class StubExpert(StubExpertKey, ExpertMixin[StubEntry], RecordMixin[StubExpertKey], ABC):
-    """Stub expert."""
+class StubReader(StubReaderKey, ReaderMixin[StubEntry], RecordMixin[StubReaderKey], ABC):
+    """Stub reader."""
 
-    def get_key(self) -> StubExpertKey:
-        return StubExpertKey(stub_expert_id=self.stub_expert_id)
+    def get_key(self) -> StubReaderKey:
+        return StubReaderKey(stub_reader_id=self.stub_reader_id)

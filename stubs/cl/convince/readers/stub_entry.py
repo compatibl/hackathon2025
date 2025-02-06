@@ -15,7 +15,7 @@
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
 from cl.runtime.records.for_dataclasses.extensions import required
-from stubs.cl.convince.entries.stub_entry_key import StubEntryKey
+from stubs.cl.convince.readers.stub_entry_key import StubEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
