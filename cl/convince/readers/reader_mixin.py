@@ -29,15 +29,15 @@ class ReaderMixin(Generic[TEntry], ABC):
     """Generic mixin for the reader classes parameterized by the entry type."""
 
     @abstractmethod
-    def generate(self, text: str) -> TEntry:
+    def read(self, text: str) -> TEntry:
         """Return entry record for the specified entry text."""
 
-    def run_generate_one(self, text: str) -> None:
+    def run_read_one(self, text: str) -> None:
         """Save entry record for the specified entry text."""
-        result = self.generate(text)
+        result = self.read(text)
         DbContext.save_one(result)
 
-    def run_generate_many(self, texts: List[str]) -> None:
+    def run_read_many(self, texts: List[str]) -> None:
         """Save entry records for the specified entry texts."""
-        results = [self.generate(text) for text in texts]  # TODO: Implement via workflow
+        results = [self.read(text) for text in texts]  # TODO: Implement via workflow
         DbContext.save_many(results)

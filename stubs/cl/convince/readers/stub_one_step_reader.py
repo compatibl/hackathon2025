@@ -21,6 +21,6 @@ from stubs.cl.convince.readers.stub_reader import StubReader
 class StubOneStepReader(StubReader):
     """One-step implementation of StubReader."""
 
-    def generate(self, text: str) -> StubEntry:
+    def read(self, text: str) -> StubEntry:
         """Return entry record for the specified entry text."""
         raise NotImplementedError()
