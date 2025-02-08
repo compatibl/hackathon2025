@@ -16,28 +16,16 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Generic
-from typing import List
 from typing import TypeVar
-from cl.runtime.contexts.db_context import DbContext
 
-TEntry = TypeVar("TEntry")
+TReading = TypeVar("TReading")
 """Generic type parameter for a record."""
 
 
 @dataclass(slots=True, kw_only=True)
-class ReaderMixin(Generic[TEntry], ABC):
-    """Generic mixin for the reader classes parameterized by the entry type."""
+class ReaderMixin(Generic[TReading], ABC):
+    """Generic mixin for types that read text and return data (reading)."""
 
     @abstractmethod
-    def read(self, text: str) -> TEntry:
-        """Return entry record for the specified entry text."""
-
-    def run_read_one(self, text: str) -> None:
-        """Save entry record for the specified entry text."""
-        result = self.read(text)
-        DbContext.save_one(result)
-
-    def run_read_many(self, texts: List[str]) -> None:
-        """Save entry records for the specified entry texts."""
-        results = [self.read(text) for text in texts]  # TODO: Implement via workflow
-        DbContext.save_many(results)
+    def read(self, text: str) -> TReading:
+        """Read text and return data (reading)."""

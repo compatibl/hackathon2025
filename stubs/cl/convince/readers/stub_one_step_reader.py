@@ -22,5 +22,4 @@ class StubOneStepReader(StubReader):
     """One-step implementation of StubReader."""
 
     def read(self, text: str) -> StubEntry:
-        """Return entry record for the specified entry text."""
         raise NotImplementedError()
