@@ -23,7 +23,7 @@ _TENOR_RE = re.compile(r"(\d+)([ymwd])")
 
 
 @dataclass(slots=True, kw_only=True)
-class RegexDateOrTenorReader(DateOrTenorReader):
+class DateOrTenorParser(DateOrTenorReader):
     """Implementation of DateOrTenorReader using regex."""
 
     def read(self, text: str) -> DateOrTenorEntry:

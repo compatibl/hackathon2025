@@ -15,14 +15,14 @@
 import pytest
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db  # noqa
-from cl.convince.readers.static.multiple_choice_ccy_reader import MultipleChoiceCcyReader
+from cl.convince.readers.static.ccy_parser import CcyParser
 
 
-def test_multiple_choice_ccy_reader(pytest_default_db):
+def test_ccy_parser(pytest_default_db):
     """Smoke test."""
     PreloadSettings.instance().save_and_configure()
 
-    reader = MultipleChoiceCcyReader(ccy_reader_id="test").build()
+    reader = CcyParser(ccy_reader_id="test").build()
     entry = reader.read("USD")
     assert entry.ccy.iso_code == "USD"
 

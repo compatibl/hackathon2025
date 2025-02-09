@@ -22,7 +22,7 @@ _TENOR_RE = re.compile(r"(\d+)([ymwd])")
 
 
 @dataclass(slots=True, kw_only=True)
-class RegexTenorReader(TenorReader):
+class TenorParser(TenorReader):
     """Implementation of TenorReader using regex."""
 
     def read(self, text: str) -> TenorEntry:

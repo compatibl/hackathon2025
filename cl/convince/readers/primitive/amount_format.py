@@ -51,7 +51,7 @@ Semicolon-delimited examples: $; dollar; USD
 
 
 @dataclass(slots=True, kw_only=True)
-class BasicAmountReader(AmountReader):
+class AmountFormat(AmountReader):
     """Basic implementation of AmountReader."""
 
     number_reader: NumberEntryKey | None = None

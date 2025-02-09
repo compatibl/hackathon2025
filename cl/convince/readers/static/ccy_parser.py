@@ -27,7 +27,7 @@ _CURRENCY_ISO_CODE = "Currency code in strict ISO-4217 format of three uppercase
 
 
 @dataclass(slots=True, kw_only=True)
-class MultipleChoiceCcyReader(CcyReader):
+class CcyParser(CcyReader):
     """Selects ISO-4217 currency code from a list of valid choices."""
 
     retriever: RetrieverKey = required()
