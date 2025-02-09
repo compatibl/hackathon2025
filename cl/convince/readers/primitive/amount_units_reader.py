@@ -16,8 +16,8 @@ from abc import ABC
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
-from cl.tradeentry.readers.amount_units_entry import AmountUnitsEntry
-from cl.tradeentry.readers.amount_units_reader_key import AmountUnitsReaderKey
+from cl.convince.readers.primitive.amount_units_entry import AmountUnitsEntry
+from cl.convince.readers.primitive.amount_units_reader_key import AmountUnitsReaderKey
 
 
 @dataclass(slots=True, kw_only=True)

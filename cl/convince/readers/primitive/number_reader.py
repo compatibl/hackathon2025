@@ -17,8 +17,8 @@ from dataclasses import dataclass
 from cl.runtime import RecordMixin
 from cl.runtime.primitive.timestamp import Timestamp
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
-from cl.tradeentry.readers.number_entry import NumberEntry
-from cl.tradeentry.readers.number_reader_key import NumberReaderKey
+from cl.convince.readers.primitive.number_entry import NumberEntry
+from cl.convince.readers.primitive.number_reader_key import NumberReaderKey
 
 
 @dataclass(slots=True, kw_only=True)

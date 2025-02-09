@@ -15,7 +15,7 @@
 import pytest
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db  # noqa
-from cl.tradeentry.readers.multiple_choice_ccy_reader import MultipleChoiceCcyReader
+from cl.convince.readers.static.multiple_choice_ccy_reader import MultipleChoiceCcyReader
 
 
 def test_multiple_choice_ccy_reader(pytest_default_db):

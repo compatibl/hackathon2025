@@ -15,7 +15,7 @@
 from abc import ABC
 from dataclasses import dataclass
 from cl.runtime.records.record_mixin import RecordMixin
-from cl.tradeentry.trades.ccy_key import CcyKey
+from cl.convince.data.static.ccy_key import CcyKey
 
 
 @dataclass(slots=True, kw_only=True)

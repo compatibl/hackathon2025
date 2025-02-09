@@ -15,9 +15,9 @@
 import re
 from dataclasses import dataclass
 from cl.runtime.contexts.db_context import DbContext
-from cl.tradeentry.readers.date_entry import DateEntry
-from cl.tradeentry.readers.date_or_tenor_entry import DateOrTenorEntry
-from cl.tradeentry.readers.date_or_tenor_reader import DateOrTenorReader
+from cl.convince.readers.primitive.date_entry import DateEntry
+from cl.convince.readers.primitive.date_or_tenor_entry import DateOrTenorEntry
+from cl.convince.readers.primitive.date_or_tenor_reader import DateOrTenorReader
 
 _TENOR_RE = re.compile(r"(\d+)([ymwd])")
 

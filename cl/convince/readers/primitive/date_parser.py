@@ -15,12 +15,12 @@
 from dataclasses import dataclass
 import dateparser
 from cl.runtime.exceptions.error_util import ErrorUtil
-from cl.tradeentry.readers.date_entry import DateEntry
-from cl.tradeentry.readers.date_reader import DateReader
+from cl.convince.readers.primitive.date_entry import DateEntry
+from cl.convince.readers.primitive.date_reader import DateReader
 
 
 @dataclass(slots=True, kw_only=True)
-class ParserDateReader(DateReader):
+class DateParser(DateReader):
     """Rules-based date reader."""
 
     def read(self, text: str) -> DateEntry:
@@ -38,7 +38,7 @@ class ParserDateReader(DateReader):
                 details=f"Text '{text}' cannot be converted to a date.",
                 value_name="text",
                 method_name="generate",
-                data_type=ParserDateReader,
+                data_type=DateParser,
             )
 
         return result.build()

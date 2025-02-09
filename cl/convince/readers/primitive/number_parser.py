@@ -17,8 +17,8 @@ from dataclasses import dataclass
 from text_to_num import text2num
 from cl.runtime.exceptions.error_util import ErrorUtil
 from cl.convince.settings.llm_settings import LlmSettings
-from cl.tradeentry.readers.number_entry import NumberEntry
-from cl.tradeentry.readers.number_reader import NumberReader
+from cl.convince.readers.primitive.number_entry import NumberEntry
+from cl.convince.readers.primitive.number_reader import NumberReader
 
 _CURRENCY_ISO_CODE = "Currency code in strict ISO-4217 format of three uppercase letters, no variations allowed."
 """Parameter description for the currency ISO-4217 code."""
@@ -30,7 +30,7 @@ _NUMBER_WITH_SUFFIX_RE = re.compile(
 
 
 @dataclass(slots=True, kw_only=True)
-class TextToNumNumberReader(NumberReader):
+class NumberParser(NumberReader):
     """Rules-based implementation of NumberReader."""
 
     def read(self, text: str) -> NumberEntry:

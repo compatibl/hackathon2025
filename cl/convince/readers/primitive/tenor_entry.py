@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
-from cl.tradeentry.readers.tenor_entry_key import TenorEntryKey
+from cl.convince.readers.primitive.tenor_entry_key import TenorEntryKey
 
 
 @dataclass(slots=True, kw_only=True)

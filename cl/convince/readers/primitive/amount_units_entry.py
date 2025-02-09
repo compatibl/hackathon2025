@@ -15,7 +15,7 @@
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.tradeentry.readers.amount_units_entry_key import AmountUnitsEntryKey
+from cl.convince.readers.primitive.amount_units_entry_key import AmountUnitsEntryKey
 
 
 @dataclass(slots=True, kw_only=True)

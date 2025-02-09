@@ -14,9 +14,9 @@
 
 import re
 from dataclasses import dataclass
-from cl.tradeentry.readers.date_reader import DateReader
-from cl.tradeentry.readers.tenor_entry import TenorEntry
-from cl.tradeentry.readers.tenor_reader import TenorReader
+from cl.convince.readers.primitive.date_reader import DateReader
+from cl.convince.readers.primitive.tenor_entry import TenorEntry
+from cl.convince.readers.primitive.tenor_reader import TenorReader
 
 _TENOR_RE = re.compile(r"(\d+)([ymwd])")
 

@@ -18,12 +18,12 @@ from cl.runtime.exceptions.error_util import ErrorUtil
 from cl.runtime.primitive.float_util import FloatUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.retrievers.annotating_retriever import AnnotatingRetriever
-from cl.tradeentry.readers.amount_entry import AmountEntry
-from cl.tradeentry.readers.amount_reader import AmountReader
-from cl.tradeentry.readers.ccy_reader import CcyReader
-from cl.tradeentry.readers.ccy_reader_key import CcyReaderKey
-from cl.tradeentry.readers.number_entry_key import NumberEntryKey
-from cl.tradeentry.readers.number_reader import NumberReader
+from cl.convince.readers.primitive.amount_entry import AmountEntry
+from cl.convince.readers.primitive.amount_reader import AmountReader
+from cl.convince.readers.static.ccy_reader import CcyReader
+from cl.convince.readers.static.ccy_reader_key import CcyReaderKey
+from cl.convince.readers.primitive.number_entry_key import NumberEntryKey
+from cl.convince.readers.primitive.number_reader import NumberReader
 
 _AMOUNT = """Numerical value of the amount (including possible space, commas and other
 decimal point and thousands separators between digits) or its text representation (e.g. 'ten') 

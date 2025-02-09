@@ -16,8 +16,8 @@ from abc import ABC
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
-from cl.tradeentry.readers.tenor_entry import TenorEntry
-from cl.tradeentry.readers.tenor_reader_key import TenorReaderKey
+from cl.convince.readers.primitive.tenor_entry import TenorEntry
+from cl.convince.readers.primitive.tenor_reader_key import TenorReaderKey
 
 
 @dataclass(slots=True, kw_only=True)

@@ -15,9 +15,9 @@
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.tradeentry.readers.amount_entry_key import AmountEntryKey
-from cl.tradeentry.readers.ccy_entry_key import CcyEntryKey
-from cl.tradeentry.readers.number_entry_key import NumberEntryKey
+from cl.convince.readers.primitive.amount_entry_key import AmountEntryKey
+from cl.convince.readers.static.ccy_entry_key import CcyEntryKey
+from cl.convince.readers.primitive.number_entry_key import NumberEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
