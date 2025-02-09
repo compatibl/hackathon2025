@@ -15,12 +15,12 @@
 from dataclasses import dataclass
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.convince.retrievers.multiple_choice_retriever import MultipleChoiceRetriever
-from cl.convince.retrievers.retriever_key import RetrieverKey
-from cl.convince.readers.static.ccy_entry import CcyEntry
-from cl.convince.readers.static.ccy_reader import CcyReader
 from cl.convince.data.static.ccy import Ccy
 from cl.convince.data.static.ccy_key import CcyKey
+from cl.convince.readers.static.ccy_entry import CcyEntry
+from cl.convince.readers.static.ccy_reader import CcyReader
+from cl.convince.retrievers.multiple_choice_retriever import MultipleChoiceRetriever
+from cl.convince.retrievers.retriever_key import RetrieverKey
 
 _CURRENCY_ISO_CODE = "Currency code in strict ISO-4217 format of three uppercase letters, no variations allowed."
 """Parameter description for the currency ISO-4217 code."""

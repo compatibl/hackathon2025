@@ -16,9 +16,9 @@ import re
 from dataclasses import dataclass
 from text_to_num import text2num
 from cl.runtime.exceptions.error_util import ErrorUtil
-from cl.convince.settings.llm_settings import LlmSettings
 from cl.convince.readers.primitive.number_entry import NumberEntry
 from cl.convince.readers.primitive.number_reader import NumberReader
+from cl.convince.settings.llm_settings import LlmSettings
 
 _CURRENCY_ISO_CODE = "Currency code in strict ISO-4217 format of three uppercase letters, no variations allowed."
 """Parameter description for the currency ISO-4217 code."""

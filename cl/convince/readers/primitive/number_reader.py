@@ -15,7 +15,6 @@
 from abc import ABC
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
-from cl.runtime.primitive.timestamp import Timestamp
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
 from cl.convince.readers.primitive.number_entry import NumberEntry
 from cl.convince.readers.primitive.number_reader_key import NumberReaderKey
@@ -27,4 +26,3 @@ class NumberReader(NumberReaderKey, EntryReaderMixin[NumberEntry], RecordMixin[N
 
     def get_key(self) -> NumberReaderKey:
         return NumberReaderKey(number_reader_id=self.number_reader_id).build()
-
