@@ -22,7 +22,7 @@ from cl.convince.readers.primitive.number_entry_key import NumberEntryKey
 class NumberEntry(NumberEntryKey, RecordMixin[NumberEntryKey]):
     """Maps a number specified using words or digits to its numerical value."""
 
-    value: float | None = required()
+    value: float | None = None
     """Numerical value specified by the entry."""
 
     def get_key(self) -> NumberEntryKey:
