@@ -44,7 +44,7 @@ You must reply with JSON formatted strictly according to the JSON specification 
 The JSON must have the following keys:
 
 {{
-    "success": "<Y if you successfully extracted the parameter value and it matches one of the provided choices and N otherwise. This field is required.>",
+    "success": "<true if you successfully extracted the parameter value and it matches one of the provided choices and false otherwise. This field is required.>",
     "param_value": "<Parameter value you extracted which matches one of the provided choices. Leave this field empty in case of failure.>",
     "justification": "<Justification for the parameter value you extracted in case of success or the reason why you were not able to find the parameter in case of failure. This field is required.>"
 }}

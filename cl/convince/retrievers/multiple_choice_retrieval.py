@@ -32,7 +32,7 @@ class MultipleChoiceRetrieval(Retrieval):
     """Valid choices for the retrieved parameter (input)."""
 
     success: str | None = None
-    """Y when parameter was extracted and is one of the valid choices and N otherwise (output)."""
+    """Use 'true' when parameter was extracted and is one of the valid choices and 'false' otherwise (output)."""
 
     param_value: str | None = None
     """Text with the retrieved parameter (output)."""

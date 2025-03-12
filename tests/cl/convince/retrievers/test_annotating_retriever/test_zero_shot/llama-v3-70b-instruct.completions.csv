@@ -7,13 +7,13 @@ You must reply with JSON formatted strictly according to the JSON specification 
 The JSON must have the following keys:
 
 {
-    ""success"": <Y if at least one piece of information was found and N otherwise. This parameter is required.>
+    ""success"": <true if at least one piece of information was found and false otherwise. This parameter is required.>
     ""annotated_text"": ""<The input text where each piece of information about this parameter is surrounded by curly braces. There should be no changes other than adding curly braces, even to whitespace. Leave this field empty in case of failure.>,""
     ""justification"": ""<Justification for your annotations in case of success or the reason why you were not able to find the parameter in case of failure.>""
 }
 Input text: ```Sell 10y SOFR swap at 3.45%```
 Parameter description: ```Fixed rate.```","{
-""success"": ""Y"",
+""success"": ""true"",
 ""annotated_text"": ""Sell 10y SOFR swap at {3.45%}"",
 ""justification"": ""The fixed rate is mentioned as 3.45% in the input text.""
 }"
