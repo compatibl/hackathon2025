@@ -14,7 +14,6 @@
 
 from dataclasses import dataclass
 from cl.runtime import RecordMixin
-from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.readers.primitive.number_entry_key import NumberEntryKey
 
 
