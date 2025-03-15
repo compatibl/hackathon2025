@@ -135,8 +135,12 @@ class AnnotatingRetriever(Retriever):
                             f"LLM response: {completion}\n"
                         )
 
-                    # Return None if not found
-                    success = BoolUtil.from_str(retrieval.success, name="success")
+                    try:
+                        # None if not found
+                        success = BoolUtil.from_str_or_none(retrieval.success)
+                    except RuntimeError:
+                        # None on parsing error
+                        success = None
                     if not success:
                         # Parameter is not found
                         if is_required:

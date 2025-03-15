@@ -147,8 +147,12 @@ class MultipleChoiceRetriever(Retriever):
                     if retrieval.param_value is not None:
                         retrieval.param_value = retrieval.param_value.strip()
 
-                    # Self-reported success or failure
-                    success = BoolUtil.from_str(retrieval.success, name="success")
+                    try:
+                        # None if not found
+                        success = BoolUtil.from_str_or_none(retrieval.success)
+                    except RuntimeError:
+                        # None on parsing error
+                        success = None
                     if not success:
                         # Parameter is not found, continue with the next trial
                         continue
