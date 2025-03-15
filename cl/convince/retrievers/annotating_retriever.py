@@ -136,7 +136,7 @@ class AnnotatingRetriever(Retriever):
                         )
 
                     # Return None if not found
-                    success = BoolUtil.parse(retrieval.success, name="success")
+                    success = BoolUtil.from_str(retrieval.success, name="success")
                     if not success:
                         # Parameter is not found
                         if is_required:
