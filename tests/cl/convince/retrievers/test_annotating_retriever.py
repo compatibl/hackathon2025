@@ -15,9 +15,9 @@
 import pytest
 from typing import List
 from cl.runtime.parsers.locale import Locale
-from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
 from cl.runtime.qa.regression_guard import RegressionGuard
+from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.llms.claude.claude_llm import ClaudeLlm
 from cl.convince.llms.gpt.gpt_llm import GptLlm
