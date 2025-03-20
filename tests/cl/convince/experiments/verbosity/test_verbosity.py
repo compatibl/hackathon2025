@@ -14,8 +14,8 @@
 
 import pytest
 from cl.runtime.plots.group_bar_plot import GroupBarPlot
-from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db  # noqa
-from cl.runtime.testing.pytest.pytest_fixtures import pytest_work_dir  # noqa
+from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
+from cl.runtime.qa.pytest.pytest_fixtures import pytest_work_dir  # noqa
 from stubs.cl.convince.experiments.stub_llms import get_stub_mini_llms
 
 

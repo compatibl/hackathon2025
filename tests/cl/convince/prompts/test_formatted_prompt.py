@@ -14,7 +14,7 @@
 
 import pytest
 from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.testing.regression_guard import RegressionGuard
+from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
 from stubs.cl.convince.prompts.stub_prompt_params import StubPromptParams
 

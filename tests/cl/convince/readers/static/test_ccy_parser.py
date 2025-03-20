@@ -14,7 +14,7 @@
 
 import pytest
 from cl.runtime.settings.preload_settings import PreloadSettings
-from cl.runtime.testing.pytest.pytest_fixtures import pytest_default_db  # noqa
+from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
 from cl.convince.readers.static.ccy_parser import CcyParser
 
 
