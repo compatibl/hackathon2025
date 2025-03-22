@@ -17,15 +17,14 @@ from dataclasses import dataclass
 from typing import Type
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.freezable import Freezable
-from cl.runtime.records.key_mixin import KeyMixin
+from cl.runtime.records.for_dataclasses.key import Key
 
 _ISO_RE = re.compile(r"^[A-Z]{3}$")
 """Regex for the ISO-4217 currency code."""
 
 
 @dataclass(slots=True)
-class CcyKey(Freezable, KeyMixin):
+class CcyKey(Key):
     """Currency recorded using its 3-letter uppercase ISO-4217 code."""
 
     iso_code: str = required()

@@ -16,13 +16,12 @@ from dataclasses import dataclass
 from typing import Type
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.freezable import Freezable
-from cl.runtime.records.key_mixin import KeyMixin
+from cl.runtime.records.for_dataclasses.key import Key
 from cl.runtime.records.protocols import is_key
 
 
 @dataclass(slots=True)
-class CompletionKey(Freezable, KeyMixin):
+class CompletionKey(Key):
     """Record of a previous LLM completion used to avoid making repeated LLM calls for the same query and trial."""
 
     completion_id: str = required()

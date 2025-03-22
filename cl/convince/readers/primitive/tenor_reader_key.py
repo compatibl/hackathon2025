@@ -15,12 +15,11 @@
 from dataclasses import dataclass
 from typing import Type
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.freezable import Freezable
-from cl.runtime.records.key_mixin import KeyMixin
+from cl.runtime.records.for_dataclasses.key import Key
 
 
 @dataclass(slots=True)
-class TenorReaderKey(Freezable, KeyMixin):
+class TenorReaderKey(Key):
     """Maps tenor string to time interval."""
 
     tenor_reader_id: str = required()
