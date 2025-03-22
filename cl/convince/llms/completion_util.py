@@ -28,7 +28,7 @@ class CompletionUtil:
         # Strip leading and trailing whitespace and EOL
         result = query.strip()
 
-        # Get combined trial_id from all previous 'with TrialContext(...)' clauses
+        # Get combined trial_id from all previous 'with TrialContext.create(...)' clauses
         # and add it to the beginning of formatted query
         if (trial_id := TrialContext.get_trial_or_none()) is not None:
             result = f"TrialID: {trial_id}\n{result}"

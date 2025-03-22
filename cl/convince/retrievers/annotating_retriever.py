@@ -99,7 +99,7 @@ class AnnotatingRetriever(Retriever):
 
             # Append retry_index to trial_id to avoid reusing a cached completion
             trial_id = str(retry_index) if self.max_retries > 1 else None
-            with TrialContext(trial_id=trial_id).build() as trial_context:
+            with TrialContext.create(trial_id) as trial_context:
 
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
