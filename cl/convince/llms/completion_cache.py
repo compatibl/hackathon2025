@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.contexts.env_util import EnvUtil
-from cl.runtime.records.for_dataclasses.freezable import Freezable
+from cl.runtime.records.for_dataclasses.data import Data
 from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
 from cl.convince.llms.completion import Completion
@@ -42,7 +42,7 @@ def _error_extension_not_supported(ext: str) -> Any:
 
 
 @dataclass(slots=True, kw_only=True)
-class CompletionCache(Freezable):
+class CompletionCache(Data):
     """
     Cache LLM completions for reducing AI cost (disable when testing the LLM itself)
 
