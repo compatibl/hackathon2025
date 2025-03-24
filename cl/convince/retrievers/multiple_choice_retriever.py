@@ -115,7 +115,7 @@ class MultipleChoiceRetriever(Retriever):
                     # Create a retrieval record
                     retrieval = MultipleChoiceRetrieval(
                         retriever=self.get_key(),
-                        trial_id=trial_context.trial_id,
+                        trial_id=trial_context.get_trial(),
                         input_text=input_text,
                         param_description=param_description,
                         valid_choices=valid_choices,

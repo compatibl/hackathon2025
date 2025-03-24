@@ -108,7 +108,7 @@ class AnnotatingRetriever(Retriever):
                     # Create a retrieval record and populate it with inputs, each trial will have a new one
                     retrieval = AnnotatingRetrieval(
                         retriever=self.get_key(),
-                        trial_id=trial_context.trial_id,
+                        trial_id=trial_context.get_trial(),
                         input_text=input_text,
                         param_description=param_description,
                         is_required=is_required,
