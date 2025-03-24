@@ -40,8 +40,8 @@ class CompletionKey(Key):
                 raise UserError(
                     f"""
 The field 'CompletionId' does not conform to one of the valid formats:
-Format 1: digest (llm, trial_id)
-Format 2: digest (llm, trial_id, md5)
+Format 1: digest (llm, trial)
+Format 2: digest (llm, trial, md5)
 CompletionId: {self.completion_id}
 """
                 )

@@ -97,9 +97,9 @@ class AnnotatingRetriever(Retriever):
         for retry_index in range(self.max_retries):
             is_last_trial = retry_index == self.max_retries - 1
 
-            # Append retry_index to trial_id to avoid reusing a cached completion
-            trial_id = str(retry_index) if self.max_retries > 1 else None
-            with TrialContext.create(trial_id) as trial_context:
+            # Append retry_index to trial to avoid reusing a cached completion
+            trial = str(retry_index) if self.max_retries > 1 else None
+            with TrialContext.create(trial) as trial_context:
 
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
@@ -108,7 +108,7 @@ class AnnotatingRetriever(Retriever):
                     # Create a retrieval record and populate it with inputs, each trial will have a new one
                     retrieval = AnnotatingRetrieval(
                         retriever=self.get_key(),
-                        trial_id=trial_context.get_trial(),
+                        trial=trial_context.get_trial(),
                         input_text=input_text,
                         param_description=param_description,
                         is_required=is_required,

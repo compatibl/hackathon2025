@@ -27,7 +27,7 @@ class Retrieval(RetrievalKey, RecordMixin[RetrievalKey]):  # TODO: Derive from T
     retriever: RetrieverKey = required()
     """Retriever which generated this retrieval."""
 
-    trial_id: str | None = None
+    trial: str | None = None
     """Optional trial identifier when running multiple trials, included in model input to prevent completion caching."""
 
     def get_key(self) -> RetrievalKey:

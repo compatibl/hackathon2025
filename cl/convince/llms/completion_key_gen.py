@@ -39,7 +39,7 @@ class CompletionKeyGen(CompletionKey, RecordMixin[CompletionKey], ABC):
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
-        # Generate completion_id from llm_id, trial_id and query fields
+        # Generate completion_id from llm_id, trial and query fields
 
         # Check that all of the fields required to compute completion_id are set
         if self.llm is None:

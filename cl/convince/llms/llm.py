@@ -39,7 +39,7 @@ class Llm(LlmKey, RecordMixin[LlmKey], ABC):
     def completion(self, query: str) -> str:
         """Text-in, text-out single query completion without model-specific tags (uses response caching)."""
 
-        # Get cache key with trial_id, EOL normalization, and stripped leading and trailing whitespace
+        # Get cache key with trial, EOL normalization, and stripped leading and trailing whitespace
         query_create = CompletionUtil.format_query(query)
 
         if not self._completion_cache:

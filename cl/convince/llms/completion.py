@@ -23,8 +23,8 @@ from cl.runtime.records.type_util import TypeUtil
 from cl.convince.llms.completion_key import CompletionKey
 from cl.convince.llms.completion_key_gen import CompletionKeyGen
 
-_TRIAL_ID_RE = re.compile(r"TrialID:\s*(\S+)")
-"""Regex for TrialID."""
+_TRIAL_ID_RE = re.compile(r"Trial:\s*(\S+)")
+"""Regex for Trial."""
 
 
 @dataclass(slots=True, kw_only=True)
@@ -40,7 +40,7 @@ class Completion(CompletionKeyGen, RecordMixin[CompletionKey], ABC):
     strict time ordering guarantees within the same process, thread and context.
     """
 
-    trial_id: str | None = None
+    trial: str | None = None
     """Trial identifier for which the completion is recorded."""
 
     def get_key(self) -> CompletionKey:
@@ -49,7 +49,7 @@ class Completion(CompletionKeyGen, RecordMixin[CompletionKey], ABC):
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
-        # Generate completion_id from llm_id, trial_id and query fields
+        # Generate completion_id from llm_id, trial and query fields
 
         # Check that the remaining required fields are set
         if StringUtil.is_empty(self.completion):
@@ -57,9 +57,9 @@ class Completion(CompletionKeyGen, RecordMixin[CompletionKey], ABC):
         if StringUtil.is_empty(self.timestamp):
             raise UserError(f"Empty 'timestamp' field in {TypeUtil.name(self)}.")
 
-        # Extract TrialID from the query if present
+        # Extract Trial from the query if present
         # TODO: Review if it is preferable to add it to the query here instead
-        if self.query.startswith("TrialID: "):
+        if self.query.startswith("Trial: "):
             match = re.search(_TRIAL_ID_RE, self.query)
-            trial_id = match.group(1) if match else None
-            self.trial_id = trial_id
+            trial = match.group(1) if match else None
+            self.trial = trial

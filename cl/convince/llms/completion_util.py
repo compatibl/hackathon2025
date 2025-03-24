@@ -23,15 +23,15 @@ class CompletionUtil:
 
     @classmethod
     def format_query(cls, query: str) -> str:
-        """Add trial_id, strip leading and trailing whitespace, and normalize EOL."""
+        """Add trial, strip leading and trailing whitespace, and normalize EOL."""
 
         # Strip leading and trailing whitespace and EOL
         result = query.strip()
 
-        # Get combined trial_id from all previous 'with TrialContext.create(...)' clauses
+        # Get combined trial from all previous 'with TrialContext.create(...)' clauses
         # and add it to the beginning of formatted query
-        if (trial_id := TrialContext.get_trial()) is not None:
-            result = f"TrialID: {trial_id}\n{result}"
+        if (trial := TrialContext.get_trial()) is not None:
+            result = f"Trial: {trial}\n{result}"
 
         # Normalize EOL
         result = cls.to_python_eol(result)
