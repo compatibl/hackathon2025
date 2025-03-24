@@ -106,7 +106,7 @@ class MultipleChoiceRetriever(Retriever):
 
             # Append retry_index to trial to avoid reusing a cached completion
             trial = str(retry_index) if self.max_retries > 1 else None
-            with TrialContext.create(trial) as trial_context:
+            with TrialContext.append_token(trial) as trial_context:
 
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
