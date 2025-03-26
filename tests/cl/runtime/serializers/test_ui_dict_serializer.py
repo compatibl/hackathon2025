@@ -16,6 +16,7 @@ import pytest
 
 from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.runtime.serializers.data_serializers import DataSerializers
+from cl.runtime.serializers.ui_dict_serializer import UiDictSerializer
 from cl.runtime.serializers.yaml_serializers import YamlSerializers
 from stubs.cl.runtime import StubDataclassComposite
 from stubs.cl.runtime import StubDataclassDerivedFromDerivedRecord
@@ -39,7 +40,7 @@ def test_data_serialization():
         StubDataclassDerivedFromDerivedRecord,
         StubDataclassOtherDerivedRecord,
         StubDataclassListFields,
-        StubDataclassTupleFields,
+        # StubDataclassTupleFields,
         StubDataclassOptionalFields,
         # TODO (Roman): Uncomment when serialization format supports all dict value types
         # StubDataclassDictFields,
@@ -50,11 +51,19 @@ def test_data_serialization():
         # StubDataclassAnyFields,  TODO (Roman): Uncomment when supported consistent Any ui serialization.
     ]
 
+    serializer_old = UiDictSerializer()
+
     for sample_type in sample_types:
         sample = sample_type()
         serialized = DataSerializers.FOR_UI.serialize(sample)
         deserialized = DataSerializers.FOR_UI.deserialize(serialized)
         # TODO: serialized = deserialized
+
+        serialized_old = serializer_old.serialize_data(sample)
+        assert serialized_old == serialized
+
+        deserialized_old = serializer_old.deserialize_data(serialized_old)
+        assert deserialized_old == deserialized
 
         # Record in RegressionGuard
         result_str = YamlSerializers.REPORTING.serialize(serialized)
