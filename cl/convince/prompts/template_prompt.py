@@ -24,13 +24,13 @@ from cl.runtime.records.protocols import TDataDict
 from cl.runtime.records.type_util import TypeUtil
 from cl.runtime.schema.schema import Schema
 from cl.runtime.serializers.dict_serializer import DictSerializer
-from cl.runtime.serializers.string_serializer import StringSerializer
+from cl.runtime.serializers.key_serializers import KeySerializers
 from cl.convince.prompts.prompt import Prompt
 
 _data_serializer = DictSerializer()
 """Serializer used to serialize params object for rendering the template."""
 
-_key_serializer = StringSerializer()
+_key_serializer = KeySerializers.DELIMITED
 """Serializer used to serialize keys for error reporting."""
 
 
@@ -58,7 +58,7 @@ class TemplatePrompt(Prompt, ABC):
             result = self._render(params_dict_with_pascal_case_keys)
         except KeyError as e:
             field_name = str(e)
-            params_key_str = _key_serializer.serialize_key(params.get_key())
+            params_key_str = _key_serializer.serialize(params.get_key())
             present_keys_str = "".join(f"  - {x}\n" for x in params_dict_with_pascal_case_keys.keys())
             raise UserError(
                 f"Parameter required by prompt is either None or not a field of the parameters object.\n"
