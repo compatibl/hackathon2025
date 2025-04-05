@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from enum import IntEnum
+from enum import IntEnum, auto
 
 
-class EntryStatusEnum(IntEnum):
+class EntryStatus(IntEnum):
     """Entry processing status."""
 
-    COMPLETED = 1
+    COMPLETED = auto()
     """Processing completed by AI or conventional code (excludes overrides and manual entries)."""
 
-    ESCALATION = 2
+    ESCALATION = auto()
     """Escalated by AI or conventional code for human review, contains pertinent details to create an override."""
 
-    OVERRIDE = 3
+    OVERRIDE = auto()
     """Human override of a previously processed or escalated entry."""
 
-    MANUAL = 4
+    MANUAL = auto()
     """New manual entry by a human in the normal course of processing (not an override)."""
