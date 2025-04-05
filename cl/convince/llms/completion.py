@@ -23,7 +23,7 @@ from cl.runtime.records.type_util import TypeUtil
 from cl.convince.llms.completion_key import CompletionKey
 from cl.convince.llms.completion_key_gen import CompletionKeyGen
 
-_TRIAL_ID_RE = re.compile(r"Trial:\s*(\S+)")
+_TRIAL_RE = re.compile(r"Trial:\s*(\S+)")
 """Regex for Trial."""
 
 
@@ -60,6 +60,6 @@ class Completion(CompletionKeyGen, RecordMixin[CompletionKey], ABC):
         # Extract Trial from the query if present
         # TODO: Review if it is preferable to add it to the query here instead
         if self.query.startswith("Trial: "):
-            match = re.search(_TRIAL_ID_RE, self.query)
+            match = re.search(_TRIAL_RE, self.query)
             trial = match.group(1) if match else None
             self.trial = trial
