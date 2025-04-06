@@ -206,6 +206,7 @@ class AnnotatingRetriever(Retriever):
                             f"Last trial error information: {str(e)}\n"
                         )
                 else:
+                    # TODO: Review logic and remove unreachable code
                     retrieval.success = "Y"
                     retrieval.build()
                     DbContext.save_one(retrieval)
