@@ -17,12 +17,12 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any
 from cl.runtime import RecordMixin
+from cl.runtime import TypeImport
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.protocols import TDataDict
 from cl.runtime.records.type_util import TypeUtil
-from cl.runtime import TypeImport
 from cl.runtime.serializers.data_serializers import DataSerializers
 from cl.runtime.serializers.key_serializers import KeySerializers
 from cl.convince.prompts.prompt import Prompt
