@@ -22,7 +22,7 @@ from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.protocols import TDataDict
 from cl.runtime.records.type_util import TypeUtil
-from cl.runtime.schema.schema import Schema
+from cl.runtime import TypeImport
 from cl.runtime.serializers.data_serializers import DataSerializers
 from cl.runtime.serializers.key_serializers import KeySerializers
 from cl.convince.prompts.prompt import Prompt
@@ -71,7 +71,7 @@ class TemplatePrompt(Prompt, ABC):
         """Check that params object is an instance of the right type."""
         if params is None:
             raise UserError(f"Params field is empty for prompt '{self.prompt_id}'.")
-        params_type = Schema.get_type_by_short_name(self.params_type)
+        params_type = TypeImport.class_from_type_name(self.params_type)
         if not isinstance(params, params_type):
             raise UserError(
                 f"Parameters object for prompt {self.prompt_id} has type {TypeUtil.name(params)} which "
