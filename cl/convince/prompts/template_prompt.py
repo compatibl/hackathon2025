@@ -71,7 +71,7 @@ class TemplatePrompt(Prompt, ABC):
         """Check that params object is an instance of the right type."""
         if params is None:
             raise UserError(f"Params field is empty for prompt '{self.prompt_id}'.")
-        params_type = TypeImport.class_from_type_name(self.params_type)
+        params_type = TypeImport.get_class_from_type_name(self.params_type)
         if not isinstance(params, params_type):
             raise UserError(
                 f"Parameters object for prompt {self.prompt_id} has type {TypeUtil.name(params)} which "
