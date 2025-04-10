@@ -15,7 +15,7 @@
 import pytest
 import os
 from typing import List
-from cl.runtime.contexts.env_util import EnvUtil
+from cl.runtime.qa.qa_util import QaUtil
 from cl.runtime.primitive.timestamp import Timestamp
 from cl.convince.llms.completion_cache import CompletionCache
 
@@ -148,7 +148,7 @@ def test_function():
     """Stub test function without a class."""
 
     # Test calling from a function
-    base_dir = EnvUtil.get_env_dir()
+    base_dir = QaUtil.get_env_dir()
     _perform_testing(base_dir)
 
 
@@ -160,7 +160,7 @@ class TestClass:
         """Stub test method inside pytest class."""
 
         # Test calling from a method
-        base_dir = EnvUtil.get_env_dir()
+        base_dir = QaUtil.get_env_dir()
         _perform_testing(base_dir)
 
 

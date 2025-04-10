@@ -17,7 +17,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 from cl.runtime.contexts.db_context import DbContext
-from cl.runtime.contexts.env_util import EnvUtil
+from cl.runtime.qa.qa_util import QaUtil
 from cl.runtime.records.for_dataclasses.data import Data
 from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
@@ -71,7 +71,7 @@ class CompletionCache(Data):
         # Find base_path=dir_path/test_module by examining call stack for test function signature test_*
         # Directory 'project_root/completions' is used when not running under a test
         default_dir = os.path.join(ProjectSettings.instance().get_resources_root(), "completions")
-        base_dir = EnvUtil.get_env_dir(default_dir=default_dir)
+        base_dir = QaUtil.get_env_dir(default_dir=default_dir)
 
         # If not found, use base path relative to project root
         if base_dir is None:
