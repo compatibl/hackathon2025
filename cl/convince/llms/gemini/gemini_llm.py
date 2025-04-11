@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-import google.generativeai as gemini  # noqa
+from google.genai import Client
+from google.genai.types import GenerateContentConfig
 from cl.runtime.contexts.context_util import UserContextUtil
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.convince.llms.llm import Llm
@@ -26,6 +27,23 @@ class GeminiLlm(Llm):
 
     model_name: str | None = None
     """Model name in Gemini format including version if any, defaults to 'llm_id'."""
+
+    temperature: float | None = 0.2
+    """
+    Controls the randomness of the output.
+    Values can range from [0.0, 1.0], inclusive. A value closer to 1.0 will produce responses
+    that are more varied and creative, while a value closer to 0.0 will typically result
+    in more straightforward responses from the model.
+    """
+
+    top_p: float | None = None
+    """The maximum cumulative probability of tokens to consider when sampling."""
+
+    top_k: int | None = None
+    """The maximum number of tokens to consider when sampling."""
+
+    seed: int | None = None
+    """Seed used in decoding. If not set, the request uses a randomly generated seed."""
 
     def uncached_completion(self, request_id: str, query: str) -> str:
         """Perform completion without CompletionCache lookup, call completion instead."""
@@ -40,10 +58,23 @@ class GeminiLlm(Llm):
         api_key = UserContextUtil.decrypt_secret("GOOGLE_API_KEY") or GoogleSettings.instance().google_api_key
         if api_key is None:
             raise UserError("Provide GOOGLE_API_KEY in Account > My Keys (users) or using Dynaconf (developers).")
-        gemini.configure(api_key=api_key)
 
-        model = gemini.GenerativeModel(model_name=model_name)
-        response = model.generate_content(query)
+        # Collect parameters for content generation
+        generation_config = GenerateContentConfig(
+            temperature=self.temperature,
+            top_p=self.top_p,
+            top_k=self.top_k,
+            seed=self.seed,
+        )
+        generation_params = dict(
+            model=model_name,
+            contents=query,
+            config=generation_config,
+        )
+
+        # Generate content
+        client = Client(api_key=api_key)
+        response = client.models.generate_content(**generation_params)
 
         result = response.text
         return result
@@ -60,10 +91,10 @@ class GeminiLlm(Llm):
         ]
         Returns:
         [
-            {"role": "system", "parts": ["System Prompt"]},
-            {"role": "user", "parts": ["What is 2 + 2?"]},
-            {"role": "assistant", "parts": ["2+2 is equals to 4"]},
-            {"role": "user", "parts": ["Answer only with resulting number"]},
+            {"role": "system", "parts": [{"text": "System Prompt"}]},
+            {"role": "user", "parts": [{"text": "What is 2 + 2?"}]},
+            {"role": "assistant", "parts": [{"text": "2+2 is equals to 4"}]},
+            {"role": "user", "parts": [{"text": "Answer only with resulting number"}]},
         ]
         """
-        return [{"role": message.role.name, "parts": [message.content]} for message in messages]
+        return [{"role": message.role.name, "parts": [{"text": message.content}]} for message in messages]
