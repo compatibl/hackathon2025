@@ -45,8 +45,7 @@ class Llm(LlmKey, RecordMixin[LlmKey], ABC):
         if not self._completion_cache:
             # Initialize completion cache on first use, error message if self is not yet frozen
             # to prevent the cache from being out of sync with the object
-            if not self.is_frozen():
-                raise RuntimeError(f"LLM object is not frozen, invoke build before first use.")
+            self.check_frozen()
             self._completion_cache = CompletionCache(channel=self.llm_id).build()
 
         # Try to find in completion cache by cache_key, make cloud provider call only if not found

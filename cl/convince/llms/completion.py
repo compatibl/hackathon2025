@@ -50,7 +50,6 @@ class Completion(CompletionKeyGen, RecordMixin[CompletionKey], ABC):
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
         # Generate completion_id from llm_id, trial and query fields
-
         # Check that the remaining required fields are set
         if StringUtil.is_empty(self.completion):
             raise UserError(f"Empty 'completion' field in {TypeUtil.name(self)}.")
