@@ -19,7 +19,6 @@ from typing import Any
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.qa.qa_util import QaUtil
 from cl.runtime.records.for_dataclasses.data import Data
-from cl.runtime.settings.context_settings import ContextSettings
 from cl.runtime.settings.project_settings import ProjectSettings
 from cl.convince.llms.completion import Completion
 from cl.convince.llms.completion_key_gen import CompletionKeyGen

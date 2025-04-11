@@ -15,8 +15,8 @@
 import pytest
 import os
 from typing import List
-from cl.runtime.qa.qa_util import QaUtil
 from cl.runtime.primitive.timestamp import Timestamp
+from cl.runtime.qa.qa_util import QaUtil
 from cl.convince.llms.completion_cache import CompletionCache
 
 module_path = __file__.removesuffix(".py")
