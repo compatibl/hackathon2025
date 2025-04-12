@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+
+from cl.runtime.records.type_util import TypeUtil
 from cl.runtime.settings.settings import Settings
 
 
@@ -40,5 +42,5 @@ class OpenaiSettings(Settings):
             raise RuntimeError(f"{TypeUtil.name(self)} field 'api_base_url' must be None or a string.")
 
     @classmethod
-    def get_prefix(cls) -> str:
-        return "openai"
+    def get_base_type(cls) -> type:
+        return OpenaiSettings

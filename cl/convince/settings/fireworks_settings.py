@@ -31,5 +31,5 @@ class FireworksSettings(Settings):
             raise RuntimeError(f"{TypeUtil.name(self)} field 'api_key' must be a string.")
 
     @classmethod
-    def get_prefix(cls) -> str:
-        return "fireworks"
+    def get_base_type(cls) -> type:
+        return FireworksSettings

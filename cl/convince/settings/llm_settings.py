@@ -34,8 +34,8 @@ class LlmSettings(Settings):
     """String identifier of the mini LLM used in the absence of override (ensure the LLM record exists)."""
 
     @classmethod
-    def get_prefix(cls) -> str:
-        return "convince_llm"
+    def get_base_type(cls) -> type:
+        return LlmSettings
 
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""

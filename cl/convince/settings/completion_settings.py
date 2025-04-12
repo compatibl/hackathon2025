@@ -28,8 +28,8 @@ class CompletionSettings(Settings):
     """Determines if completions are saved to CSV files (defaults to True on Windows, required on other OS)."""
 
     @classmethod
-    def get_prefix(cls) -> str:
-        return "convince_completion"
+    def get_base_type(cls) -> type:
+        return CompletionSettings
 
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
