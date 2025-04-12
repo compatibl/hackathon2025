@@ -13,8 +13,6 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-
 from cl.runtime.contexts.context import Context
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.records.for_dataclasses.extensions import required
@@ -36,7 +34,7 @@ class LlmContext(Context):
     """Default mini LLM."""
 
     @classmethod
-    def get_base_type(cls) -> Type:
+    def get_base_type(cls) -> type:
         return LlmContext
 
     def __init(self) -> None:

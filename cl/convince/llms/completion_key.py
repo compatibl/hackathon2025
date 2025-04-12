@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.for_dataclasses.key import Key
@@ -28,7 +27,7 @@ class CompletionKey(Key):
     """Unique completion identifier is a hash of completion parameters."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type:
         return CompletionKey
 
     def __init(self) -> None:

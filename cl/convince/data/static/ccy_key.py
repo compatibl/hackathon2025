@@ -14,7 +14,6 @@
 
 import re
 from dataclasses import dataclass
-from typing import Type
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.for_dataclasses.key import Key
@@ -31,7 +30,7 @@ class CcyKey(Key):
     """3-letter uppercase ISO-4217 code for the currency."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type:
         return CcyKey
 
     def __init(self) -> None:
