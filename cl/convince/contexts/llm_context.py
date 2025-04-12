@@ -36,7 +36,7 @@ class LlmContext(Context):
     """Default mini LLM."""
 
     @classmethod
-    def get_context_type(cls) -> Type:
+    def get_base_type(cls) -> Type:
         return LlmContext
 
     def __init(self) -> None:
