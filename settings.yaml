@@ -2,33 +2,33 @@
 default:
 
   # Documented in LogSettings class
-  runtime_log_level: info
-  runtime_log_filename_prefix: main
+  log_level: info
+  log_filename_prefix: main
 
   # Documented in ContextSettings class
-  runtime_context_packages:
+  context_packages:
     - cl.runtime
     - cl.convince
     - stubs.cl.runtime
     - stubs.cl.convince
-  runtime_context_db_class: cl.runtime.db.sql.sqlite_db.SqliteDb
+  context_db_class: cl.runtime.db.sql.sqlite_db.SqliteDb
 
   # Documented in ApiSettings class
-  runtime_api_hostname: localhost
-  runtime_api_port: 7008
+  api_hostname: localhost
+  api_port: 7008
 
   # Documented in PreloadSettings class
-  runtime_preload_dirs:
+  preload_dirs:
     - preloads/cl
     - preloads/stubs
 
   # Documented in LlmSettings class
-  convince_llm_locale: en-US
-  convince_llm_full: gpt-4o
-  convince_llm_mini: gpt-4o-mini
+  llm_locale: en-US
+  llm_full: gpt-4o
+  llm_mini: gpt-4o-mini
 
 # Test environment
 test:
 
   # Documented in LogSettings class
-  runtime_log_filename_prefix: tests
+  log_filename_prefix: tests
