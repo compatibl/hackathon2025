@@ -17,7 +17,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any
 from cl.runtime import RecordMixin
-from cl.runtime import TypeImport
+from cl.runtime.schema.type_info_cache import TypeInfoCache
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.records.for_dataclasses.extensions import required
@@ -71,7 +71,7 @@ class TemplatePrompt(Prompt, ABC):
         """Check that params object is an instance of the right type."""
         if params is None:
             raise UserError(f"Params field is empty for prompt '{self.prompt_id}'.")
-        params_type = TypeImport.get_class_from_type_name(self.params_type)
+        params_type = TypeInfoCache.get_class_from_type_name(self.params_type)
         if not isinstance(params, params_type):
             raise UserError(
                 f"Parameters object for prompt {self.prompt_id} has type {TypeUtil.name(params)} which "
