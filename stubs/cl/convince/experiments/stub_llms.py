@@ -22,7 +22,6 @@ from cl.convince.llms.llm import Llm
 def get_stub_mini_llms() -> List[Llm]:
     """Mini-LLMs for proof of concept tests."""
     return [
-        FireworksLlamaLlm(llm_id="llama-v3-8b-instruct").build(),
         GptLlm(llm_id="gpt-4o-mini").build(),
     ]
 
