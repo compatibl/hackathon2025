@@ -14,11 +14,9 @@
 
 from cl.convince.retrievers.retriever_key import RetrieverKey
 
-cls = RetrieverKey
-
 
 class RetrieverKeys:
     """RetrieverKey constants."""
 
-    ANNOTATING_RETRIEVER: cls = cls(retriever_id="AnnotatingRetriever")
+    ANNOTATING_RETRIEVER = RetrieverKey(retriever_id="AnnotatingRetriever")
     """Instructs the model to surround the requested parameter by curly braces and uses the annotations to retrieve."""
