@@ -14,11 +14,11 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.key import Key
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class CcyReaderKey(Key):
+class CcyReaderKey(KeyMixin):
     """Maps string description of a currency to the ISO-4217 three-letter currency code."""
 
     ccy_reader_id: str = required()

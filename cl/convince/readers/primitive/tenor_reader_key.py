@@ -14,11 +14,11 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.key import Key
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class TenorReaderKey(Key):
+class TenorReaderKey(KeyMixin):
     """Maps tenor string to time interval."""
 
     tenor_reader_id: str = required()

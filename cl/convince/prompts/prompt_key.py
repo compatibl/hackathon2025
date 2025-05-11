@@ -14,11 +14,11 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.key import Key
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class PromptKey(Key):
+class PromptKey(KeyMixin):
     """Parameterized LLM prompt template rendered using a parameters object."""
 
     prompt_id: str = required()

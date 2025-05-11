@@ -14,11 +14,11 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.key import Key
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class RetrieverKey(Key):
+class RetrieverKey(KeyMixin):
     """Retrieves the requested data from the text."""
 
     retriever_id: str = required()

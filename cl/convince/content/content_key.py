@@ -14,11 +14,11 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.key import Key
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class ContentKey(Key):
+class ContentKey(KeyMixin):
     """Content consumed or generated during AI workflows (derived classes provide format-specific functionality)."""
 
     content_id: str = required()

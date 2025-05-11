@@ -14,11 +14,11 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.for_dataclasses.key import Key
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class DateEntryKey(Key):
+class DateEntryKey(KeyMixin):
     """Maps a date string to its value taking into account locale conventions and formatting rules."""
 
     text: str = required()
