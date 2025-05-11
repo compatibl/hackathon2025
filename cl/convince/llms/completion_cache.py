@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.qa.qa_util import QaUtil
-from cl.runtime.records.for_dataclasses.data import Data
+from cl.runtime.records.data_mixin import DataMixin
 from cl.runtime.settings.project_settings import ProjectSettings
 from cl.convince.llms.completion import Completion
 from cl.convince.llms.completion_key_gen import CompletionKeyGen
@@ -41,7 +41,7 @@ def _error_extension_not_supported(ext: str) -> Any:
 
 
 @dataclass(slots=True, kw_only=True)
-class CompletionCache(Data):
+class CompletionCache(DataMixin):
     """
     Cache LLM completions for reducing AI cost (disable when testing the LLM itself)
 
