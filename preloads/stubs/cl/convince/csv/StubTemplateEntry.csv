@@ -1,0 +1,2 @@
+text,template,value
+The value is: abc,The value is: {value},abc

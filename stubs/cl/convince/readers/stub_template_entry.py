@@ -13,25 +13,21 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-
-from cl.convince.readers.entry_mixin import EntryMixin
+from cl.convince.readers.template_entry_mixin import TemplateEntryMixin
 from cl.runtime.records.for_dataclasses.extensions import required
 from stubs.cl.convince.readers.stub_entry_key import StubEntryKey
 from stubs.cl.runtime.templates.stub_template_key import StubTemplateKey
 
 
 @dataclass(slots=True, kw_only=True)
-class StubEntry(StubEntryKey, EntryMixin[StubEntryKey]):
-    """Stub for EntryMixin."""
+class StubTemplateEntry(StubEntryKey, TemplateEntryMixin[StubEntryKey]):
+    """Stub for TemplateEntryMixin."""
+
+    template: StubTemplateKey | None = None
+    """Template used to validate the entry."""
 
     value: str = required()
     """Value specified by the entry."""
 
     def get_key(self) -> StubEntryKey:
         return StubEntryKey(text=self.text).build()
-
-    def describe_correction(self) -> str | None:
-        if self.value in self.text:
-            return None
-        else:
-            return "Diff"  # TODO: Use unified diff

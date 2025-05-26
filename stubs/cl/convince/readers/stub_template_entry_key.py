@@ -13,25 +13,17 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-
-from cl.convince.readers.entry_mixin import EntryMixin
 from cl.runtime.records.for_dataclasses.extensions import required
-from stubs.cl.convince.readers.stub_entry_key import StubEntryKey
-from stubs.cl.runtime.templates.stub_template_key import StubTemplateKey
+from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class StubEntry(StubEntryKey, EntryMixin[StubEntryKey]):
-    """Stub for EntryMixin."""
+@dataclass(slots=True)
+class StubTemplateEntryKey(KeyMixin):
+    """Stub for TemplateEntryMixin."""
 
-    value: str = required()
-    """Value specified by the entry."""
+    text: str = required()
+    """Full text of the entry."""
 
-    def get_key(self) -> StubEntryKey:
-        return StubEntryKey(text=self.text).build()
-
-    def describe_correction(self) -> str | None:
-        if self.value in self.text:
-            return None
-        else:
-            return "Diff"  # TODO: Use unified diff
+    @classmethod
+    def get_key_type(cls) -> type:
+        return StubTemplateEntryKey

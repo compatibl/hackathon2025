@@ -12,18 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
-from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.key_mixin import KeyMixin
+import pytest
+from stubs.cl.convince.readers.stub_entry import StubEntry
 
 
-@dataclass(slots=True)
-class StubEntryKey(KeyMixin):
-    """Stub for EntryMixin."""
+def test_describe_correction():
+    """Test EntryMixin."""
 
-    text: str = required()
-    """Full text of the entry."""
+    valid_text = "The value is abc"
+    invalid_text = "The value is def"
+    value = "abc"
 
-    @classmethod
-    def get_key_type(cls) -> type:
-        return StubEntryKey
+    # Test valid
+    entry = StubEntry(text=valid_text, value=value).build()
+    assert entry.describe_correction() is None
+
+    # Test not valid
+    entry = StubEntry(text=invalid_text, value=value).build()
+    assert entry.describe_correction() == "Diff"  # TODO: Use unified diff
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
