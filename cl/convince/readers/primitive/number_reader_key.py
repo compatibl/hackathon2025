@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 class NumberReaderKey(KeyMixin):
     """Maps a number specified using words or digits to its numerical value."""
 
-    number_reader_id: str = required()
+    reader_id: str = required()
     """Unique identifier for this reader type."""
 
     @classmethod

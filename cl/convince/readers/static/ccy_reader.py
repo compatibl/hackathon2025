@@ -25,4 +25,4 @@ class CcyReader(CcyReaderKey, EntryReaderMixin[CcyReaderKey, CcyEntry], ABC):
     """Maps string description of a currency to the ISO-4217 three-letter currency code."""
 
     def get_key(self) -> CcyReaderKey:
-        return CcyReaderKey(ccy_reader_id=self.ccy_reader_id).build()
+        return CcyReaderKey(reader_id=self.reader_id).build()

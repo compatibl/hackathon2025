@@ -1,2 +1,2 @@
-ccy_reader_id,retriever
+reader_id,retriever
 Default,MultipleChoiceRetriever

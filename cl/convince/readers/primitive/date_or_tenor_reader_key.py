@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 class DateOrTenorReaderKey(KeyMixin):
     """Maps a date or tenor string to its value taking into account locale conventions and formatting rules."""
 
-    date_or_tenor_reader_id: str = required()
+    reader_id: str = required()
     """Unique identifier for this reader type."""
 
     @classmethod

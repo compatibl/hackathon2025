@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 class CcyReaderKey(KeyMixin):
     """Maps string description of a currency to the ISO-4217 three-letter currency code."""
 
-    ccy_reader_id: str = required()
+    reader_id: str = required()
     """Unique currency reader identifier."""
 
     @classmethod

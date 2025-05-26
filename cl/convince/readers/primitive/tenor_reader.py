@@ -25,4 +25,4 @@ class TenorReader(TenorReaderKey, EntryReaderMixin[TenorReaderKey, TenorEntry], 
     """Maps tenor string to time interval."""
 
     def get_key(self) -> TenorReaderKey:
-        return TenorReaderKey(tenor_reader_id=self.tenor_reader_id).build()
+        return TenorReaderKey(reader_id=self.reader_id).build()

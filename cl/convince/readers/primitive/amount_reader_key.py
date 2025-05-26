@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 class AmountReaderKey(KeyMixin):
     """Reader for an amount with or without currency specification."""
 
-    amount_reader_id: str = required()
+    reader_id: str = required()
     """Unique identifier for this reader type."""
 
     @classmethod

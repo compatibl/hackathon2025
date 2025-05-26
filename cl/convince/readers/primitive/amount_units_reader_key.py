@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 class AmountUnitsReaderKey(KeyMixin):
     """Maps an amount units string to the numerical multiplier for the amount."""
 
-    amount_units_reader_id: str = required()
+    reader_id: str = required()
     """Unique identifier for this reader type."""
 
     @classmethod

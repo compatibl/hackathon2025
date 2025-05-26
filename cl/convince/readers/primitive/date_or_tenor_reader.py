@@ -27,4 +27,4 @@ class DateOrTenorReader(
     """Maps a date or tenor string to its value taking into account locale conventions and formatting rules."""
 
     def get_key(self) -> DateOrTenorReaderKey:
-        return DateOrTenorReaderKey(date_or_tenor_reader_id=self.date_or_tenor_reader_id).build()
+        return DateOrTenorReaderKey(reader_id=self.reader_id).build()

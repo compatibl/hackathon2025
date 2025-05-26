@@ -22,7 +22,7 @@ def test_ccy_parser(pytest_default_db):
     """Smoke test."""
     PreloadSettings.instance().save_and_configure()
 
-    reader = CcyParser(ccy_reader_id="test").build()
+    reader = CcyParser(reader_id="test").build()
     entry = reader.read("USD")
     assert entry.ccy.iso_code == "USD"
 

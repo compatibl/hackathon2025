@@ -25,4 +25,4 @@ class DateReader(DateReaderKey, EntryReaderMixin[DateReaderKey, DateEntry], ABC)
     """Maps a date string to its value taking into account locale conventions and formatting rules."""
 
     def get_key(self) -> DateReaderKey:
-        return DateReaderKey(date_reader_id=self.date_reader_id).build()
+        return DateReaderKey(reader_id=self.reader_id).build()

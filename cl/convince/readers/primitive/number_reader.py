@@ -25,4 +25,4 @@ class NumberReader(NumberReaderKey, EntryReaderMixin[NumberReaderKey, NumberEntr
     """Maps a number specified using words or digits to its numerical value."""
 
     def get_key(self) -> NumberReaderKey:
-        return NumberReaderKey(number_reader_id=self.number_reader_id).build()
+        return NumberReaderKey(reader_id=self.reader_id).build()

@@ -27,4 +27,4 @@ class AmountUnitsReader(
     """Maps an amount units string to the numerical multiplier for the amount."""
 
     def get_key(self) -> AmountUnitsReaderKey:
-        return AmountUnitsReaderKey(amount_units_reader_id=self.amount_units_reader_id).build()
+        return AmountUnitsReaderKey(reader_id=self.reader_id).build()

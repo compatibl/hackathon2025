@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 class DateReaderKey(KeyMixin):
     """Maps a date string to its value taking into account locale conventions and formatting rules."""
 
-    date_reader_id: str = required()
+    reader_id: str = required()
     """Unique identifier for this reader type."""
 
     @classmethod

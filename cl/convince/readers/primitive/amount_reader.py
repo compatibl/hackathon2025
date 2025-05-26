@@ -25,4 +25,4 @@ class AmountReader(AmountReaderKey, EntryReaderMixin[AmountReaderKey, AmountEntr
     """Reader for an amount with or without currency specification."""
 
     def get_key(self) -> AmountReaderKey:
-        return AmountReaderKey(amount_reader_id=self.amount_reader_id).build()
+        return AmountReaderKey(reader_id=self.reader_id).build()

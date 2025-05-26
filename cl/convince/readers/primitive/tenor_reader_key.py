@@ -21,7 +21,7 @@ from cl.runtime.records.key_mixin import KeyMixin
 class TenorReaderKey(KeyMixin):
     """Maps tenor string to time interval."""
 
-    tenor_reader_id: str = required()
+    reader_id: str = required()
     """Unique identifier for this reader type."""
 
     @classmethod
