@@ -22,7 +22,7 @@ from cl.convince.readers.primitive.amount_units_reader_key import AmountUnitsRea
 
 @dataclass(slots=True, kw_only=True)
 class AmountUnitsReader(
-    AmountUnitsReaderKey, EntryReaderMixin[AmountUnitsEntry], RecordMixin[AmountUnitsReaderKey], ABC
+    AmountUnitsReaderKey, EntryReaderMixin[AmountUnitsReaderKey, AmountUnitsEntry], ABC
 ):
     """Maps an amount units string to the numerical multiplier for the amount."""
 

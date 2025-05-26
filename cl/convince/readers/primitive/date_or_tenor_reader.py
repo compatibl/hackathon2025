@@ -22,7 +22,7 @@ from cl.convince.readers.primitive.date_or_tenor_reader_key import DateOrTenorRe
 
 @dataclass(slots=True, kw_only=True)
 class DateOrTenorReader(
-    DateOrTenorReaderKey, EntryReaderMixin[DateOrTenorEntry], RecordMixin[DateOrTenorReaderKey], ABC
+    DateOrTenorReaderKey, EntryReaderMixin[DateOrTenorReaderKey, DateOrTenorEntry], ABC
 ):
     """Maps a date or tenor string to its value taking into account locale conventions and formatting rules."""
 

@@ -21,7 +21,7 @@ from cl.convince.readers.primitive.amount_reader_key import AmountReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class AmountReader(AmountReaderKey, EntryReaderMixin[AmountEntry], RecordMixin[AmountReaderKey], ABC):
+class AmountReader(AmountReaderKey, EntryReaderMixin[AmountReaderKey, AmountEntry], ABC):
     """Reader for an amount with or without currency specification."""
 
     def get_key(self) -> AmountReaderKey:

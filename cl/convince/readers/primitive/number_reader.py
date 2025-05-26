@@ -21,7 +21,7 @@ from cl.convince.readers.primitive.number_reader_key import NumberReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class NumberReader(NumberReaderKey, EntryReaderMixin[NumberEntry], RecordMixin[NumberReaderKey], ABC):
+class NumberReader(NumberReaderKey, EntryReaderMixin[NumberReaderKey, NumberEntry], ABC):
     """Maps a number specified using words or digits to its numerical value."""
 
     def get_key(self) -> NumberReaderKey:

@@ -21,7 +21,7 @@ from cl.convince.readers.static.ccy_reader_key import CcyReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class CcyReader(CcyReaderKey, EntryReaderMixin[CcyEntry], RecordMixin[CcyReaderKey], ABC):
+class CcyReader(CcyReaderKey, EntryReaderMixin[CcyReaderKey, CcyEntry], ABC):
     """Maps string description of a currency to the ISO-4217 three-letter currency code."""
 
     def get_key(self) -> CcyReaderKey:
