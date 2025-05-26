@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Generic
-
-from typing_extensions import Self
-
-from cl.convince.readers.entry_mixin import EntryMixin
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import TKey
+from cl.convince.readers.entry_mixin import EntryMixin
 
 
 @dataclass(slots=True, kw_only=True)
@@ -46,4 +44,3 @@ class TemplateEntryMixin(Generic[TKey], EntryMixin[TKey], ABC):
             return None
         else:
             return "Diff"  # TODO: Use unified diff
-

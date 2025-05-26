@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.convince.readers.template_entry_mixin import TemplateEntryMixin
 from cl.runtime.records.for_dataclasses.extensions import required
-from stubs.cl.convince.readers.stub_entry_key import StubEntryKey
+from cl.convince.readers.template_entry_mixin import TemplateEntryMixin
 from stubs.cl.runtime.templates.stub_template_key import StubTemplateKey
+from stubs.cl.convince.readers.stub_entry_key import StubEntryKey
 
 
 @dataclass(slots=True, kw_only=True)

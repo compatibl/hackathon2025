@@ -14,7 +14,6 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
 from cl.convince.readers.static.ccy_entry import CcyEntry
 from cl.convince.readers.static.ccy_reader_key import CcyReaderKey

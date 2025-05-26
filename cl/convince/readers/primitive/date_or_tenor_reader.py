@@ -14,16 +14,13 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
 from cl.convince.readers.primitive.date_or_tenor_entry import DateOrTenorEntry
 from cl.convince.readers.primitive.date_or_tenor_reader_key import DateOrTenorReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class DateOrTenorReader(
-    DateOrTenorReaderKey, EntryReaderMixin[DateOrTenorReaderKey, DateOrTenorEntry], ABC
-):
+class DateOrTenorReader(DateOrTenorReaderKey, EntryReaderMixin[DateOrTenorReaderKey, DateOrTenorEntry], ABC):
     """Maps a date or tenor string to its value taking into account locale conventions and formatting rules."""
 
     def get_key(self) -> DateOrTenorReaderKey:

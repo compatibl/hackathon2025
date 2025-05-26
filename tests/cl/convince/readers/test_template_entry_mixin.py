@@ -15,8 +15,8 @@
 import pytest
 from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
 from cl.runtime.templates.fstring_template_engine import FstringTemplateEngine
-from stubs.cl.convince.readers.stub_template_entry import StubTemplateEntry
 from stubs.cl.runtime.templates.stub_template import StubTemplate
+from stubs.cl.convince.readers.stub_template_entry import StubTemplateEntry
 
 
 def test_describe_correction(pytest_default_db):
@@ -34,7 +34,7 @@ def test_describe_correction(pytest_default_db):
     assert entry.describe_correction() is None
 
     # Test not valid
-    entry = StubTemplateEntry(text=invalid_text,template=template, value=value).build()
+    entry = StubTemplateEntry(text=invalid_text, template=template, value=value).build()
     assert entry.describe_correction() == "Diff"  # TODO: Use unified diff
 
 

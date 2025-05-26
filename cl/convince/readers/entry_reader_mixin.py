@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Generic
 from typing import List
 from typing import TypeVar
-
 from cl.runtime import RecordMixin
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.records.protocols import TKey

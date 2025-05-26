@@ -14,16 +14,13 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
 from cl.convince.readers.primitive.amount_units_entry import AmountUnitsEntry
 from cl.convince.readers.primitive.amount_units_reader_key import AmountUnitsReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class AmountUnitsReader(
-    AmountUnitsReaderKey, EntryReaderMixin[AmountUnitsReaderKey, AmountUnitsEntry], ABC
-):
+class AmountUnitsReader(AmountUnitsReaderKey, EntryReaderMixin[AmountUnitsReaderKey, AmountUnitsEntry], ABC):
     """Maps an amount units string to the numerical multiplier for the amount."""
 
     def get_key(self) -> AmountUnitsReaderKey:

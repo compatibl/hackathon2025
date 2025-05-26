@@ -28,4 +28,4 @@ class StubEntryReader(StubEntryReaderKey, EntryReaderMixin[StubEntryReaderKey, S
     def read(self, text: str) -> StubEntry:
         # Stub, use the last three characters as the value
         value = text[-3:]
-        return StubEntry(text=text,value=value)
+        return StubEntry(text=text, value=value)

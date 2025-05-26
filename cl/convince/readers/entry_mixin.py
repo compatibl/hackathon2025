@@ -12,19 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Generic, TypeVar
-
-from typing_extensions import Self
-
+from typing import Generic
 from cl.runtime import RecordMixin
-from cl.runtime.contexts.db_context import DbContext
-from cl.runtime.records.clone_util import CloneUtil
-from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import TKey
 from cl.runtime.records.type_util import TypeUtil
-from cl.runtime.templates.template_mixin import TemplateMixin
 
 
 @dataclass(slots=True, kw_only=True)
@@ -49,4 +43,5 @@ class EntryMixin(Generic[TKey], RecordMixin[TKey], ABC):
             # TODO: Also record correction as a log message or a dedicated record
             raise RuntimeError(
                 f"Entry validation failed for {TypeUtil.name(self)} with the following message:\n"
-                f"{correction}\nText of the entry:\n{self.text}")
+                f"{correction}\nText of the entry:\n{self.text}"
+            )
