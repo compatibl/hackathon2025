@@ -12,28 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Generic
 from typing import List
 from typing import TypeVar
+
+from cl.runtime import RecordMixin
 from cl.runtime.contexts.db_context import DbContext
-from cl.convince.readers.reader_mixin import ReaderMixin
+from cl.runtime.records.protocols import TKey
 
 TEntry = TypeVar("TEntry")
-"""Generic type parameter for a record."""
+"""Generic type parameter for an entry."""
 
 
 @dataclass(slots=True, kw_only=True)
-class EntryReaderMixin(Generic[TEntry], ReaderMixin[TEntry], ABC):
+class EntryReaderMixin(Generic[TKey, TEntry], RecordMixin[TKey], ABC):
     """Generic mixin for types that read text and return an entry record."""
 
+    @abstractmethod
+    def read(self, text: str) -> TEntry:
+        """Return an entry containing the input text and the data extracted from it."""
+
     def run_read_one(self, text: str) -> None:
-        """Save entry record for the specified entry text."""
+        """Save the entry record obtained from the specified entry text."""
         result = self.read(text)
         DbContext.save_one(result)
 
     def run_read_many(self, texts: List[str]) -> None:
-        """Save entry records for the specified entry texts."""
+        """Save entry records obtained from the specified entry texts."""
         results = [self.read(text) for text in texts]  # TODO: Implement via workflow
         DbContext.save_many(results)
