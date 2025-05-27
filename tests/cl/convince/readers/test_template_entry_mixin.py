@@ -14,28 +14,33 @@
 
 import pytest
 from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
+from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.runtime.templates.fstring_template_engine import FstringTemplateEngine
 from stubs.cl.runtime.templates.stub_template import StubTemplate
 from stubs.cl.convince.readers.stub_template_entry import StubTemplateEntry
 
 
+# @pytest.mark.skip("Skip during refactoring.")
 def test_describe_correction(pytest_default_db):
     """Test EntryMixin."""
 
-    valid_text = "The value is abc"
-    invalid_text = "The value is def"
+    input_text = "The value is abc"
     template_body = "The value is {value}"
-    value = "abc"
+    valid_value = "abc"
+    invalid_value = "def"
 
     # Test valid
     engine = FstringTemplateEngine()
     template = StubTemplate(body=template_body, engine=engine).build()
-    entry = StubTemplateEntry(text=valid_text, template=template, value=value).build()
+    entry = StubTemplateEntry(text=input_text, template=template, value=valid_value).build()
     assert entry.describe_correction() is None
 
     # Test not valid
-    entry = StubTemplateEntry(text=invalid_text, template=template, value=value).build()
-    assert entry.describe_correction() == "Diff"  # TODO: Use unified diff
+    entry = StubTemplateEntry(text=input_text, template=template, value=invalid_value).build()
+    guard = RegressionGuard()
+    correction = entry.describe_correction()
+    guard.write(correction)
+    guard.verify()
 
 
 if __name__ == "__main__":
