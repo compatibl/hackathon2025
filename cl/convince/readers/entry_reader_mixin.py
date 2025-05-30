@@ -14,21 +14,29 @@
 
 from abc import ABC
 from abc import abstractmethod
-from dataclasses import dataclass
 from typing import Generic
 from typing import List
 from typing import TypeVar
 from cl.runtime import RecordMixin
 from cl.runtime.contexts.db_context import DbContext
+from cl.runtime.records.generic_util import GenericUtil
 from cl.runtime.records.protocols import TKey
 
 TEntry = TypeVar("TEntry")
 """Generic type parameter for an entry."""
 
 
-@dataclass(slots=True, kw_only=True)
 class EntryReaderMixin(Generic[TKey, TEntry], RecordMixin[TKey], ABC):
     """Generic mixin for types that read text and return an entry record."""
+
+    __slots__ = ()
+    """To prevent creation of __dict__ in derived types."""
+
+    @classmethod
+    def get_entry_type(cls):
+        """The actual type passed as TEntry argument to the generic definition of this class or its descendants."""
+        # Second argument of EntryReaderMixin[TKey, TEntry]
+        return GenericUtil.get_generic_args(cls, EntryReaderMixin)[1]
 
     @abstractmethod
     def read(self, text: str) -> TEntry:
