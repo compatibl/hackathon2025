@@ -36,7 +36,7 @@ class EntryReaderMixin(Generic[TKey, TEntry], RecordMixin[TKey], ABC):
     def get_entry_type(cls):
         """The actual type passed as TEntry argument to the generic definition of this class or its descendants."""
         # Second argument of EntryReaderMixin[TKey, TEntry]
-        return GenericUtil.get_generic_args(cls, EntryReaderMixin)[1]
+        return GenericUtil.get_generic_args(cls, EntryReaderMixin)["TEntry"]
 
     @abstractmethod
     def read(self, text: str) -> TEntry:
