@@ -21,12 +21,14 @@ from cl.runtime.records.protocols import TKey
 from cl.runtime.records.type_util import TypeUtil
 
 
-@dataclass(slots=True, kw_only=True)
 class EntryMixin(Generic[TKey], RecordMixin[TKey], ABC):
     """
     Optional generic mixin for a text entry with a describe_correction method.
     Declare MyEntry as MyEntry(MyKey, EntryMixin[MyKey]).
     """
+
+    __slots__ = ()
+    """To prevent creation of __dict__ in derived types."""
 
     @property
     @abstractmethod

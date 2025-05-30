@@ -25,12 +25,14 @@ from cl.runtime.serializers.yaml_encoders import YamlEncoders
 from cl.convince.readers.entry_mixin import EntryMixin
 
 
-@dataclass(slots=True, kw_only=True)
 class TemplateEntryMixin(Generic[TKey], EntryMixin[TKey], ABC):
     """
     Optional generic mixin for a text entry with a describe_correction method that uses a template.
     Declare MyEntryTemplate as MyEntryTemplate(MyKey, TemplateEntryMixin[MyKey]).
     """
+
+    __slots__ = ()
+    """To prevent creation of __dict__ in derived types."""
 
     @property
     @abstractmethod
