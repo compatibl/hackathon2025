@@ -14,7 +14,6 @@
 
 from abc import ABC
 from abc import abstractmethod
-from dataclasses import dataclass
 from typing import Generic
 from cl.runtime import RecordMixin
 from cl.runtime.records.protocols import TKey

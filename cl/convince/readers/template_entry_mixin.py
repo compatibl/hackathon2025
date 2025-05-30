@@ -15,7 +15,6 @@
 import difflib
 from abc import ABC
 from abc import abstractmethod
-from dataclasses import dataclass
 from typing import Generic
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.records.key_mixin import KeyMixin
