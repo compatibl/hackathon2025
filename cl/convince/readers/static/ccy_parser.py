@@ -42,7 +42,7 @@ class CcyParser(CcyReader):
     def read(self, text: str) -> CcyEntry:
 
         # Load objects from storage if specified as a key
-        retriever = DbContext.load_one(MultipleChoiceRetriever, self.retriever)
+        retriever = DbContext.load_one(self.retriever, cast_to=MultipleChoiceRetriever)
 
         # Get the list of valid currency codes
         currencies = DbContext.load_all(Ccy)

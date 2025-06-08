@@ -163,7 +163,7 @@ class CompletionCache(DataMixin):
         completion_key = CompletionKeyGen(llm=LlmKey(llm_id=self.channel), query=query).build().get_key()
 
         # Return completion string from DB or None if the record is not found
-        completion = DbContext.load_one_or_none(Completion, completion_key)
+        completion = DbContext.load_one_or_none(completion_key, cast_to=Completion)
         result = completion.completion if completion is not None else None
         return result
 

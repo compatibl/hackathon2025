@@ -88,7 +88,7 @@ class AmountFormat(AmountReader):
         )
         if currency_description is not None:
             # Try to load an existing entry using reverse lookup
-            ccy_reader = DbContext.load_one(CcyReader, self.ccy_reader)
+            ccy_reader = DbContext.load_one(self.ccy_reader, cast_to=CcyReader)
             result.ccy = ccy_reader.read(currency_description)
 
         # Extract the currency if present
@@ -99,7 +99,7 @@ class AmountFormat(AmountReader):
         )
         if amount_description is not None:
             # Try to load an existing entry using reverse lookup
-            number_reader = DbContext.load_one(NumberReader, self.number_reader)
+            number_reader = DbContext.load_one(self.number_reader, cast_to=NumberReader)
             result.value = number_reader.read(amount_description).value
 
         return result.build()

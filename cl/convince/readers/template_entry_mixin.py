@@ -40,8 +40,7 @@ class TemplateEntryMixin(Generic[TKey], EntryMixin[TKey], ABC):
 
     def describe_correction(self) -> str | None:
         # Load the template from DB
-        template_type = type(self.template)
-        template = DbContext.load_one(template_type, self.template)
+        template = DbContext.load_one(self.template)
         # Render
         rendered_template = template.render(self)  # noqa
         if self.text == rendered_template:

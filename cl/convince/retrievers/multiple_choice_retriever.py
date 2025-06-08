@@ -94,10 +94,10 @@ class MultipleChoiceRetriever(Retriever):
     ) -> MultipleChoiceRetrieval:
 
         # Load the full LLM specified by the context
-        llm = DbContext.load_one(Llm, LlmContext.get_full_llm())
+        llm = DbContext.load_one(LlmContext.get_full_llm(), cast_to=Llm)
 
         # Load the prompt
-        prompt = DbContext.load_one(Prompt, self.prompt)
+        prompt = DbContext.load_one(self.prompt, cast_to=Prompt)
         valid_choices_str = "; ".join(valid_choices)
 
         trial_count = 2
