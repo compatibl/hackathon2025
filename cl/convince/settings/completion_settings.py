@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from typing_extensions import final
 from cl.runtime.contexts.os_util import OsUtil
 from cl.runtime.settings.settings import Settings
-from typing_extensions import final
 
 
 @dataclass(slots=True, kw_only=True)
