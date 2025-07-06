@@ -11,7 +11,10 @@ default:
     - cl.convince
     - stubs.cl.runtime
     - stubs.cl.convince
-  context_db_class: cl.runtime.db.sql.sqlite_db.SqliteDb
+
+  # Documented in DbSettings class
+  db_name: dev_hackathon_main
+  db_type: SqliteDb
 
   # Documented in ApiSettings class
   api_hostname: localhost
