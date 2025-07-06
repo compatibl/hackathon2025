@@ -15,9 +15,11 @@
 from dataclasses import dataclass
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.settings.settings import Settings
+from typing_extensions import final
 
 
 @dataclass(slots=True, kw_only=True)
+@final
 class LlmSettings(Settings):
     """LLM settings in the Convince package."""
 
@@ -32,10 +34,6 @@ class LlmSettings(Settings):
 
     mini: str | None = None
     """String identifier of the mini LLM used in the absence of override (ensure the LLM record exists)."""
-
-    @classmethod
-    def get_base_type(cls) -> type:
-        return LlmSettings
 
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""

@@ -15,9 +15,11 @@
 from dataclasses import dataclass
 from cl.runtime.contexts.os_util import OsUtil
 from cl.runtime.settings.settings import Settings
+from typing_extensions import final
 
 
 @dataclass(slots=True, kw_only=True)
+@final
 class CompletionSettings(Settings):
     """Settings that apply to the entire Convince package."""
 
@@ -26,10 +28,6 @@ class CompletionSettings(Settings):
 
     save_to_csv: bool | None = None
     """Determines if completions are saved to CSV files (defaults to True on Windows, required on other OS)."""
-
-    @classmethod
-    def get_base_type(cls) -> type:
-        return CompletionSettings
 
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""

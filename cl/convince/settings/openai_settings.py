@@ -15,9 +15,11 @@
 from dataclasses import dataclass
 from cl.runtime.records.type_util import TypeUtil
 from cl.runtime.settings.settings import Settings
+from typing_extensions import final
 
 
 @dataclass(slots=True, kw_only=True)
+@final
 class OpenaiSettings(Settings):
     """OpenAI settings."""
 
@@ -39,7 +41,3 @@ class OpenaiSettings(Settings):
             raise RuntimeError(f"{TypeUtil.name(self)} field 'api_key' must be a string.")
         if self.api_base_url is not None and not isinstance(self.api_base_url, str):
             raise RuntimeError(f"{TypeUtil.name(self)} field 'api_base_url' must be None or a string.")
-
-    @classmethod
-    def get_base_type(cls) -> type:
-        return OpenaiSettings

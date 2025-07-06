@@ -15,9 +15,11 @@
 from dataclasses import dataclass
 from cl.runtime.records.type_util import TypeUtil
 from cl.runtime.settings.settings import Settings
+from typing_extensions import final
 
 
 @dataclass(slots=True, kw_only=True)
+@final
 class FireworksSettings(Settings):
     """Fireworks settings."""
 
@@ -30,6 +32,3 @@ class FireworksSettings(Settings):
         if self.api_key is not None and not isinstance(self.api_key, str):
             raise RuntimeError(f"{TypeUtil.name(self)} field 'api_key' must be a string.")
 
-    @classmethod
-    def get_base_type(cls) -> type:
-        return FireworksSettings
