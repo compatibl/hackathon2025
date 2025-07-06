@@ -21,9 +21,9 @@ def test_llm_context():
     """Smoke test."""
 
     settings = LlmSettings.instance()
-    assert LlmContext.get_locale().locale_id == settings.locale
-    assert LlmContext.get_full_llm().llm_id == settings.full
-    assert LlmContext.get_mini_llm().llm_id == settings.mini
+    assert LlmContext.get_locale().locale_id == settings.llm_locale
+    assert LlmContext.get_full_llm().llm_id == settings.llm_full
+    assert LlmContext.get_mini_llm().llm_id == settings.llm_mini
 
 
 if __name__ == "__main__":

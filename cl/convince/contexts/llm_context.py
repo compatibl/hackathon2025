@@ -63,9 +63,9 @@ class LlmContext(Context):
         if (context := cls.current_or_none()) is not None and context.locale is not None:
             # Use the value from the current context if not None
             return context.locale
-        elif (settings := LlmSettings.instance()).locale is not None:
+        elif (settings := LlmSettings.instance()).llm_locale is not None:
             # Otherwise use the value from settings if not None
-            return LocaleKey(locale_id=settings.locale)
+            return LocaleKey(locale_id=settings.llm_locale)
         else:
             # If neither is defined, return None
             return None
@@ -85,9 +85,9 @@ class LlmContext(Context):
         if (context := cls.current_or_none()) is not None and context.full_llm is not None:
             # Use the value from the current context if not None
             return context.full_llm
-        elif (settings := LlmSettings.instance()).full is not None:
+        elif (settings := LlmSettings.instance()).llm_full is not None:
             # Otherwise use the value from settings if not None
-            return LlmKey(llm_id=settings.full).build()
+            return LlmKey(llm_id=settings.llm_full).build()
         else:
             # If neither is defined, return None
             return None
@@ -107,9 +107,9 @@ class LlmContext(Context):
         if (context := cls.current_or_none()) is not None and context.mini_llm is not None:
             # Use the value from the current context if not None
             return context.mini_llm
-        elif (settings := LlmSettings.instance()).mini is not None:
+        elif (settings := LlmSettings.instance()).llm_mini is not None:
             # Otherwise use the value from settings if not None
-            return LlmKey(llm_id=settings.mini)
+            return LlmKey(llm_id=settings.llm_mini)
         else:
             # If neither is defined, return None
             return None

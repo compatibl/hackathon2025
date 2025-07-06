@@ -23,19 +23,19 @@ from cl.runtime.settings.settings import Settings
 class CompletionSettings(Settings):
     """Settings that apply to the entire Convince package."""
 
-    load_from_csv: bool | None = None
+    completion_load_from_csv: bool | None = None
     """Determines if completions are loaded from CSV files (defaults to True on Windows, required on other OS)."""
 
-    save_to_csv: bool | None = None
+    completion_save_to_csv: bool | None = None
     """Determines if completions are saved to CSV files (defaults to True on Windows, required on other OS)."""
 
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
-        if self.load_from_csv is None:
+        if self.completion_load_from_csv is None:
             # Defaults to True on Windows, required on other OS
             if OsUtil.is_windows():
-                self.load_from_csv = True
+                self.completion_load_from_csv = True
             else:
                 raise RuntimeError(
                     "Setting CL_CONVINCE_COMPLETION_LOAD_FROM_CSV is required on non-Windows platforms.\n"
@@ -43,10 +43,10 @@ class CompletionSettings(Settings):
                 )
 
         # Save completions to a local file on Windows only
-        if self.save_to_csv is None:
+        if self.completion_save_to_csv is None:
             # Defaults to True on Windows, required on other OS
             if OsUtil.is_windows():
-                self.save_to_csv = True
+                self.completion_save_to_csv = True
             else:
                 raise RuntimeError(
                     "Setting CL_CONVINCE_COMPLETION_SAVE_TO_CSV is required on non-Windows platforms.\n"

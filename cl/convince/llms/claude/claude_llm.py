@@ -59,7 +59,7 @@ class ClaudeLlm(Llm):
         """Instantiate and cache the Anthropic client instance."""
 
         # Try loading API key from context.secrets first and then from settings
-        api_key = UserContextUtil.decrypt_secret("ANTHROPIC_API_KEY") or AnthropicSettings.instance().api_key
+        api_key = UserContextUtil.decrypt_secret("ANTHROPIC_API_KEY") or AnthropicSettings.instance().anthropic_api_key
         if api_key is None:
             raise UserError("Provide ANTHROPIC_API_KEY in Account > My Keys (users) or using Dynaconf (developers).")
 

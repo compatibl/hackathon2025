@@ -23,10 +23,10 @@ from cl.runtime.settings.settings import Settings
 class OpenaiSettings(Settings):
     """OpenAI settings."""
 
-    api_key: str | None = None
+    openai_api_key: str | None = None
     """The key for making REST API calls, ensure this key is stored in .secrets.yaml rather than settings.yaml."""
 
-    api_base_url: str | None = None
+    openai_api_base_url: str | None = None
     """
     Base URL inclusive of protocol version for the REST API (optional, passed as 'base_url' to OpenAI SDK).
     
@@ -37,7 +37,7 @@ class OpenaiSettings(Settings):
 
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
-        if self.api_key is not None and not isinstance(self.api_key, str):
+        if self.openai_api_key is not None and not isinstance(self.openai_api_key, str):
             raise RuntimeError(f"{TypeUtil.name(self)} field 'api_key' must be a string.")
-        if self.api_base_url is not None and not isinstance(self.api_base_url, str):
+        if self.openai_api_base_url is not None and not isinstance(self.openai_api_base_url, str):
             raise RuntimeError(f"{TypeUtil.name(self)} field 'api_base_url' must be None or a string.")

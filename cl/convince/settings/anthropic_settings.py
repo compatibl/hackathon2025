@@ -23,10 +23,10 @@ from cl.runtime.settings.settings import Settings
 class AnthropicSettings(Settings):
     """Anthropic settings."""
 
-    api_key: str | None = None
+    anthropic_api_key: str | None = None
     """The key for making REST API calls, ensure this key is stored in .secrets.yaml rather than settings.yaml."""
 
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
-        if self.api_key is not None and not isinstance(self.api_key, str):
+        if self.anthropic_api_key is not None and not isinstance(self.anthropic_api_key, str):
             raise RuntimeError(f"{TypeUtil.name(self)} field 'api_key' must be a string.")

@@ -117,7 +117,7 @@ class CompletionCache(DataMixin):
         DbContext.save_one(completion_record)
 
         # Save completions to a file unless explicitly turned off in CompletionSettings
-        if CompletionSettings.instance().save_to_csv:
+        if CompletionSettings.instance().completion_save_to_csv:
 
             # Check if the file already exists
             is_new = not os.path.exists(self.output_path)
@@ -176,7 +176,7 @@ class CompletionCache(DataMixin):
         if not self._completions_loaded:
             self._completions_loaded = True
 
-            if CompletionSettings.instance().load_from_csv and os.path.exists(self.output_path):
+            if CompletionSettings.instance().completion_load_from_csv and os.path.exists(self.output_path):
                 # Populate the dictionary from file if exists but not yet loaded
                 with open(self.output_path, mode="r", newline="", encoding="utf-8") as file:
                     reader = csv.reader(file, delimiter=",", quotechar='"', escapechar="\\", lineterminator=os.linesep)
