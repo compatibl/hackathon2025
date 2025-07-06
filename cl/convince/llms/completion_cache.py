@@ -17,6 +17,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 from cl.runtime.contexts.db_context import DbContext
+from cl.runtime.contexts.process_context import ProcessContext
 from cl.runtime.qa.qa_util import QaUtil
 from cl.runtime.records.data_mixin import DataMixin
 from cl.runtime.settings.project_settings import ProjectSettings
@@ -69,8 +70,10 @@ class CompletionCache(DataMixin):
 
         # Find base_path=dir_path/test_module by examining call stack for test function signature test_*
         # Directory 'project_root/completions' is used when not running under a test
-        default_dir = os.path.join(ProjectSettings.instance().get_resources_root(), "completions")
-        base_dir = QaUtil.get_env_dir(default_dir=default_dir)
+        if ProcessContext.is_testing():
+            base_dir = QaUtil.get_test_dir()
+        else:
+            base_dir = os.path.join(ProjectSettings.instance().get_resources_root(), "completions")
 
         # If not found, use base path relative to project root
         if base_dir is None:
