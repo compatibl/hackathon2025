@@ -17,11 +17,6 @@ from stubs.cl.convince.readers.stub_entry import StubEntry
 from stubs.cl.convince.readers.stub_entry_reader import StubEntryReader
 
 
-def test_get_entry_type():
-    """Test EntryReaderMixin.get_entry_type method."""
-    assert StubEntryReader.get_entry_type() == StubEntry
-
-
 def test_read():
     """Test EntryReaderMixin.read method."""
 

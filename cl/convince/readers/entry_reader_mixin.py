@@ -19,7 +19,6 @@ from typing import List
 from typing import TypeVar
 from cl.runtime import RecordMixin
 from cl.runtime.contexts.db_context import DbContext
-from cl.runtime.records.generic_util import GenericUtil
 from cl.runtime.records.protocols import TKey
 
 TEntry = TypeVar("TEntry")
@@ -31,12 +30,6 @@ class EntryReaderMixin(Generic[TKey, TEntry], RecordMixin, ABC):
 
     __slots__ = ()
     """To prevent creation of __dict__ in derived types."""
-
-    @classmethod
-    def get_entry_type(cls):
-        """The actual type passed as TEntry argument to the generic definition of this class or its descendants."""
-        # Second argument of EntryReaderMixin[TKey, TEntry]
-        return GenericUtil.get_bound_type(cls, TEntry)
 
     @abstractmethod
     def read(self, text: str) -> TEntry:
