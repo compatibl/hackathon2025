@@ -19,7 +19,7 @@ from cl.convince.readers.primitive.amount_units_entry_key import AmountUnitsEntr
 
 
 @dataclass(slots=True, kw_only=True)
-class AmountUnitsEntry(AmountUnitsEntryKey, RecordMixin[AmountUnitsEntryKey]):
+class AmountUnitsEntry(AmountUnitsEntryKey, RecordMixin):
     """Maps amount units string to the numerical multiplier for the amount."""
 
     amount_multiplier: float = required()

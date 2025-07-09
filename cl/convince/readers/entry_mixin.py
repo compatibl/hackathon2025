@@ -20,7 +20,7 @@ from cl.runtime.records.protocols import TKey
 from cl.runtime.records.type_util import TypeUtil
 
 
-class EntryMixin(Generic[TKey], RecordMixin[TKey], ABC):
+class EntryMixin(Generic[TKey], RecordMixin, ABC):
     """
     Optional generic mixin for a text entry with a describe_correction method.
     Declare MyEntry as MyEntry(MyKey, EntryMixin[MyKey]).

@@ -21,7 +21,7 @@ from cl.convince.retrievers.retriever_key import RetrieverKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Retrieval(RetrievalKey, RecordMixin[RetrievalKey]):  # TODO: Derive from Task
+class Retrieval(RetrievalKey, RecordMixin):  # TODO: Derive from Task
     """Records inputs and results of a retrieval."""
 
     retriever: RetrieverKey = required()

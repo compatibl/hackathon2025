@@ -18,7 +18,7 @@ from cl.convince.readers.primitive.number_entry_key import NumberEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
-class NumberEntry(NumberEntryKey, RecordMixin[NumberEntryKey]):
+class NumberEntry(NumberEntryKey, RecordMixin):
     """Maps a number specified using words or digits to its numerical value."""
 
     value: float | None = None

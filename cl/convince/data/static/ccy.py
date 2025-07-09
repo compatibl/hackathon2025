@@ -19,7 +19,7 @@ from cl.convince.data.static.ccy_key import CcyKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Ccy(CcyKey, RecordMixin[CcyKey], ABC):
+class Ccy(CcyKey, RecordMixin, ABC):
     """Currency recorded using ISO-4217 three-letter currency code."""
 
     def get_key(self) -> CcyKey:

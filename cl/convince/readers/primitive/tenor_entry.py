@@ -18,7 +18,7 @@ from cl.convince.readers.primitive.tenor_entry_key import TenorEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
-class TenorEntry(TenorEntryKey, RecordMixin[TenorEntryKey]):
+class TenorEntry(TenorEntryKey, RecordMixin):
     """Maps tenor string to time interval."""
 
     years: int | None = None

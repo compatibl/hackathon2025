@@ -20,7 +20,7 @@ from cl.convince.readers.primitive.date_entry_key import DateEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
-class DateEntry(DateEntryKey, RecordMixin[DateEntryKey]):
+class DateEntry(DateEntryKey, RecordMixin):
     """Maps a date string to its value taking into account locale conventions and formatting rules."""
 
     date: dt.date = required()

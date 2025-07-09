@@ -23,7 +23,7 @@ from cl.convince.llms.llm_key import LlmKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Llm(LlmKey, RecordMixin[LlmKey], ABC):
+class Llm(LlmKey, RecordMixin, ABC):
     """Provides an API for single query and chat completion."""
 
     _completion_cache: CompletionCache | None = None

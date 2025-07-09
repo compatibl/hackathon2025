@@ -26,7 +26,7 @@ TEntry = TypeVar("TEntry")
 """Generic type parameter for an entry."""
 
 
-class EntryReaderMixin(Generic[TKey, TEntry], RecordMixin[TKey], ABC):
+class EntryReaderMixin(Generic[TKey, TEntry], RecordMixin, ABC):
     """Generic mixin for types that read text and return an entry record."""
 
     __slots__ = ()

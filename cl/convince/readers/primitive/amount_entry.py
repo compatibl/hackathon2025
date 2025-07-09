@@ -21,7 +21,7 @@ from cl.convince.readers.static.ccy_entry_key import CcyEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
-class AmountEntry(AmountEntryKey, RecordMixin[AmountEntryKey]):
+class AmountEntry(AmountEntryKey, RecordMixin):
     """Entry for an amount with or without currency specification."""
 
     value: NumberEntryKey = required()

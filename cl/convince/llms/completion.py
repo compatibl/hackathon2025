@@ -28,7 +28,7 @@ _TRIAL_RE = re.compile(r"Trial:\s*(\S+)")
 
 
 @dataclass(slots=True, kw_only=True)
-class Completion(CompletionKeyGen, RecordMixin[CompletionKey], ABC):
+class Completion(CompletionKeyGen, RecordMixin, ABC):
     """Provides an API for single query and chat completion."""
 
     completion: str = required()

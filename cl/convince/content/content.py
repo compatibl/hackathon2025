@@ -21,7 +21,7 @@ from cl.convince.content.content_key import ContentKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Content(ContentKey, RecordMixin[ContentKey], ABC):
+class Content(ContentKey, RecordMixin, ABC):
     """Content consumed or generated during AI workflows (derived classes provide format-specific functionality)."""
 
     @abstractmethod

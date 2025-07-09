@@ -19,7 +19,7 @@ from cl.convince.prompts.prompt_key import PromptKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Prompt(PromptKey, RecordMixin[PromptKey], ABC):
+class Prompt(PromptKey, RecordMixin, ABC):
     """Parameterized LLM prompt template rendered using a parameters object."""
 
     def get_key(self) -> PromptKey:

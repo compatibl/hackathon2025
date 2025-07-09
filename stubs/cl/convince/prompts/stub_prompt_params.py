@@ -20,7 +20,7 @@ from stubs.cl.convince.prompts.stub_prompt_params_key import StubPromptParamsKey
 
 
 @dataclass(slots=True, kw_only=True)
-class StubPromptParams(StubPromptParamsKey, RecordMixin[StubPromptParamsKey]):
+class StubPromptParams(StubPromptParamsKey, RecordMixin):
     """Stub prompt parameters of various primitive types."""
 
     str_req: str = "abc"

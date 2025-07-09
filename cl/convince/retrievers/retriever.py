@@ -20,7 +20,7 @@ from cl.convince.retrievers.retriever_key import RetrieverKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Retriever(RetrieverKey, RecordMixin[RetrieverKey], ABC):
+class Retriever(RetrieverKey, RecordMixin, ABC):
     """Retrieves the requested data from the text."""
 
     def get_key(self) -> RetrieverKey:

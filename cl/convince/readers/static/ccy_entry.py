@@ -20,7 +20,7 @@ from cl.convince.readers.static.ccy_entry_key import CcyEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
-class CcyEntry(CcyEntryKey, RecordMixin[CcyEntryKey]):
+class CcyEntry(CcyEntryKey, RecordMixin):
     """Maps string description of a currency to the ISO-4217 three-letter currency code."""
 
     ccy: CcyKey = required()

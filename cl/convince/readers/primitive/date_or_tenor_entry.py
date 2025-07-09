@@ -18,7 +18,7 @@ from cl.convince.readers.primitive.date_or_tenor_entry_key import DateOrTenorEnt
 
 
 @dataclass(slots=True, kw_only=True)
-class DateOrTenorEntry(DateOrTenorEntryKey, RecordMixin[DateOrTenorEntryKey]):
+class DateOrTenorEntry(DateOrTenorEntryKey, RecordMixin):
     """Maps a date or tenor string to its value taking into account locale conventions and formatting rules."""
 
     date: str | None = None
