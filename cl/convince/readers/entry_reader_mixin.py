@@ -14,25 +14,21 @@
 
 from abc import ABC
 from abc import abstractmethod
-from typing import Generic
 from typing import List
 from typing import TypeVar
+from cl.convince.readers.entry_mixin import EntryMixin
 from cl.runtime import RecordMixin
 from cl.runtime.contexts.db_context import DbContext
-from cl.runtime.records.protocols import TKey
-
-TEntry = TypeVar("TEntry")
-"""Generic type parameter for an entry."""
 
 
-class EntryReaderMixin(Generic[TKey, TEntry], RecordMixin, ABC):
-    """Generic mixin for types that read text and return an entry record."""
+class EntryReaderMixin(RecordMixin, ABC):
+    """Mixin for types that read text and return an entry record."""
 
     __slots__ = ()
     """To prevent creation of __dict__ in derived types."""
 
     @abstractmethod
-    def read(self, text: str) -> TEntry:
+    def read(self, text: str) -> EntryMixin:
         """Return an entry containing the input text and the data extracted from it."""
 
     def run_read_one(self, text: str) -> None:

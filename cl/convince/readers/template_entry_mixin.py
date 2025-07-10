@@ -15,7 +15,6 @@
 import difflib
 from abc import ABC
 from abc import abstractmethod
-from typing import Generic
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import TKey
@@ -24,18 +23,15 @@ from cl.runtime.serializers.yaml_encoders import YamlEncoders
 from cl.convince.readers.entry_mixin import EntryMixin
 
 
-class TemplateEntryMixin(Generic[TKey], EntryMixin[TKey], ABC):
-    """
-    Optional generic mixin for a text entry with a describe_correction method that uses a template.
-    Declare MyEntryTemplate as MyEntryTemplate(MyKey, TemplateEntryMixin[MyKey]).
-    """
+class TemplateEntryMixin(EntryMixin, ABC):
+    """Mixin for a text entry with a describe_correction method that uses a template."""
 
     __slots__ = ()
     """To prevent creation of __dict__ in derived types."""
 
     @property
     @abstractmethod
-    def template(self) -> KeyMixin:
+    def template(self) -> KeyMixin:  # TODO: Use a specific key type for the template key
         """Template used to validate the entry."""
 
     def describe_correction(self) -> str | None:

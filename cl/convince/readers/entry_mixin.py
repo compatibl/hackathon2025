@@ -14,17 +14,13 @@
 
 from abc import ABC
 from abc import abstractmethod
-from typing import Generic
 from cl.runtime import RecordMixin
 from cl.runtime.records.protocols import TKey
 from cl.runtime.records.type_util import TypeUtil
 
 
-class EntryMixin(Generic[TKey], RecordMixin, ABC):
-    """
-    Optional generic mixin for a text entry with a describe_correction method.
-    Declare MyEntry as MyEntry(MyKey, EntryMixin[MyKey]).
-    """
+class EntryMixin(RecordMixin, ABC):
+    """Mixin for a text entry with a describe_correction method."""
 
     __slots__ = ()
     """To prevent creation of __dict__ in derived types."""
