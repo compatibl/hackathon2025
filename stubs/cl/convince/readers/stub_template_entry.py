@@ -20,7 +20,7 @@ from stubs.cl.convince.readers.stub_entry_key import StubEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
-class StubTemplateEntry(StubEntryKey, TemplateEntryMixin[StubEntryKey]):
+class StubTemplateEntry(StubEntryKey, TemplateEntryMixin):
     """Stub for TemplateEntryMixin."""
 
     template: StubTemplateKey | None = None

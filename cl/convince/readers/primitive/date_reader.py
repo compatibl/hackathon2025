@@ -20,7 +20,7 @@ from cl.convince.readers.primitive.date_reader_key import DateReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class DateReader(DateReaderKey, EntryReaderMixin[DateReaderKey, DateEntry], ABC):
+class DateReader(DateReaderKey, EntryReaderMixin, ABC):
     """Maps a date string to its value taking into account locale conventions and formatting rules."""
 
     def get_key(self) -> DateReaderKey:

@@ -19,7 +19,7 @@ from stubs.cl.convince.readers.stub_entry_reader_key import StubEntryReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class StubEntryReader(StubEntryReaderKey, EntryReaderMixin[StubEntryReaderKey, StubEntry]):
+class StubEntryReader(StubEntryReaderKey, EntryReaderMixin):
     """Stub for EntryReaderMixin."""
 
     def get_key(self) -> StubEntryReaderKey:

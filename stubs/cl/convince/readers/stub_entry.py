@@ -19,7 +19,7 @@ from stubs.cl.convince.readers.stub_entry_key import StubEntryKey
 
 
 @dataclass(slots=True, kw_only=True)
-class StubEntry(StubEntryKey, EntryMixin[StubEntryKey]):
+class StubEntry(StubEntryKey, EntryMixin):
     """Stub for EntryMixin."""
 
     value: str = required()

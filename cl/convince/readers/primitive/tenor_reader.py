@@ -20,7 +20,7 @@ from cl.convince.readers.primitive.tenor_reader_key import TenorReaderKey
 
 
 @dataclass(slots=True, kw_only=True)
-class TenorReader(TenorReaderKey, EntryReaderMixin[TenorReaderKey, TenorEntry], ABC):
+class TenorReader(TenorReaderKey, EntryReaderMixin, ABC):
     """Maps tenor string to time interval."""
 
     def get_key(self) -> TenorReaderKey:
