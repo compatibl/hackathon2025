@@ -15,7 +15,6 @@
 from abc import ABC
 from abc import abstractmethod
 from cl.runtime import RecordMixin
-from cl.runtime.records.protocols import TKey
 from cl.runtime.records.type_util import TypeUtil
 
 

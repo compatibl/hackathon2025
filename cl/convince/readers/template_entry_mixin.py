@@ -17,7 +17,6 @@ from abc import ABC
 from abc import abstractmethod
 from cl.runtime.contexts.db_context import DbContext
 from cl.runtime.records.key_mixin import KeyMixin
-from cl.runtime.records.protocols import TKey
 from cl.runtime.serializers.bootstrap_serializers import BootstrapSerializers
 from cl.runtime.serializers.yaml_encoders import YamlEncoders
 from cl.convince.readers.entry_mixin import EntryMixin

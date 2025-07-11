@@ -15,7 +15,6 @@
 from abc import ABC
 from dataclasses import dataclass
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
-from cl.convince.readers.primitive.amount_units_entry import AmountUnitsEntry
 from cl.convince.readers.primitive.amount_units_reader_key import AmountUnitsReaderKey
 
 

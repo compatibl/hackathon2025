@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-from stubs.cl.convince.readers.stub_entry import StubEntry
 from stubs.cl.convince.readers.stub_entry_reader import StubEntryReader
 
 

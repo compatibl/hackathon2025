@@ -15,7 +15,6 @@
 from abc import ABC
 from dataclasses import dataclass
 from cl.convince.readers.entry_reader_mixin import EntryReaderMixin
-from cl.convince.readers.primitive.tenor_entry import TenorEntry
 from cl.convince.readers.primitive.tenor_reader_key import TenorReaderKey
 
 

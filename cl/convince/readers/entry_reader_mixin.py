@@ -15,10 +15,9 @@
 from abc import ABC
 from abc import abstractmethod
 from typing import List
-from typing import TypeVar
-from cl.convince.readers.entry_mixin import EntryMixin
 from cl.runtime import RecordMixin
 from cl.runtime.contexts.db_context import DbContext
+from cl.convince.readers.entry_mixin import EntryMixin
 
 
 class EntryReaderMixin(RecordMixin, ABC):
