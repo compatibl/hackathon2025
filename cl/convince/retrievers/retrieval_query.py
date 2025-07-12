@@ -27,5 +27,5 @@ class RetrievalQuery(QueryMixin):
     """Filter by retriever key."""
 
     @classmethod
-    def get_record_type(cls) -> type:
+    def get_target_type(cls) -> type:
         return AnnotatingRetrieval
