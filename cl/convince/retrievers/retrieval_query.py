@@ -21,7 +21,7 @@ from cl.convince.retrievers.retriever_key import RetrieverKey
 
 @dataclass(slots=True, kw_only=True)
 class RetrievalQuery(QueryMixin):
-    """Query Retrieval by the retriever field."""
+    """Query for Retrieval by the retriever field."""
 
     retriever: RetrieverKey = required()
     """Filter by retriever key."""
