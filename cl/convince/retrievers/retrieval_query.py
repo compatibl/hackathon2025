@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.query_mixin import QueryMixin
 from cl.convince.retrievers.annotating_retrieval import AnnotatingRetrieval
 from cl.convince.retrievers.retriever_key import RetrieverKey
-from cl.runtime.records.for_dataclasses.extensions import required
 
 
 @dataclass(slots=True, kw_only=True)
@@ -28,4 +28,4 @@ class RetrievalQuery(QueryMixin):
 
     @classmethod
     def get_record_type(cls) -> type:
-        return AnnotatingRetrieval 
+        return AnnotatingRetrieval
