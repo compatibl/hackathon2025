@@ -27,7 +27,7 @@ class CompletionKey(KeyMixin):
     """Unique completion identifier is a hash of completion parameters."""
 
     @classmethod
-    def get_key_type(cls) -> type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return CompletionKey
 
     def __init(self) -> None:

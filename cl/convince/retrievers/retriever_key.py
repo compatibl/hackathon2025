@@ -25,5 +25,5 @@ class RetrieverKey(KeyMixin):
     """Unique retriever identifier defaults to Timestamp if not specified."""
 
     @classmethod
-    def get_key_type(cls) -> type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return RetrieverKey

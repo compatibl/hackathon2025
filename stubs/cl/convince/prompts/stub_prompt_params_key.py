@@ -24,5 +24,5 @@ class StubPromptParamsKey(KeyMixin):
     """Unique prompt params identifier."""
 
     @classmethod
-    def get_key_type(cls) -> type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return StubPromptParamsKey

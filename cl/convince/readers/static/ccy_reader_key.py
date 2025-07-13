@@ -25,5 +25,5 @@ class CcyReaderKey(KeyMixin):
     """Unique currency reader identifier."""
 
     @classmethod
-    def get_key_type(cls) -> type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return CcyReaderKey

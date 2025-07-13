@@ -30,7 +30,7 @@ class CcyKey(KeyMixin):
     """3-letter uppercase ISO-4217 code for the currency."""
 
     @classmethod
-    def get_key_type(cls) -> type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return CcyKey
 
     def __init(self) -> None:

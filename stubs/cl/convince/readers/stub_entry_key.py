@@ -25,5 +25,5 @@ class StubEntryKey(KeyMixin):
     """Full text of the entry."""
 
     @classmethod
-    def get_key_type(cls) -> type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return StubEntryKey
