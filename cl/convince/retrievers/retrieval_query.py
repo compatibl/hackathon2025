@@ -27,6 +27,5 @@ class RetrievalQuery(QueryMixin):
     retriever: RetrieverKey = required()
     """Filter by retriever key."""
 
-    @classmethod
-    def get_target_type(cls) -> type[KeyMixin]:
+    def get_target_type(self) -> type[KeyMixin]:
         return AnnotatingRetrieval
