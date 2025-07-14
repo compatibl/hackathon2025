@@ -13,14 +13,15 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from cl.convince.data.static import ccy_key
 from cl.runtime.contexts.db_context import DbContext
-from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.data.static.ccy import Ccy
 from cl.convince.data.static.ccy_key import CcyKey
 from cl.convince.readers.static.ccy_entry import CcyEntry
 from cl.convince.readers.static.ccy_reader import CcyReader
 from cl.convince.retrievers.multiple_choice_retriever import MultipleChoiceRetriever
 from cl.convince.retrievers.retriever_key import RetrieverKey
+from cl.runtime.records.for_dataclasses.extensions import required
 
 _CURRENCY_ISO_CODE = "Currency code in strict ISO-4217 format of three uppercase letters, no variations allowed."
 """Parameter description for the currency ISO-4217 code."""
@@ -44,9 +45,9 @@ class CcyParser(CcyReader):
         # Load objects from storage if specified as a key
         retriever = DbContext.load_one(self.retriever, cast_to=MultipleChoiceRetriever)
 
-        # Get the list of valid currency codes
-        currencies = DbContext.load_all(Ccy)
-        iso_codes = [currency.iso_code for currency in currencies]
+        # Get the list of all currency codes
+        ccy_keys = DbContext.load_all(CcyKey, cast_to=Ccy)
+        iso_codes = [ccy.iso_code for ccy in ccy_keys]
 
         # Retrieve ISO code
         retrieval = retriever.retrieve(
