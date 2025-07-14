@@ -46,7 +46,7 @@ class CcyParser(CcyReader):
         retriever = DbContext.load_one(self.retriever, cast_to=MultipleChoiceRetriever)
 
         # Get the list of all currency codes
-        ccy_keys = DbContext.load_all(CcyKey, cast_to=Ccy)
+        ccy_keys = DbContext.load_type(CcyKey, cast_to=Ccy)
         iso_codes = [ccy.iso_code for ccy in ccy_keys]
 
         # Retrieve ISO code
