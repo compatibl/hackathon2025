@@ -14,13 +14,11 @@
 
 
 import pytest
-from typing import Any
 from cl.convince.llms.json_response_util import JsonResponseUtil
 
 
-@pytest.mark.parametrize(
-    "input_str, expected_output",
-    [
+def test_fix_json_format() -> None:
+    test_cases = [
         # Test basic valid JSON
         ('{"key": "value"}', '{"key": "value"}'),
         # Test single quotes to double quotes
@@ -72,15 +70,14 @@ from cl.convince.llms.json_response_util import JsonResponseUtil
         (" {}  ", " {}  "),
         (" {  \n }  ", " {  \n }  "),
         ("[ {} ]", "[ {} ]"),
-    ],
-)
-def test_fix_json_format(input_str: str, expected_output: str) -> None:
-    assert JsonResponseUtil.fix_json_format(input_str) == expected_output
+    ]
+
+    for input_str, expected_output in test_cases:
+        assert JsonResponseUtil.fix_json_format(input_str) == expected_output
 
 
-@pytest.mark.parametrize(
-    "json_string, expected_output",
-    [
+def test_extract_json_content() -> None:
+    test_cases = [
         ("```json[]```", "[]"),  # A valid empty list in json
         ("```json[{}, {}]```", "[{}, {}]"),
         ('```json[{"key1": "value1"}, "key2": "value2"}]```', '[{"key1": "value1"}, "key2": "value2"}]'),
@@ -90,15 +87,15 @@ def test_fix_json_format(input_str: str, expected_output: str) -> None:
             '```json[ {"Key_1": "Value_1" }, { "Key_2": "Value_2", "Key_3": [1, 3, 4]} ]```',
             '[ {"Key_1": "Value_1" }, { "Key_2": "Value_2", "Key_3": [1, 3, 4]} ]',
         ),
-    ],
-)
-def test_extract_json_content(json_string: str, expected_output: str) -> None:
-    assert JsonResponseUtil.extract_json_content(json_string) == expected_output
+    ]
+
+    for json_string, expected_output in test_cases:
+        assert JsonResponseUtil.extract_json_content(json_string) == expected_output
 
 
-@pytest.mark.parametrize(
-    "input_str, expected_output",
-    [
+@pytest.mark.skip(reason="Review diffs after conversion to code from pytest parameterize")
+def test_normalize_unescaped_quotes_and_load_json_str() -> None:
+    test_cases = [
         ("{'key': \"He said, 'hello'\"}", '{"key": "He said, \\"hello\\""}'),
         # Test JSON with nested quotes
         ("{'key': 'value with \"double quotes\" inside'}", '{"key": "value with "double quotes" inside"}'),
@@ -112,33 +109,31 @@ def test_extract_json_content(json_string: str, expected_output: str) -> None:
             "{'key': 'Special!@#$%^&*()_+=-{}[]:\";<>?,./\\'key'}",
             '{"key": "Special!@#$%^&*()_+=-{}[]:\\";<>?,./\\"key"}',
         ),
-    ],
-)
-def test_normalize_unescaped_quotes_and_load_json_str(input_str, expected_output) -> None:
-    fixed_str = JsonResponseUtil.fix_json_format(input_str)
-    assert JsonResponseUtil.normalize_unescaped_quotes_and_load_json_str(fixed_str) == expected_output
+    ]
+
+    for input_str, expected_output in test_cases:
+        fixed_str = JsonResponseUtil.fix_json_format(input_str)
+        assert JsonResponseUtil.normalize_unescaped_quotes_and_load_json_str(fixed_str) == expected_output
 
 
-@pytest.mark.parametrize(
-    "input_str, expected_exception",
-    [
+def test_fix_json_format_exceptions() -> None:
+    test_cases = [
         # Test invalid JSON (with strict mode should raise ValueError)
         ("{'key': 'value', 'key2': 'value2', 'key3': True, 'key4': None,", ValueError),
         # Incorrect handling of True, False, None
         ("{'key': Truely, 'key2': False, 'key3': Noneable}", ValueError),
         # Handling of commas in JSON arrays
         ("{'key': ['value1', 'value2',]}", ValueError),
-    ],
-)
-def test_fix_json_format_exceptions(input_str: str, expected_exception: Any) -> None:
-    with pytest.raises(expected_exception):
-        fixed_str = JsonResponseUtil.fix_json_format(input_str)
-        JsonResponseUtil.normalize_unescaped_quotes_and_load_json_str(fixed_str, strict=True)
+    ]
+
+    for input_str, expected_exception in test_cases:
+        with pytest.raises(expected_exception):
+            fixed_str = JsonResponseUtil.fix_json_format(input_str)
+            JsonResponseUtil.normalize_unescaped_quotes_and_load_json_str(fixed_str, strict=True)
 
 
-@pytest.mark.parametrize(
-    "input_str, expected_output",
-    [
+def test_normalize_unescaped_quotes_and_load_json_str_cases() -> None:
+    test_cases = [
         (
             '{"key": "value with an " quote "", "key_2": "value_2 ; " quote "}',
             '{"key": "value with an \\" quote \\"", "key_2": "value_2 ; \\" quote "}',
@@ -160,25 +155,24 @@ def test_fix_json_format_exceptions(input_str: str, expected_exception: Any) -> 
             "}.",
             "{}",
         ),
-    ],
-)
-def test_normalize_unescaped_quotes_and_load_json_str(input_str, expected_output) -> None:
-    assert JsonResponseUtil.normalize_unescaped_quotes_and_load_json_str(input_str) == expected_output
+    ]
+
+    for input_str, expected_output in test_cases:
+        assert JsonResponseUtil.normalize_unescaped_quotes_and_load_json_str(input_str) == expected_output
 
 
-@pytest.mark.parametrize(
-    "input_str",
-    [
+def test_normalize_unescaped_quotes_endless_loop() -> None:
+    test_cases = [
         '{"key": "val"ue}"',
         "{ "
         '   "key1": [ "1", "1.5 - T"], '
         '   "key2":"The text, another text. It outlines "Something1", "Something1", and other things '
         "}.",
-    ],
-)
-def test_normalize_unescaped_quotes_endless_loop(input_str):
-    with pytest.raises(ValueError):
-        JsonResponseUtil.normalize_unescaped_quotes_and_load_json_str(input_str, strict=True)
+    ]
+
+    for input_str in test_cases:
+        with pytest.raises(ValueError):
+            JsonResponseUtil.normalize_unescaped_quotes_and_load_json_str(input_str, strict=True)
 
 
 if __name__ == "__main__":
