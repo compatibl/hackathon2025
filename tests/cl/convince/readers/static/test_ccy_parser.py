@@ -13,12 +13,11 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.convince.readers.static.ccy_parser import CcyParser
 
 
-def test_ccy_parser(pytest_default_db):
+def test_ccy_parser(default_db_fixture):
     """Smoke test."""
     PreloadSettings.instance().save_and_configure()
 

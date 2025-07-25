@@ -15,7 +15,6 @@
 import pytest
 from typing import List
 from cl.runtime.parsers.locale import Locale
-from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
 from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.convince.contexts.llm_context import LlmContext
@@ -57,7 +56,7 @@ def _test_extract(input_text: str, param_description: str, param_samples: List[s
     RegressionGuard().verify_all()
 
 
-def test_zero_shot(pytest_default_db):
+def test_zero_shot(default_db_fixture):
     """Test without samples."""
     PreloadSettings.instance().save_and_configure(final_record_types=[Locale, GptLlm, LlamaLlm, ClaudeLlm])
     _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)

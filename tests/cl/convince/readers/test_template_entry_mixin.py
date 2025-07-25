@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
 from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.runtime.templates.fstring_template_engine import FstringTemplateEngine
 from stubs.cl.runtime.templates.stub_template import StubTemplate
@@ -21,7 +20,7 @@ from stubs.cl.convince.readers.stub_template_entry import StubTemplateEntry
 
 
 # @pytest.mark.skip("Skip during refactoring.")
-def test_describe_correction(pytest_default_db):
+def test_describe_correction(default_db_fixture):
     """Test EntryMixin."""
 
     input_text = "The value is abc"

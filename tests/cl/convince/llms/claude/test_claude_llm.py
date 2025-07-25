@@ -13,11 +13,10 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.qa.pytest.pytest_fixtures import pytest_default_db  # noqa
 from cl.convince.llms.claude.claude_llm import ClaudeLlm
 
 
-def test_smoke(pytest_default_db):
+def test_smoke(default_db_fixture):
     """Test ClaudeLlm class."""
     llms = [
         ClaudeLlm(llm_id="claude-3-haiku-20240307").build(),
