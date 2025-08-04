@@ -15,7 +15,7 @@
 import re
 from dataclasses import dataclass
 from typing import List
-from cl.runtime.contexts.db_context import DbContext
+from cl.runtime.contexts.data_context import DataContext
 from cl.runtime.contexts.trial_context import TrialContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -88,10 +88,10 @@ class AnnotatingRetriever(Retriever):
     ) -> str | None:
 
         # Load the full LLM specified by the context
-        llm = DbContext.load_one(LlmContext.get_full_llm(), cast_to=Llm)
+        llm = DataContext.load_one(LlmContext.get_full_llm(), cast_to=Llm)
 
         # Load the prompt
-        prompt = DbContext.load_one(self.prompt, cast_to=Prompt)
+        prompt = DataContext.load_one(self.prompt, cast_to=Prompt)
 
         # Run multiple retries
         for retry_index in range(self.max_retries):
@@ -187,7 +187,7 @@ class AnnotatingRetriever(Retriever):
                     # TODO: Determine if numbered combination works better
                     retrieval.output_text = " ".join(matches)
                     retrieval.build()
-                    DbContext.save_one(retrieval)
+                    DataContext.save_one(retrieval)
 
                     # Return only the parameter value
                     return retrieval.output_text
@@ -196,7 +196,7 @@ class AnnotatingRetriever(Retriever):
                     retrieval.success = "N"
                     retrieval.justification = str(e)
                     retrieval.build()
-                    DbContext.save_one(retrieval)
+                    DataContext.save_one(retrieval)
                     if is_last_trial:
                         # Rethrow only when the last trial is reached
                         raise UserError(
@@ -209,7 +209,7 @@ class AnnotatingRetriever(Retriever):
                     # TODO: Review logic and remove unreachable code
                     retrieval.success = "Y"
                     retrieval.build()
-                    DbContext.save_one(retrieval)
+                    DataContext.save_one(retrieval)
 
         # The method should always return from the loop, adding as a backup in case this changes in the future
         raise UserError(

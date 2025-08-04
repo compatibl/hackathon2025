@@ -16,7 +16,7 @@ import csv
 import os
 from dataclasses import dataclass
 from typing import Any
-from cl.runtime.contexts.db_context import DbContext
+from cl.runtime.contexts.data_context import DataContext
 from cl.runtime.contexts.process_context import ProcessContext
 from cl.runtime.qa.qa_util import QaUtil
 from cl.runtime.records.data_mixin import DataMixin
@@ -114,7 +114,7 @@ class CompletionCache(DataMixin):
         ).build()
 
         # Save completions to DB (including preloads) outside a test
-        DbContext.save_one(completion_record)
+        DataContext.save_one(completion_record)
 
         # Save completions to a file unless explicitly turned off in CompletionSettings
         if CompletionSettings.instance().completion_save_to_csv:
@@ -166,7 +166,7 @@ class CompletionCache(DataMixin):
         completion_key = CompletionKeyGen(llm=LlmKey(llm_id=self.channel), query=query).build().get_key()
 
         # Return completion string from DB or None if the record is not found
-        completion = DbContext.load_one_or_none(completion_key, cast_to=Completion)
+        completion = DataContext.load_one_or_none(completion_key, cast_to=Completion)
         result = completion.completion if completion is not None else None
         return result
 
@@ -206,4 +206,4 @@ class CompletionCache(DataMixin):
                     ]
 
                     # Save to DB unless inside a test
-                    DbContext.save_many(completions)
+                    DataContext.save_many(completions)

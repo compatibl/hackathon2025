@@ -15,7 +15,7 @@
 import difflib
 from abc import ABC
 from abc import abstractmethod
-from cl.runtime.contexts.db_context import DbContext
+from cl.runtime.contexts.data_context import DataContext
 from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.serializers.bootstrap_serializers import BootstrapSerializers
 from cl.runtime.serializers.yaml_encoders import YamlEncoders
@@ -35,7 +35,7 @@ class TemplateEntryMixin(EntryMixin, ABC):
 
     def describe_correction(self) -> str | None:
         # Load the template from DB
-        template = DbContext.load_one(self.template)
+        template = DataContext.load_one(self.template)
         # Render
         rendered_template = template.render(self)  # noqa
         if self.text == rendered_template:
