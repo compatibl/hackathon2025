@@ -71,7 +71,7 @@ class CompletionCache(DataMixin):
         # Find base_path=dir_path/test_module by examining call stack for test function signature test_*
         # Directory 'project_root/completions' is used when not running under a test
         if ProcessContext.is_testing():
-            base_dir = QaUtil.get_test_dir()
+            base_dir = QaUtil.get_test_dir_from_call_stack()
         else:
             base_dir = os.path.join(ProjectSettings.instance().get_resources_root(), "completions")
 

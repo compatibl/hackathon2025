@@ -148,7 +148,7 @@ def test_function():
     """Stub test function without a class."""
 
     # Test calling from a function
-    base_dir = QaUtil.get_test_dir()
+    base_dir = QaUtil.get_test_dir_from_call_stack()
     _perform_testing(base_dir)
 
 
@@ -160,7 +160,7 @@ class TestClass:
         """Stub test method inside pytest class."""
 
         # Test calling from a method
-        base_dir = QaUtil.get_test_dir()
+        base_dir = QaUtil.get_test_dir_from_call_stack()
         _perform_testing(base_dir)
 
 
