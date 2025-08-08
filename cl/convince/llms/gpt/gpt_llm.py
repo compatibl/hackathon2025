@@ -15,7 +15,9 @@
 from dataclasses import dataclass
 from typing import ClassVar
 from openai import OpenAI
-from cl.runtime.contexts.context_util import UserContextUtil
+
+from cl.runtime.contexts.context_manager import active_or_default
+from cl.runtime.contexts.user_context import UserContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.float_util import FloatUtil
 from cl.runtime.records.type_util import TypeUtil
@@ -85,7 +87,7 @@ class GptLlm(Llm):
         if cls._client is None:
 
             # Try loading API key from context.secrets first and then from settings
-            api_key = UserContextUtil.decrypt_secret("OPENAI_API_KEY") or OpenaiSettings.instance().openai_api_key
+            api_key = active_or_default(UserContext).decrypt_secret("OPENAI_API_KEY") or OpenaiSettings.instance().openai_api_key
             if api_key is None:
                 raise UserError("Provide OPENAI_API_KEY in Account > My Keys (users) or using Dynaconf (developers).")
 

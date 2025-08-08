@@ -15,7 +15,9 @@
 from dataclasses import dataclass
 from typing import ClassVar
 from anthropic import Anthropic
-from cl.runtime.contexts.context_util import UserContextUtil
+
+from cl.runtime.contexts.context_manager import active_or_default
+from cl.runtime.contexts.user_context import UserContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.convince.llms.llm import Llm
 from cl.convince.settings.anthropic_settings import AnthropicSettings
@@ -59,7 +61,7 @@ class ClaudeLlm(Llm):
         """Instantiate and cache the Anthropic client instance."""
 
         # Try loading API key from context.secrets first and then from settings
-        api_key = UserContextUtil.decrypt_secret("ANTHROPIC_API_KEY") or AnthropicSettings.instance().anthropic_api_key
+        api_key = active_or_default(UserContext).decrypt_secret("ANTHROPIC_API_KEY") or AnthropicSettings.instance().anthropic_api_key
         if api_key is None:
             raise UserError("Provide ANTHROPIC_API_KEY in Account > My Keys (users) or using Dynaconf (developers).")
 
