@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.contexts.data_context import DataContext
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.exceptions.error_util import ErrorUtil
 from cl.runtime.primitive.float_util import FloatUtil
 from cl.runtime.records.for_dataclasses.extensions import required
@@ -88,7 +89,7 @@ class AmountFormat(AmountReader):
         )
         if currency_description is not None:
             # Try to load an existing entry using reverse lookup
-            ccy_reader = DataContext.load_one(self.ccy_reader, cast_to=CcyReader)
+            ccy_reader = active(DataSource).load_one(self.ccy_reader, cast_to=CcyReader)
             result.ccy = ccy_reader.read(currency_description)
 
         # Extract the currency if present
@@ -99,7 +100,7 @@ class AmountFormat(AmountReader):
         )
         if amount_description is not None:
             # Try to load an existing entry using reverse lookup
-            number_reader = DataContext.load_one(self.number_reader, cast_to=NumberReader)
+            number_reader = active(DataSource).load_one(self.number_reader, cast_to=NumberReader)
             result.value = number_reader.read(amount_description).value
 
         return result.build()

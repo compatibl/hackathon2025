@@ -15,8 +15,9 @@
 import re
 from dataclasses import dataclass
 from typing import List
-from cl.runtime.contexts.data_context import DataContext
+from cl.runtime.contexts.context_manager import active
 from cl.runtime.contexts.trial_context import TrialContext
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
@@ -88,10 +89,10 @@ class AnnotatingRetriever(Retriever):
     ) -> str | None:
 
         # Load the full LLM specified by the context
-        llm = DataContext.load_one(LlmContext.get_full_llm(), cast_to=Llm)
+        llm = active(DataSource).load_one(LlmContext.get_full_llm(), cast_to=Llm)
 
         # Load the prompt
-        prompt = DataContext.load_one(self.prompt, cast_to=Prompt)
+        prompt = active(DataSource).load_one(self.prompt, cast_to=Prompt)
 
         # Run multiple retries
         for retry_index in range(self.max_retries):
@@ -187,7 +188,7 @@ class AnnotatingRetriever(Retriever):
                     # TODO: Determine if numbered combination works better
                     retrieval.output_text = " ".join(matches)
                     retrieval.build()
-                    DataContext.save_one(retrieval)
+                    active(DataSource).save_one(retrieval)
 
                     # Return only the parameter value
                     return retrieval.output_text
@@ -196,7 +197,7 @@ class AnnotatingRetriever(Retriever):
                     retrieval.success = "N"
                     retrieval.justification = str(e)
                     retrieval.build()
-                    DataContext.save_one(retrieval)
+                    active(DataSource).save_one(retrieval)
                     if is_last_trial:
                         # Rethrow only when the last trial is reached
                         raise UserError(
@@ -209,7 +210,7 @@ class AnnotatingRetriever(Retriever):
                     # TODO: Review logic and remove unreachable code
                     retrieval.success = "Y"
                     retrieval.build()
-                    DataContext.save_one(retrieval)
+                    active(DataSource).save_one(retrieval)
 
         # The method should always return from the loop, adding as a backup in case this changes in the future
         raise UserError(

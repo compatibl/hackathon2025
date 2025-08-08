@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.contexts.data_context import DataContext
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.data.static.ccy import Ccy
 from cl.convince.data.static.ccy_key import CcyKey
@@ -42,10 +43,10 @@ class CcyParser(CcyReader):
     def read(self, text: str) -> CcyEntry:
 
         # Load objects from storage if specified as a key
-        retriever = DataContext.load_one(self.retriever, cast_to=MultipleChoiceRetriever)
+        retriever = active(DataSource).load_one(self.retriever, cast_to=MultipleChoiceRetriever)
 
         # Get the list of all currency codes
-        ccy_keys = DataContext.load_type(CcyKey, cast_to=Ccy)
+        ccy_keys = active(DataSource).load_type(CcyKey, cast_to=Ccy)
         iso_codes = [ccy.iso_code for ccy in ccy_keys]
 
         # Retrieve ISO code

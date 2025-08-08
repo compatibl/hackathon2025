@@ -16,7 +16,8 @@ from abc import ABC
 from abc import abstractmethod
 from typing import List
 from cl.runtime import RecordMixin
-from cl.runtime.contexts.data_context import DataContext
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.convince.readers.entry_mixin import EntryMixin
 
 
@@ -33,9 +34,9 @@ class EntryReaderMixin(RecordMixin, ABC):
     def run_read_one(self, text: str) -> None:
         """Save the entry record obtained from the specified entry text."""
         result = self.read(text)
-        DataContext.save_one(result)
+        active(DataSource).save_one(result)
 
     def run_read_many(self, texts: List[str]) -> None:
         """Save entry records obtained from the specified entry texts."""
         results = [self.read(text) for text in texts]  # TODO: Implement via workflow
-        DataContext.save_many(results)
+        active(DataSource).save_many(results)

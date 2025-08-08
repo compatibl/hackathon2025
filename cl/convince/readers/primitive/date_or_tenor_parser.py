@@ -14,7 +14,8 @@
 
 import re
 from dataclasses import dataclass
-from cl.runtime.contexts.data_context import DataContext
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.convince.readers.primitive.date_entry import DateEntry
 from cl.convince.readers.primitive.date_or_tenor_entry import DateOrTenorEntry
 from cl.convince.readers.primitive.date_or_tenor_reader import DateOrTenorReader
@@ -44,4 +45,4 @@ class DateOrTenorParser(DateOrTenorReader):
             self.date = date_entry.date
 
         # Save
-        DataContext.save_one(self)
+        active(DataSource).save_one(self)
