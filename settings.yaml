@@ -31,7 +31,7 @@ default:
   llm_mini: gpt-4o-mini
 
 # Test environment
-test:
+testing:
 
   # Documented in QaSettings class
   qa_db_types:
