@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.contexts.context_mixin import ContextMixin
+from cl.runtime.contexts.context_manager import active_or_none
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.records.data_mixin import DataMixin
 from cl.runtime.records.for_dataclasses.extensions import required
@@ -22,7 +22,7 @@ from cl.convince.settings.llm_settings import LlmSettings
 
 
 @dataclass(slots=True, kw_only=True)
-class LlmContext(ContextMixin, DataMixin):
+class LlmContext(DataMixin):
     """LLM defaults."""
 
     locale: LocaleKey = required()
@@ -61,7 +61,7 @@ class LlmContext(ContextMixin, DataMixin):
     @classmethod
     def get_locale_or_none(cls) -> LocaleKey | None:
         """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
-        if (context := cls.current_or_none()) is not None and context.locale is not None:
+        if (context := active_or_none(cls)) is not None and context.locale is not None:
             # Use the value from the current context if not None
             return context.locale
         elif (settings := LlmSettings.instance()).llm_locale is not None:
@@ -83,7 +83,7 @@ class LlmContext(ContextMixin, DataMixin):
     @classmethod
     def get_full_llm_or_none(cls) -> LlmKey | None:
         """Default full LLM."""
-        if (context := cls.current_or_none()) is not None and context.full_llm is not None:
+        if (context := active_or_none(cls)) is not None and context.full_llm is not None:
             # Use the value from the current context if not None
             return context.full_llm
         elif (settings := LlmSettings.instance()).llm_full is not None:
@@ -105,7 +105,7 @@ class LlmContext(ContextMixin, DataMixin):
     @classmethod
     def get_mini_llm_or_none(cls) -> LlmKey | None:
         """Default mini LLM."""
-        if (context := cls.current_or_none()) is not None and context.mini_llm is not None:
+        if (context := active_or_none(cls)) is not None and context.mini_llm is not None:
             # Use the value from the current context if not None
             return context.mini_llm
         elif (settings := LlmSettings.instance()).llm_mini is not None:

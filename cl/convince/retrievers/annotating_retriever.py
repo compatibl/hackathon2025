@@ -15,7 +15,8 @@
 import re
 from dataclasses import dataclass
 from typing import List
-from cl.runtime.contexts.context_manager import active, activate
+from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import active
 from cl.runtime.contexts.trial_context import TrialContext
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.exceptions.user_error import UserError
