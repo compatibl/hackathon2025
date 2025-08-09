@@ -16,7 +16,7 @@ import csv
 import os
 from dataclasses import dataclass
 from typing import Any
-from cl.runtime.contexts.app_context import AppContext
+from cl.runtime.contexts.env import EnvContext
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.db.data_source import DataSource
@@ -72,7 +72,7 @@ class CompletionCache(DataMixin):
 
         # Find base_path=dir_path/test_module by examining call stack for test function signature test_*
         # Directory 'project_root/completions' is used when not running under a test
-        if active_or_default(AppContext).testing:  # TODO: Use AppContext
+        if active_or_default(EnvContext).testing:  # TODO: Use EnvContext
             base_dir = QaUtil.get_test_dir_from_call_stack()
         else:
             base_dir = os.path.join(ProjectSettings.instance().get_resources_root(), "completions")
