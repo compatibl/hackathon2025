@@ -15,7 +15,7 @@
 import re
 from dataclasses import dataclass
 from typing import List
-from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import activate, active_or_default
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.contexts.trial_context import TrialContext
 from cl.runtime.db.data_source import DataSource
@@ -90,7 +90,8 @@ class AnnotatingRetriever(Retriever):
     ) -> str | None:
 
         # Load the full LLM specified by the context
-        llm = active(DataSource).load_one(LlmContext.get_full_llm(), cast_to=Llm)
+        full_llm_key = active_or_default(LlmContext).full_llm
+        llm = active(DataSource).load_one(full_llm_key, cast_to=Llm)
 
         # Load the prompt
         prompt = active(DataSource).load_one(self.prompt, cast_to=Prompt)

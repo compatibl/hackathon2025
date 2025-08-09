@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.contexts.context_manager import active_or_none
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.records.data_mixin import DataMixin
 from cl.runtime.records.for_dataclasses.extensions import required
@@ -43,74 +42,23 @@ class LlmContext(DataMixin):
 
         # Initialize empty fields in this context instance from the current context instance or settings,
         # except when self is already the current context
+        settings = None
         if self.locale is None:
-            self.locale = self.get_locale_or_none()
+            settings = settings or LlmSettings.instance()
+            if settings.llm_locale is not None:
+                self.locale = LocaleKey(locale_id=settings.llm_locale)
+            else:
+                raise RuntimeError("LLM locale is not specified in LLmContext or LlmSettings.")
         if self.full_llm is None:
-            self.full_llm = self.get_full_llm_or_none()
+            settings = settings or LlmSettings.instance()
+            if settings.llm_full is not None:
+                self.full_llm = LlmKey(llm_id=settings.llm_full).build()
+            else:
+                raise RuntimeError("Full LLM is not specified in LLmContext or LlmSettings.")
         if self.mini_llm is None:
-            self.mini_llm = self.get_mini_llm_or_none()
+            settings = settings or LlmSettings.instance()
+            if settings.llm_mini is not None:
+                self.mini_llm = LlmKey(llm_id=settings.llm_mini).build()
+            else:
+                raise RuntimeError("Mini LLM is not specified in LLmContext or LlmSettings.")
 
-    @classmethod
-    def get_locale(cls) -> LocaleKey:
-        """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
-        if (result := cls.get_locale_or_none()) is not None:
-            return result
-        else:
-            raise RuntimeError("LLM locale is not specified in LLmContext or LlmSettings.")
-
-    @classmethod
-    def get_locale_or_none(cls) -> LocaleKey | None:
-        """Default locale for LLM completions only (this has no effect on the UI or the data file format)."""
-        if (context := active_or_none(cls)) is not None and context.locale is not None:
-            # Use the value from the current context if not None
-            return context.locale
-        elif (settings := LlmSettings.instance()).llm_locale is not None:
-            # Otherwise use the value from settings if not None
-            return LocaleKey(locale_id=settings.llm_locale)
-        else:
-            # If neither is defined, return None
-            return None
-
-    @classmethod
-    def get_full_llm(cls) -> LlmKey:
-        """Default full LLM."""
-        if (result := cls.get_full_llm_or_none()) is not None:
-            return result
-        else:
-            # If neither is defined, error message
-            raise RuntimeError("Full LLM is not specified in LLmContext or LlmSettings.")
-
-    @classmethod
-    def get_full_llm_or_none(cls) -> LlmKey | None:
-        """Default full LLM."""
-        if (context := active_or_none(cls)) is not None and context.full_llm is not None:
-            # Use the value from the current context if not None
-            return context.full_llm
-        elif (settings := LlmSettings.instance()).llm_full is not None:
-            # Otherwise use the value from settings if not None
-            return LlmKey(llm_id=settings.llm_full).build()
-        else:
-            # If neither is defined, return None
-            return None
-
-    @classmethod
-    def get_mini_llm(cls) -> LlmKey:
-        """Default mini LLM."""
-        if (result := cls.get_mini_llm_or_none()) is not None:
-            return result
-        else:
-            # If neither is defined, error message
-            raise RuntimeError("Mini LLM is not specified in LLmContext or LlmSettings.")
-
-    @classmethod
-    def get_mini_llm_or_none(cls) -> LlmKey | None:
-        """Default mini LLM."""
-        if (context := active_or_none(cls)) is not None and context.mini_llm is not None:
-            # Use the value from the current context if not None
-            return context.mini_llm
-        elif (settings := LlmSettings.instance()).llm_mini is not None:
-            # Otherwise use the value from settings if not None
-            return LlmKey(llm_id=settings.llm_mini)
-        else:
-            # If neither is defined, return None
-            return None

@@ -15,15 +15,16 @@
 import pytest
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.settings.llm_settings import LlmSettings
+from cl.runtime.contexts.context_manager import active_or_default
 
 
 def test_llm_context():
     """Smoke test."""
 
     settings = LlmSettings.instance()
-    assert LlmContext.get_locale().locale_id == settings.llm_locale
-    assert LlmContext.get_full_llm().llm_id == settings.llm_full
-    assert LlmContext.get_mini_llm().llm_id == settings.llm_mini
+    assert active_or_default(LlmContext).locale.locale_id == settings.llm_locale
+    assert active_or_default(LlmContext).full_llm.llm_id == settings.llm_full
+    assert active_or_default(LlmContext).mini_llm.llm_id == settings.llm_mini
 
 
 if __name__ == "__main__":
