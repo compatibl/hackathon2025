@@ -15,7 +15,7 @@
 import re
 from dataclasses import dataclass
 from typing import List
-from cl.runtime.contexts.context_manager import active
+from cl.runtime.contexts.context_manager import active, activate
 from cl.runtime.contexts.trial_context import TrialContext
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.exceptions.user_error import UserError
@@ -100,7 +100,7 @@ class AnnotatingRetriever(Retriever):
 
             # Append retry_index to trial to avoid reusing a cached completion
             trial = str(retry_index) if self.max_retries > 1 else None
-            with TrialContext.append_token(trial) as trial_context:
+            with activate(TrialContext.append_token(trial)) as trial_context:
 
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
