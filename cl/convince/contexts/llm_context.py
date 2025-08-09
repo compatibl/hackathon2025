@@ -61,4 +61,3 @@ class LlmContext(DataMixin):
                 self.mini_llm = LlmKey(llm_id=settings.llm_mini).build()
             else:
                 raise RuntimeError("Mini LLM is not specified in LLmContext or LlmSettings.")
-

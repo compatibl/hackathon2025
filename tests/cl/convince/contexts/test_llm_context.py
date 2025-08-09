@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import pytest
+from cl.runtime.contexts.context_manager import active_or_default
 from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.settings.llm_settings import LlmSettings
-from cl.runtime.contexts.context_manager import active_or_default
 
 
 def test_llm_context():
