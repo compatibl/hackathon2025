@@ -6,6 +6,7 @@ default:
   log_filename_prefix: main
 
   # Documented in EnvSettings class
+  env_id: temp_convince_main
   env_packages:
     - cl.runtime
     - cl.convince
