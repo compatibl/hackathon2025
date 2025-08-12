@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
 from cl.convince.llms.claude.claude_llm import ClaudeLlm
 from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm

@@ -14,7 +14,6 @@
 
 import re
 from dataclasses import dataclass
-from typing import List
 from cl.runtime.contexts.context_manager import activate
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.contexts.context_manager import active_or_default

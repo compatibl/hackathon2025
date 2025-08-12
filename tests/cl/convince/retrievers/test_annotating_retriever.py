@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-from typing import List
 from cl.runtime.contexts.context_manager import activate
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.qa.regression_guard import RegressionGuard
