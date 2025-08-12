@@ -15,28 +15,25 @@
 from dataclasses import dataclass
 from typing_extensions import final
 from cl.runtime.parsers.locale import Locale
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.settings.settings import Settings
 
 
 @dataclass(slots=True, kw_only=True)
 @final
 class LlmSettings(Settings):
-    """LLM settings in the Convince package."""
+    """LLM settings."""
+
+    llm_type: str = required()
+    """Type name of the default LLM instance."""
+
+    llm_id: str = required()
+    """Identifier of the default LLM instance."""
 
     llm_locale: str | None = None
     """
-    Locale that LLM is instructed to use in BCP 47 language-country format, for example en-US.
+    Locale the default LLM instance is instructed to use in BCP 47 language-country format, for example en-US.
     This applies to LLM completions only and has no effect on the UI or the data file format.
     """
 
-    llm_full: str | None = None
-    """String identifier of the full LLM used in the absence of override (ensure the LLM record exists)."""
 
-    llm_mini: str | None = None
-    """String identifier of the mini LLM used in the absence of override (ensure the LLM record exists)."""
-
-    def __init(self) -> None:
-        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
-
-        # Validate locale format by running init_all for a locale object
-        Locale(locale_id=self.llm_locale).build()

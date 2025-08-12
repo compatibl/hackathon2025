@@ -27,9 +27,9 @@ default:
     - preloads/stubs
 
   # Documented in LlmSettings class
+  llm_type: GptLlm
+  llm_id: gpt-4o
   llm_locale: en-US
-  llm_full: gpt-4o
-  llm_mini: gpt-4o-mini
 
 # Test environment
 testing:

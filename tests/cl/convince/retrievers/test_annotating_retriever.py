@@ -17,7 +17,6 @@ from cl.runtime.contexts.context_manager import activate
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.runtime.settings.preload_settings import PreloadSettings
-from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.llms.claude.claude_llm import ClaudeLlm
 from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llama.llama_llm import LlamaLlm
@@ -45,7 +44,7 @@ def _test_extract(input_text: str, param_description: str, param_samples: list[s
     param_samples_str = "".join(f"  - {x}\n" for x in param_samples) if param_samples is not None else None
     stub_full_llms = get_stub_full_llms()
     for llm in stub_full_llms:
-        with activate(LlmContext(full_llm=llm).build()):
+        with activate(llm):
             retriever = AnnotatingRetriever(
                 retriever_id="test_annotating_retriever",
             )

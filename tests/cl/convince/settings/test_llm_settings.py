@@ -22,8 +22,7 @@ def test_llm_settings():
 
     settings = LlmSettings.instance()
     assert StringUtil.is_not_empty(settings.llm_locale)
-    assert StringUtil.is_not_empty(settings.llm_full)
-    assert StringUtil.is_not_empty(settings.llm_mini)
+    assert StringUtil.is_not_empty(settings.llm_id)
 
 
 if __name__ == "__main__":

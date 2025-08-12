@@ -24,7 +24,6 @@ from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.type_util import TypeUtil
-from cl.convince.contexts.llm_context import LlmContext
 from cl.convince.llms.llm import Llm
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
 from cl.convince.prompts.prompt import Prompt
@@ -89,10 +88,6 @@ class AnnotatingRetriever(Retriever):
         param_samples: list[str] | None = None,
     ) -> str | None:
 
-        # Load the full LLM specified by the context
-        full_llm_key = active_or_default(LlmContext).full_llm
-        llm = active(DataSource).load_one(full_llm_key, cast_to=Llm)
-
         # Load the prompt
         prompt = active(DataSource).load_one(self.prompt, cast_to=Prompt)
 
@@ -122,7 +117,7 @@ class AnnotatingRetriever(Retriever):
                     rendered_prompt = prompt.render(params=retrieval)
 
                     # Get text annotated with braces and check that the only difference is braces and whitespace
-                    completion = llm.completion(rendered_prompt)
+                    completion = (llm := active_or_default(Llm)).completion(rendered_prompt)
 
                     # Extract the results
                     json_result = RetrieverUtil.extract_json(completion)

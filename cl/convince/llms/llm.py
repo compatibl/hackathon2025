@@ -15,7 +15,16 @@
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
+from typing import Self
+
+from cl.convince.settings.llm_settings import LlmSettings
+from cl.runtime import TypeCache
+from cl.runtime.contexts.context_manager import active_or_none, active_or_default
+from cl.runtime.parsers.locale import Locale
+from cl.runtime.parsers.locale_key import LocaleKey
+from cl.runtime.parsers.locale_keys import LocaleKeys
 from cl.runtime.primitive.timestamp import Timestamp
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.llms.completion_cache import CompletionCache
 from cl.convince.llms.completion_util import CompletionUtil
@@ -26,14 +35,44 @@ from cl.convince.llms.llm_key import LlmKey
 class Llm(LlmKey, RecordMixin, ABC):
     """Provides an API for single query and chat completion."""
 
+    llm_locale: LocaleKey = required()
+    """Locale used by the LLM, may differ from the active locale."""
+
     _completion_cache: CompletionCache | None = None
     """Completion cache is used to return cached LLM responses."""
 
     def get_key(self) -> LlmKey:
         return LlmKey(llm_id=self.llm_id).build()
 
+    @classmethod
+    def default(cls) -> Self:
+        # Default instance based on LlmSettings
+        llm_settings = LlmSettings.instance()
+        llm_type = TypeCache.get_class_from_type_name(llm_settings.llm_type)
+        llm_id = llm_settings.llm_id
+        llm_locale = LocaleKey(locale_id=llm_settings.llm_locale).build()
+        return llm_type(llm_id=llm_id, llm_locale=llm_locale).build()
+
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+
+        if self.llm_id is None:
+            # Default to LlmSettings.llm_id if not specified
+            self.llm_id = LlmSettings.instance().llm_id
+
+        if self.llm_locale is None:
+            if (llm_settings_locale := LlmSettings.instance().llm_locale) is not None:
+                # Try using locale from LlmSettings first
+                self.llm_locale = LocaleKey(locale_id=llm_settings_locale)
+            else:
+                # Otherwise use the active or default locale
+                self.llm_locale = active_or_default(Locale)
+
+        if self.llm_locale != LocaleKeys.EN_US:
+            # TODO: Enable locale other than en-US after the code using LLM locale is added
+            raise RuntimeError("LLM locale is not yet supported.")
+
+        # Initialize completion cache
         self._completion_cache = CompletionCache(channel=self.llm_id).build()
 
     def completion(self, query: str) -> str:
