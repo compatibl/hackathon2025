@@ -31,7 +31,7 @@ class AnnotatingRetrieval(Retrieval):
     is_required: bool = required()
     """If False, not found is considered a success (input)."""
 
-    param_samples: List[str] | None = None
+    param_samples: list[str] | None = None
     """Samples of possible retrieved parameter values for few-shot prompts (input)."""
 
     success: str | None = None

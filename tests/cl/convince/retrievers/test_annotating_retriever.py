@@ -40,7 +40,7 @@ PARAM_SAMPLES = [
 ]
 
 
-def _test_extract(input_text: str, param_description: str, param_samples: List[str] | None = None) -> None:
+def _test_extract(input_text: str, param_description: str, param_samples: list[str] | None = None) -> None:
     """Test extraction of the specified parameters from the entries."""
     # TODO: Use samples in few-shot test
     param_samples_str = "".join(f"  - {x}\n" for x in param_samples) if param_samples is not None else None

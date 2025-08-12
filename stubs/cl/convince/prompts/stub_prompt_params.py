@@ -29,7 +29,7 @@ class StubPromptParams(StubPromptParamsKey, RecordMixin):
     str_opt: str | None = None
     """Optional string field."""
 
-    str_req_list: List[str] = required(default_factory=lambda: ["str_req_list_1", "str_req_list_2"])
+    str_req_list: list[str] = required(default_factory=lambda: ["str_req_list_1", "str_req_list_2"])
     """Required string list field."""
 
     int_req: int = 123

@@ -22,7 +22,7 @@ from cl.convince.llms.completion_cache import CompletionCache
 module_path = __file__.removesuffix(".py")
 
 
-def _delete_cache_files(base_dir: str, channels: List[str]):
+def _delete_cache_files(base_dir: str, channels: list[str]):
     """Delete existing test cache files to prevent starting from previous test output or git diff at the end."""
     for channel in set(channels):
         if channel is not None and channel != "":
@@ -34,7 +34,7 @@ def _delete_cache_files(base_dir: str, channels: List[str]):
             os.remove(file_path)
 
 
-def _check_cache_files_eol(base_dir: str, channels: List[str]):
+def _check_cache_files_eol(base_dir: str, channels: list[str]):
     """Check if files contain only OS-specific line endings."""
     for channel in set(channels):
         if channel is not None and channel != "":

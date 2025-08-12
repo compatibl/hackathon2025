@@ -87,7 +87,7 @@ class AnnotatingRetriever(Retriever):
         input_text: str,
         param_description: str,
         is_required: bool = False,  # TODO: Make this parameter required
-        param_samples: List[str] | None = None,
+        param_samples: list[str] | None = None,
     ) -> str | None:
 
         # Load the full LLM specified by the context

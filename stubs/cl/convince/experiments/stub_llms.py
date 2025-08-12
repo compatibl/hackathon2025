@@ -19,14 +19,14 @@ from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaL
 from cl.convince.llms.llm import Llm
 
 
-def get_stub_mini_llms() -> List[Llm]:
+def get_stub_mini_llms() -> list[Llm]:
     """Mini-LLMs for proof of concept tests."""
     return [
         GptLlm(llm_id="gpt-4o-mini").build(),
     ]
 
 
-def get_stub_full_llms() -> List[Llm]:
+def get_stub_full_llms() -> list[Llm]:
     """Full (but not extravagant) LLMs for prompt design tests."""
     return [
         ClaudeLlm(llm_id="claude-3-5-sonnet-20240620").build(),

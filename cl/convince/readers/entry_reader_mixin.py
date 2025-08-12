@@ -36,7 +36,7 @@ class EntryReaderMixin(RecordMixin, ABC):
         result = self.read(text)
         active(DataSource).save_one(result)
 
-    def run_read_many(self, texts: List[str]) -> None:
+    def run_read_many(self, texts: list[str]) -> None:
         """Save entry records obtained from the specified entry texts."""
         results = [self.read(text) for text in texts]  # TODO: Implement via workflow
         active(DataSource).save_many(results)

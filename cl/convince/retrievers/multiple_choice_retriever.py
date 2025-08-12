@@ -93,7 +93,7 @@ class MultipleChoiceRetriever(Retriever):
         *,
         input_text: str,
         param_description: str,
-        valid_choices: List[str],
+        valid_choices: list[str],
     ) -> MultipleChoiceRetrieval:
 
         # Load the full LLM specified by the context
