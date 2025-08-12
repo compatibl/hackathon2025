@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing_extensions import Self
+from typing import Self
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.content.content import Content
 
