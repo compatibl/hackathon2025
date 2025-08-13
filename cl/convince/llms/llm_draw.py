@@ -15,7 +15,6 @@
 from dataclasses import dataclass
 from typing import Iterable
 from typing import Self
-from cl.convince.llms.llm_draw_key import LlmDrawKey
 from cl.runtime import RecordMixin
 from cl.runtime.contexts.context_manager import active_or_none
 from cl.runtime.exceptions.error_util import ErrorUtil
@@ -24,6 +23,7 @@ from cl.runtime.records.protocols import TPrimitive
 from cl.runtime.records.protocols import is_primitive
 from cl.runtime.records.type_util import TypeUtil
 from cl.runtime.serializers.primitive_serializers import PrimitiveSerializers
+from cl.convince.llms.llm_draw_key import LlmDrawKey
 
 
 @dataclass(slots=True, kw_only=True)

@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from cl.runtime.contexts.context_manager import activate
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.contexts.context_manager import active_or_default
-from cl.convince.llms.llm_draw import LlmDraw
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -25,6 +24,7 @@ from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.type_util import TypeUtil
 from cl.convince.llms.llm import Llm
+from cl.convince.llms.llm_draw import LlmDraw
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
 from cl.convince.prompts.prompt import Prompt
 from cl.convince.prompts.prompt_key import PromptKey
