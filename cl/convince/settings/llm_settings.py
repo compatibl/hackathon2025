@@ -14,7 +14,6 @@
 
 from dataclasses import dataclass
 from typing_extensions import final
-from cl.runtime.parsers.locale import Locale
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.settings.settings import Settings
 
@@ -35,5 +34,3 @@ class LlmSettings(Settings):
     Locale the default LLM instance is instructed to use in BCP 47 language-country format, for example en-US.
     This applies to LLM completions only and has no effect on the UI or the data file format.
     """
-
-

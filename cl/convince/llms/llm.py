@@ -16,10 +16,8 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Self
-
-from cl.convince.settings.llm_settings import LlmSettings
 from cl.runtime import TypeCache
-from cl.runtime.contexts.context_manager import active_or_none, active_or_default
+from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.parsers.locale_key import LocaleKey
 from cl.runtime.parsers.locale_keys import LocaleKeys
@@ -29,6 +27,7 @@ from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.llms.completion_cache import CompletionCache
 from cl.convince.llms.completion_util import CompletionUtil
 from cl.convince.llms.llm_key import LlmKey
+from cl.convince.settings.llm_settings import LlmSettings
 
 
 @dataclass(slots=True, kw_only=True)
