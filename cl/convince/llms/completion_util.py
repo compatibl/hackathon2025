@@ -15,7 +15,7 @@
 import collections
 import os
 from typing import Iterable
-from cl.runtime.contexts.trial_context import TrialContext
+from cl.convince.llms.llm_draw import LlmDraw
 
 
 class CompletionUtil:
@@ -30,7 +30,7 @@ class CompletionUtil:
 
         # Get trial identifier from the current active trial context
         # and add it to the beginning of formatted query
-        if (trial := TrialContext.get_trial()) is not None:
+        if (trial := LlmDraw.get_trial()) is not None:
             result = f"Trial: {trial}\n{result}"
 
         # Normalize EOL

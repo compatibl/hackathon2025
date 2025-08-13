@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from cl.runtime.contexts.context_manager import activate
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.contexts.context_manager import active_or_default
-from cl.runtime.contexts.trial_context import TrialContext
+from cl.convince.llms.llm_draw import LlmDraw
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
@@ -104,7 +104,7 @@ class MultipleChoiceRetriever(Retriever):
 
             # Append retry_index to trial to avoid reusing a cached completion
             trial = str(retry_index) if self.max_retries > 1 else None
-            with activate(TrialContext.append_token(trial)) as trial_context:
+            with activate(LlmDraw.append_token(trial)) as trial_context:
 
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
