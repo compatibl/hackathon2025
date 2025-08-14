@@ -47,7 +47,7 @@ class Llm(LlmKey, RecordMixin, ABC):
     def default(cls) -> Self:
         # Default instance based on LlmSettings
         llm_settings = LlmSettings.instance()
-        llm_type = TypeCache.get_class_from_type_name(llm_settings.llm_type)
+        llm_type = TypeCache.from_type_name(llm_settings.llm_type)
         llm_id = llm_settings.llm_id
         llm_locale = LocaleKey(locale_id=llm_settings.llm_locale).build()
         return llm_type(llm_id=llm_id, llm_locale=llm_locale).build()
