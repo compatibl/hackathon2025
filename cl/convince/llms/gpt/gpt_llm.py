@@ -52,8 +52,7 @@ class GptLlm(Llm):
                 # Compare with tolerance in case it is calculated by a formula
                 if FloatUtil.less(self.temperature, 0.0) or FloatUtil.more(self.temperature, 1.0):
                     raise RuntimeError(
-                        f"{typename(self)} field temperature={self.temperature} "
-                        f"is outside the range from 0 to 1."
+                        f"{typename(self)} field temperature={self.temperature} " f"is outside the range from 0 to 1."
                     )
                 # Ensure that roundoff error does not move it out of range
                 self.temperature = min(max(self.temperature, 0.0), 1.0)
