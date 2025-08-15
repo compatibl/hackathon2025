@@ -15,7 +15,7 @@
 from abc import ABC
 from abc import abstractmethod
 from cl.runtime import RecordMixin
-from cl.runtime.records.type_util import TypeUtil
+from cl.runtime.records.typename import typename
 
 
 class EntryMixin(RecordMixin, ABC):
@@ -38,6 +38,6 @@ class EntryMixin(RecordMixin, ABC):
         if (correction := self.describe_correction()) is not None:
             # TODO: Also record correction as a log message or a dedicated record
             raise RuntimeError(
-                f"Entry validation failed for {TypeUtil.name(self)} with the following message:\n"
+                f"Entry validation failed for {typename(self)} with the following message:\n"
                 f"{correction}\nText of the entry:\n{self.text}"
             )

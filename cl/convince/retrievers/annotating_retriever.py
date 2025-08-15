@@ -22,7 +22,7 @@ from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.type_util import TypeUtil
+from cl.runtime.records.typename import typename
 from cl.convince.llms.llm import Llm
 from cl.convince.llms.llm_draw import LlmDraw
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
@@ -71,7 +71,7 @@ class AnnotatingRetriever(Retriever):
         if self.prompt is None:
             self.prompt = FormattedPrompt(
                 prompt_id="AnnotatingRetriever",
-                params_type=TypeUtil.name(Retrieval),
+                params_type=typename(Retrieval),
                 template=_TEMPLATE,
             )  # TODO: Review the handling of defaults
 

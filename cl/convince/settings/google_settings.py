@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from typing_extensions import final
-from cl.runtime.records.type_util import TypeUtil
+from cl.runtime.records.typename import typename
 from cl.runtime.settings.settings import Settings
 
 
@@ -30,4 +30,4 @@ class GoogleSettings(Settings):
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
         if self.google_api_key is not None and not isinstance(self.google_api_key, str):
-            raise RuntimeError(f"{TypeUtil.name(self)} field 'api_key' must be a string.")
+            raise RuntimeError(f"{typename(self)} field 'api_key' must be a string.")

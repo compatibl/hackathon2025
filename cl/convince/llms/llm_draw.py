@@ -21,7 +21,7 @@ from cl.runtime.exceptions.error_util import ErrorUtil
 from cl.runtime.records.protocols import PRIMITIVE_CLASS_NAMES
 from cl.runtime.records.protocols import TPrimitive
 from cl.runtime.records.protocols import is_primitive
-from cl.runtime.records.type_util import TypeUtil
+from cl.runtime.records.typename import typename
 from cl.runtime.serializers.primitive_serializers import PrimitiveSerializers
 from cl.convince.llms.llm_draw_key import LlmDrawKey
 
@@ -91,7 +91,7 @@ class LlmDraw(LlmDrawKey, RecordMixin):  # TODO: Requires refactoring after the 
             raise RuntimeError(
                 f"A LlmDraw must be one of the following primitive classes:\n"
                 f"{primitive_class_names}\n"
-                f"The following token of type {TypeUtil.name(token)} is not supported:\n"
+                f"The following token of type {typename(token)} is not supported:\n"
                 f"{ErrorUtil.wrap(token)}"
             )
         elif isinstance(token, str):

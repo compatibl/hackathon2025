@@ -18,7 +18,7 @@ from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
-from cl.runtime.records.type_util import TypeUtil
+from cl.runtime.records.typename import typename
 from cl.convince.llms.completion_key import CompletionKey
 from cl.convince.llms.llm_key import LlmKey
 
@@ -43,9 +43,9 @@ class CompletionKeyGen(CompletionKey, RecordMixin, ABC):
 
         # Check that all of the fields required to compute completion_id are set
         if self.llm is None:
-            raise UserError(f"Empty 'llm' field in {TypeUtil.name(self)}.")
+            raise UserError(f"Empty 'llm' field in {typename(self)}.")
         if StringUtil.is_empty(self.query):
-            raise UserError(f"Empty 'query' field in {TypeUtil.name(self)}.")
+            raise UserError(f"Empty 'query' field in {typename(self)}.")
 
         # Create a unique identifier using StringUtil.digest, this will
         # add MD5 hash if multiline or more than 80 characters

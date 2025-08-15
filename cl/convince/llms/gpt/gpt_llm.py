@@ -19,7 +19,7 @@ from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.contexts.user_context import UserContext
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.float_util import FloatUtil
-from cl.runtime.records.type_util import TypeUtil
+from cl.runtime.records.typename import typename
 from cl.convince.llms.llm import Llm
 from cl.convince.settings.openai_settings import OpenaiSettings
 
@@ -52,13 +52,13 @@ class GptLlm(Llm):
                 # Compare with tolerance in case it is calculated by a formula
                 if FloatUtil.less(self.temperature, 0.0) or FloatUtil.more(self.temperature, 1.0):
                     raise RuntimeError(
-                        f"{TypeUtil.name(self)} field temperature={self.temperature} "
+                        f"{typename(self)} field temperature={self.temperature} "
                         f"is outside the range from 0 to 1."
                     )
                 # Ensure that roundoff error does not move it out of range
                 self.temperature = min(max(self.temperature, 0.0), 1.0)
             else:
-                raise RuntimeError(f"{TypeUtil.name(self)} field 'api_base_url' must be None or a number from 0 to 1")
+                raise RuntimeError(f"{typename(self)} field 'api_base_url' must be None or a number from 0 to 1")
 
     def uncached_completion(self, request_id: str, query: str) -> str:
         """Perform completion without CompletionCache lookup, call completion instead."""

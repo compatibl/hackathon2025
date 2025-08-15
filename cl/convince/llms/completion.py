@@ -19,7 +19,7 @@ from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
-from cl.runtime.records.type_util import TypeUtil
+from cl.runtime.records.typename import typename
 from cl.convince.llms.completion_key import CompletionKey
 from cl.convince.llms.completion_key_gen import CompletionKeyGen
 
@@ -52,9 +52,9 @@ class Completion(CompletionKeyGen, RecordMixin, ABC):
         # Generate completion_id from llm_id, trial and query fields
         # Check that the remaining required fields are set
         if StringUtil.is_empty(self.completion):
-            raise UserError(f"Empty 'completion' field in {TypeUtil.name(self)}.")
+            raise UserError(f"Empty 'completion' field in {typename(self)}.")
         if StringUtil.is_empty(self.timestamp):
-            raise UserError(f"Empty 'timestamp' field in {TypeUtil.name(self)}.")
+            raise UserError(f"Empty 'timestamp' field in {typename(self)}.")
 
         # Extract Trial from the query if present
         # TODO: Review if it is preferable to add it to the query here instead

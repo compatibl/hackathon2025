@@ -21,7 +21,7 @@ from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.protocols import TDataDict
-from cl.runtime.records.type_util import TypeUtil
+from cl.runtime.records.typename import typename
 from cl.runtime.schema.type_cache import TypeCache
 from cl.runtime.serializers.data_serializers import DataSerializers
 from cl.runtime.serializers.key_serializers import KeySerializers
@@ -58,7 +58,7 @@ class TemplatePrompt(Prompt, ABC):
                 f"Parameter required by prompt is either None or not a field of the parameters object.\n"
                 f"Prompt key='{self.prompt_id}'\n"
                 f"Parameter name: {field_name}\n"
-                f"Parameters object type={TypeUtil.name(params)} and key='{params_key_str}'\n"
+                f"Parameters object type={typename(params)} and key='{params_key_str}'\n"
                 f"Available non-empty fields of the parameters object:\n{present_keys_str}\n"
             )
         return result
@@ -74,6 +74,6 @@ class TemplatePrompt(Prompt, ABC):
         params_type = TypeCache.from_type_name(self.params_type)
         if not isinstance(params, params_type):
             raise UserError(
-                f"Parameters object for prompt {self.prompt_id} has type {TypeUtil.name(params)} which "
+                f"Parameters object for prompt {self.prompt_id} has type {typename(params)} which "
                 f"is not a subclass of the expected type {self.params_type}."
             )
