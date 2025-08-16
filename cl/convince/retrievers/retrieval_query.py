@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from cl.runtime.db.query_mixin import QueryMixin
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
-from cl.runtime.db.query_mixin import QueryMixin
 from cl.convince.retrievers.annotating_retrieval import AnnotatingRetrieval
 from cl.convince.retrievers.retriever_key import RetrieverKey
 
