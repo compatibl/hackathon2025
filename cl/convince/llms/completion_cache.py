@@ -116,7 +116,7 @@ class CompletionCache(DataMixin):
         ).build()
 
         # Save completions to DB (including preloads) outside a test
-        active(DataSource).save_one(completion_record)
+        active(DataSource).replace_one(completion_record)
 
         # Save completions to a file unless explicitly turned off in CompletionSettings
         if CompletionSettings.instance().completion_save_to_csv:
@@ -208,4 +208,4 @@ class CompletionCache(DataMixin):
                     ]
 
                     # Save to DB unless inside a test
-                    active(DataSource).save_many(completions)
+                    active(DataSource).replace_many(completions)  # TODO: Review to see how to use insert_many instead
