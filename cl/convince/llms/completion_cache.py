@@ -208,4 +208,6 @@ class CompletionCache(DataMixin):
                     ]
 
                     # Save to DB unless inside a test
-                    active(DataSource).replace_many(completions, commit=True)  # TODO: Review to see how to use insert_many instead
+                    active(DataSource).replace_many(
+                        completions, commit=True
+                    )  # TODO: Review to see how to use insert_many instead
