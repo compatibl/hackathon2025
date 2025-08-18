@@ -45,4 +45,4 @@ class DateOrTenorParser(DateOrTenorReader):
             self.date = date_entry.date
 
         # Save
-        active(DataSource).replace_one(self)
+        active(DataSource).replace_one(self, commit=True)

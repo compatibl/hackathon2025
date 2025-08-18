@@ -185,7 +185,7 @@ class AnnotatingRetriever(Retriever):
                     # TODO: Determine if numbered combination works better
                     retrieval.output_text = " ".join(matches)
                     retrieval.build()
-                    active(DataSource).replace_one(retrieval)
+                    active(DataSource).replace_one(retrieval, commit=True)
 
                     # Return only the parameter value
                     return retrieval.output_text
@@ -194,7 +194,7 @@ class AnnotatingRetriever(Retriever):
                     retrieval.success = "N"
                     retrieval.justification = str(e)
                     retrieval.build()
-                    active(DataSource).replace_one(retrieval)
+                    active(DataSource).replace_one(retrieval, commit=True)
                     if is_last_trial:
                         # Rethrow only when the last trial is reached
                         raise UserError(
@@ -207,7 +207,7 @@ class AnnotatingRetriever(Retriever):
                     # TODO: Review logic and remove unreachable code
                     retrieval.success = "Y"
                     retrieval.build()
-                    active(DataSource).replace_one(retrieval)
+                    active(DataSource).replace_one(retrieval, commit=True)
 
         # The method should always return from the loop, adding as a backup in case this changes in the future
         raise UserError(
