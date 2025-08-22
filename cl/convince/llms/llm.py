@@ -16,7 +16,7 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Self
-from cl.runtime import TypeCache
+from cl.runtime.schema.type_cache import TypeCache
 from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.parsers.locale_key import LocaleKey

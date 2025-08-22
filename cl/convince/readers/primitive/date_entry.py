@@ -14,7 +14,7 @@
 
 import datetime as dt
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
+from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.readers.primitive.date_entry_key import DateEntryKey
 

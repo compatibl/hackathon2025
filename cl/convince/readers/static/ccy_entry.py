@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
+from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.data.static.ccy_key import CcyKey
 from cl.convince.readers.static.ccy_entry_key import CcyEntryKey

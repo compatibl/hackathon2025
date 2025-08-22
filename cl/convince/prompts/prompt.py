@@ -14,7 +14,7 @@
 
 from abc import ABC
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
+from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.prompts.prompt_key import PromptKey
 
 
