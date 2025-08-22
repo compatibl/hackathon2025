@@ -14,9 +14,9 @@
 
 from abc import ABC
 from abc import abstractmethod
-from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
+from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.readers.entry_mixin import EntryMixin
 
 

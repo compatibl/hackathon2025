@@ -16,7 +16,6 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Self
-from cl.runtime.schema.type_cache import TypeCache
 from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.parsers.locale import Locale
 from cl.runtime.parsers.locale_key import LocaleKey
@@ -24,6 +23,7 @@ from cl.runtime.parsers.locale_keys import LocaleKeys
 from cl.runtime.primitive.timestamp import Timestamp
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.schema.type_cache import TypeCache
 from cl.convince.llms.completion_cache import CompletionCache
 from cl.convince.llms.completion_util import CompletionUtil
 from cl.convince.llms.llm_key import LlmKey
