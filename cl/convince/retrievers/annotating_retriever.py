@@ -24,7 +24,7 @@ from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.typename import typename
 from cl.convince.llms.llm import Llm
-from cl.convince.llms.llm_draw import LlmDraw
+from cl.runtime.stats.draw import Draw
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
 from cl.convince.prompts.prompt import Prompt
 from cl.convince.prompts.prompt_key import PromptKey
@@ -100,7 +100,7 @@ class AnnotatingRetriever(Retriever):
             is_last_trial = retry_index == self.max_retries - 1
 
             # Create a draw context
-            with activate(LlmDraw(draw_index=draw_index).build()) as draw:
+            with activate(Draw(draw_index=draw_index).build()) as draw:
 
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
