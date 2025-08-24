@@ -16,6 +16,7 @@ from abc import ABC
 from abc import abstractmethod
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
+from cl.runtime.primitive.timestamp import Timestamp
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.readers.entry_mixin import EntryMixin
 
@@ -25,6 +26,22 @@ class EntryReaderMixin(RecordMixin, ABC):
 
     __slots__ = ()
     """To prevent creation of __dict__ in derived types."""
+
+    @property
+    @abstractmethod
+    def reader_id(self) -> str:
+        """Unique identifier for this reader type."""
+
+    @reader_id.setter
+    @abstractmethod
+    def reader_id(self, value):
+        """Unique identifier for this reader type."""
+
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        if self.reader_id is None:
+            # Use globally unique UUIDv7-based timestamp if not specified
+            self.reader_id = Timestamp.create()
 
     @abstractmethod
     def read(self, text: str) -> EntryMixin:
