@@ -1,5 +1,6 @@
 RequestID,Query,Completion
-2025-01-01-01-52-47-106-7571913ae9370fb293bc,"You will be provided with an input text, a description of a parameter, and possible values of this parameter.
+2025-01-01-01-52-47-106-7571913ae9370fb293bc,"Trial: 0
+You will be provided with an input text, a description of a parameter, and possible values of this parameter.
 Your goal is to extract the value of the parameter from the provided input text.
 
 You must reply with JSON formatted strictly according to the JSON specification in which all values are strings.
