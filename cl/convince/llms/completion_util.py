@@ -15,8 +15,8 @@
 import collections
 import os
 from typing import Iterable
-from cl.convince.llms.llm_draw import LlmDraw
 from cl.runtime.contexts.context_manager import active_or_none
+from cl.convince.llms.llm_draw import LlmDraw
 
 
 class CompletionUtil:

@@ -13,9 +13,10 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.contexts.context_manager import activate, active, active_or_none
+from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.contexts.context_manager import active_or_none
 from cl.convince.llms.llm_draw import LlmDraw
-from stubs.cl.runtime import StubDataclass
 
 
 def test_context():
