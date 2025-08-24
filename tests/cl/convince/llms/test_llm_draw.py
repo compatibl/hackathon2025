@@ -13,49 +13,45 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import activate, active, active_or_none
 from cl.convince.llms.llm_draw import LlmDraw
 from stubs.cl.runtime import StubDataclass
 
 
-def test_append_token():
-    """Test LlmDraw.add_token method."""
+def test_context():
+    """Test LlmDraw context."""
 
-    assert LlmDraw.get_trial() is None
-    with activate(LlmDraw.append_token("abc")) as trial_context_1:
+    assert active_or_none(LlmDraw) is None
+    with activate(LlmDraw(draw_index=1).build()) as draw_1:
         # One token in chain
-        assert trial_context_1.trial_chain == ("abc",)
-        assert LlmDraw.get_trial() == "abc"
-        with activate(LlmDraw.append_token(123)) as trial_context_2:
+        assert draw_1.draw_id == "1"
+        assert active(LlmDraw).draw_id == "1"
+        with activate(LlmDraw(draw_index=2).build()) as draw_12:
             # Two tokens in chain
-            assert trial_context_2.trial_chain == (
-                "abc",
-                "123",
-            )
-            assert LlmDraw.get_trial() == "abc\\123"
-        assert trial_context_1.trial_chain == ("abc",)
-        assert LlmDraw.get_trial() == "abc"
-        with activate(LlmDraw.append_token(None)) as trial_context_3:
-            # One token in chain, None is ignored
-            assert trial_context_3.trial_chain == ("abc",)
-            assert LlmDraw.get_trial() == "abc"
+            assert draw_12.draw_id == "1.2"
+            assert active(LlmDraw).draw_id == "1.2"
+        assert active(LlmDraw).draw_id == "1"
+        with activate(LlmDraw(draw_index=3).build()) as draw_13:
+            # Two tokens in chain
+            assert draw_13.draw_id == "1.3"
+            assert active(LlmDraw).draw_id == "1.3"
+    assert active_or_none(LlmDraw) is None
 
 
 def test_exceptions():
     """Test LlmDraw exceptions."""
 
-    with pytest.raises(RuntimeError, match="A LlmDraw must be one of the following primitive classes"):
-        # Not a primitive type
-        LlmDraw.append_token(StubDataclass())
-    with pytest.raises(RuntimeError, match="empty string"):
+    not_a_str_msg = "not a valid type for a field declared as int"
+    required_msg = "Required field is not specified"
+    with pytest.raises(RuntimeError, match=not_a_str_msg):
+        # Not an int
+        LlmDraw(draw_index="1").build()  # noqa
+    with pytest.raises(RuntimeError, match=not_a_str_msg):
         # Empty string
-        LlmDraw.append_token("")
-    with pytest.raises(RuntimeError, match="newline"):
-        # Contains newline
-        LlmDraw.append_token("\n")
-    with pytest.raises(RuntimeError, match="backslash"):
-        # Contains backslash
-        LlmDraw.append_token("\\")
+        LlmDraw(draw_index="").build()  # noqa
+    with pytest.raises(RuntimeError, match=required_msg):
+        # None
+        LlmDraw(draw_index=None).build()  # noqa
 
 
 if __name__ == "__main__":

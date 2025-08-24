@@ -16,6 +16,7 @@ import collections
 import os
 from typing import Iterable
 from cl.convince.llms.llm_draw import LlmDraw
+from cl.runtime.contexts.context_manager import active_or_none
 
 
 class CompletionUtil:
@@ -28,10 +29,9 @@ class CompletionUtil:
         # Strip leading and trailing whitespace and EOL
         result = query.strip()
 
-        # Get trial identifier from the current active trial context
-        # and add it to the beginning of formatted query
-        if (trial := LlmDraw.get_trial()) is not None:
-            result = f"Trial: {trial}\n{result}"
+        # Get draw_id from the active draw context and add it to the beginning of the formatted query
+        if (draw := active_or_none(LlmDraw)) is not None:
+            result = f"Trial: {draw.draw_id}\n{result}"
 
         # Normalize EOL
         result = cls.to_python_eol(result)

@@ -100,11 +100,14 @@ class MultipleChoiceRetriever(Retriever):
 
         trial_count = 2
         for retry_index in range(self.max_retries):
+
+            # Include retry_index in query to avoid reusing a cached completion
+            draw_index = retry_index if self.max_retries > 1 else 0
+            trial = retry_index if self.max_retries > 1 else None  # TODO: Use draw index (requires cache rebuild)
             is_last_trial = retry_index == self.max_retries - 1
 
-            # Append retry_index to trial to avoid reusing a cached completion
-            trial = str(retry_index) if self.max_retries > 1 else None
-            with activate(LlmDraw.append_token(trial)) as trial_context:
+            # Create a draw context
+            with activate(LlmDraw(draw_index=draw_index).build()) as draw:
 
                 # Strip starting and ending whitespace
                 input_text = input_text.strip()  # TODO: Perform more advanced normalization
@@ -113,7 +116,7 @@ class MultipleChoiceRetriever(Retriever):
                     # Create a retrieval record
                     retrieval = MultipleChoiceRetrieval(
                         retriever=self.get_key(),
-                        trial=trial_context.get_trial(),
+                        trial=trial,
                         input_text=input_text,
                         param_description=param_description,
                         valid_choices=valid_choices,

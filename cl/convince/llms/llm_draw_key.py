@@ -19,17 +19,10 @@ from cl.runtime.records.key_mixin import KeyMixin
 
 @dataclass(slots=True)
 class LlmDrawKey(KeyMixin):
-    """
-    Use activate(LLmDraw(...)) to run multiple LLM chats for the same conversation
-    chain without receiving the previously cached responses.
-
-    Notes:
-        - Completions are cached separately for each LLM draw identifier and model
-        - Nested LLmDraw contexts are chained together to form a unique backslash-delimited draw identifier
-    """
+    """Keep track of a unique draw identifier consisting of dot-delimited draw indices for each nested draw context."""
 
     draw_id: str = required()
-    """Unique LLM draw identifier."""
+    """Unique draw identifier consists of dot-delimited draw indices for each nested draw context."""
 
     @classmethod
     def get_key_type(cls) -> type[KeyMixin]:
