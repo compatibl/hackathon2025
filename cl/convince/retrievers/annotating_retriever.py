@@ -23,8 +23,8 @@ from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.typename import typename
-from cl.convince.llms.llm import Llm
 from cl.runtime.stats.draw import Draw
+from cl.convince.llms.llm import Llm
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
 from cl.convince.prompts.prompt import Prompt
 from cl.convince.prompts.prompt_key import PromptKey
