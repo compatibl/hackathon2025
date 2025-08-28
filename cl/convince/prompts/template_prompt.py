@@ -19,7 +19,7 @@ from typing import Any
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.protocols import TDataDict
+from cl.runtime.records.data_mixin import TDataDict
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.records.typename import typename
 from cl.runtime.schema.type_cache import TypeCache
