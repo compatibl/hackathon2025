@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
-from cl.runtime.records.protocols import is_key
+from cl.runtime.records.protocols import is_key_type
 
 
 @dataclass(slots=True)
@@ -34,7 +34,7 @@ class CompletionKey(KeyMixin):
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
         # Validate completion_id inside a key but not inside a record where it will be set based on other fields
         # TODO: Use standard helper classes
-        if is_key(type(self)):
+        if is_key_type(type(self)):
             if "(" not in self.completion_id or ")" not in self.completion_id:
                 raise UserError(
                     f"""
