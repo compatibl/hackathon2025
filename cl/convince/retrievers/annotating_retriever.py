@@ -247,14 +247,14 @@ class AnnotatingRetriever(Retriever):
                 return None
             else:
                 raise UserError(
-                    f"No curly braces are present in annotated text.\n" f"Annotated text: ```{annotated_text}```\n"
+                    f"No curly braces are present in annotated text.\nAnnotated text: ```{annotated_text}```\n"
                 )
         if any("{" in match or "}" in match for match in matches):
             if continue_on_error:
                 return None
             else:
                 raise UserError(
-                    f"Nested curly braces are present in annotated text.\n" f"Annotated text: ```{annotated_text}```\n"
+                    f"Nested curly braces are present in annotated text.\nAnnotated text: ```{annotated_text}```\n"
                 )
 
         # Combine using semicolon delimiter and return
