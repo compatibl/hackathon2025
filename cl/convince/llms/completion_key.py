@@ -34,7 +34,7 @@ class CompletionKey(KeyMixin):
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
         # Validate completion_id inside a key but not inside a record where it will be set based on other fields
         # TODO: Use standard helper classes
-        if is_key(self):
+        if is_key(type(self)):
             if "(" not in self.completion_id or ")" not in self.completion_id:
                 raise UserError(
                     f"""
