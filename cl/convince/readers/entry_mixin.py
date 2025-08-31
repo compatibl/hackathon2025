@@ -38,6 +38,6 @@ class EntryMixin(RecordMixin, ABC):
         if (correction := self.describe_correction()) is not None:
             # TODO: Also record correction as a log message or a dedicated record
             raise RuntimeError(
-                f"Entry validation failed for {typename(self)} with the following message:\n"
+                f"Entry validation failed for {typename(type(self))} with the following message:\n"
                 f"{correction}\nText of the entry:\n{self.text}"
             )

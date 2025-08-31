@@ -58,7 +58,7 @@ class TemplatePrompt(Prompt, ABC):
                 f"Parameter required by prompt is either None or not a field of the parameters object.\n"
                 f"Prompt key='{self.prompt_id}'\n"
                 f"Parameter name: {field_name}\n"
-                f"Parameters object type={typename(params)} and key='{params_key_str}'\n"
+                f"Parameters object type={typename(type(params))} and key='{params_key_str}'\n"
                 f"Available non-empty fields of the parameters object:\n{present_keys_str}\n"
             )
         return result

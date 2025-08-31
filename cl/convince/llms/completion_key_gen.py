@@ -43,9 +43,9 @@ class CompletionKeyGen(CompletionKey, RecordMixin, ABC):
 
         # Check that all of the fields required to compute completion_id are set
         if self.llm is None:
-            raise UserError(f"Empty 'llm' field in {typename(self)}.")
+            raise UserError(f"Empty 'llm' field in {typename(type(self))}.")
         if StringUtil.is_empty(self.query):
-            raise UserError(f"Empty 'query' field in {typename(self)}.")
+            raise UserError(f"Empty 'query' field in {typename(type(self))}.")
 
         # Create a unique identifier using StringUtil.digest, this will
         # add MD5 hash if multiline or more than 80 characters

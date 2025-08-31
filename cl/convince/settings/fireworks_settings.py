@@ -30,4 +30,4 @@ class FireworksSettings(Settings):
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
         if self.fireworks_api_key is not None and not isinstance(self.fireworks_api_key, str):
-            raise RuntimeError(f"{typename(self)} field 'api_key' must be a string.")
+            raise RuntimeError(f"{typename(type(self))} field 'api_key' must be a string.")

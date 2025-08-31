@@ -38,6 +38,6 @@ class OpenaiSettings(Settings):
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
         if self.openai_api_key is not None and not isinstance(self.openai_api_key, str):
-            raise RuntimeError(f"{typename(self)} field 'api_key' must be a string.")
+            raise RuntimeError(f"{typename(type(self))} field 'api_key' must be a string.")
         if self.openai_api_base_url is not None and not isinstance(self.openai_api_base_url, str):
-            raise RuntimeError(f"{typename(self)} field 'api_base_url' must be None or a string.")
+            raise RuntimeError(f"{typename(type(self))} field 'api_base_url' must be None or a string.")

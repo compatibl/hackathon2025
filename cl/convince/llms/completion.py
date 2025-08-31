@@ -52,9 +52,9 @@ class Completion(CompletionKeyGen, RecordMixin, ABC):
         # Generate completion_id from llm_id, trial and query fields
         # Check that the remaining required fields are set
         if StringUtil.is_empty(self.completion):
-            raise UserError(f"Empty 'completion' field in {typename(self)}.")
+            raise UserError(f"Empty 'completion' field in {typename(type(self))}.")
         if StringUtil.is_empty(self.timestamp):
-            raise UserError(f"Empty 'timestamp' field in {typename(self)}.")
+            raise UserError(f"Empty 'timestamp' field in {typename(type(self))}.")
 
         # Extract Trial from the query if present
         # TODO: Review if it is preferable to add it to the query here instead
