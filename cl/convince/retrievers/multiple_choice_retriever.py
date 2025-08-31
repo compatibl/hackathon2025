@@ -51,7 +51,7 @@ The JSON must have the following keys:
 }}
 Input text: ```{InputText}```
 Parameter description: ```{ParamDescription}```
-Semicolon-delimited list of valid choices: ```{ValidChoices}```
+Semicolon-delimited list of valid choices: ```{ValidChoicesDescription}```
 
 Keep in mind that the input text does not need to be one of the valid choices. Rather, you must use your knowledge as
 Senior Quantitative Analyst to determine if the input has the same meaning or maps to one of the valid choices,
@@ -96,7 +96,7 @@ class MultipleChoiceRetriever(Retriever):
 
         # Load the prompt
         prompt = active(DataSource).load_one(self.prompt, cast_to=Prompt)
-        valid_choices_str = "; ".join(valid_choices)
+        valid_choices_description = ";".join(valid_choices)
 
         trial_count = 2
         for retry_index in range(self.max_retries):
@@ -119,7 +119,7 @@ class MultipleChoiceRetriever(Retriever):
                         trial=trial,
                         input_text=input_text,
                         param_description=param_description,
-                        valid_choices=valid_choices,
+                        valid_choices_description=valid_choices_description,
                     )
 
                     # Create braces extraction prompt
@@ -170,7 +170,7 @@ class MultipleChoiceRetriever(Retriever):
                                 raise UserError(
                                     f"The extracted parameter is among the valid choices.\n"
                                     f"Extracted value: ```{retrieval.param_value}```\n"
-                                    f"Semicolon-delimited list of valid choices: ```{valid_choices_str}```\n"
+                                    f"Valid choices: ```{valid_choices_description}```\n"
                                 )
                     else:
                         raise RuntimeError(

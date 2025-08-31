@@ -13,7 +13,7 @@ The JSON must have the following keys:
 }
 Input text: ```USD```
 Parameter description: ```Currency code in strict ISO-4217 format of three uppercase letters, no variations allowed.```
-Semicolon-delimited list of valid choices: ```['CAD', 'EUR', 'GBP', 'USD']```
+Semicolon-delimited list of valid choices: ```CAD;EUR;GBP;USD```
 
 Keep in mind that the input text does not need to be one of the valid choices. Rather, you must use your knowledge as
 Senior Quantitative Analyst to determine if the input has the same meaning or maps to one of the valid choices,

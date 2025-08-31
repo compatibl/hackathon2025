@@ -27,8 +27,8 @@ class MultipleChoiceRetrieval(Retrieval):
     param_description: str = required()
     """Description of the retrieved parameter (input)."""
 
-    valid_choices: list[str] = required()
-    """Valid choices for the retrieved parameter (input)."""
+    valid_choices_description: str = required()
+    """Description of the valid choices for the retrieved parameter (input)."""
 
     success: str | None = None
     """Use 'true' when parameter was extracted and is one of the valid choices and 'false' otherwise (output)."""
