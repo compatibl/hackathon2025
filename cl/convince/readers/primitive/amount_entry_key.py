@@ -14,11 +14,12 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class AmountEntryKey(KeyMixin):
+class AmountEntryKey(DataclassMixin, KeyMixin):
     """Entry for an amount with or without currency specification."""
 
     text: str = required()

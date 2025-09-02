@@ -14,11 +14,12 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class AmountUnitsReaderKey(KeyMixin):
+class AmountUnitsReaderKey(DataclassMixin, KeyMixin):
     """Maps an amount units string to the numerical multiplier for the amount."""
 
     reader_id: str = required()

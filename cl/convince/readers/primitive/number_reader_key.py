@@ -14,11 +14,12 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class NumberReaderKey(KeyMixin):
+class NumberReaderKey(DataclassMixin, KeyMixin):
     """Maps a number specified using words or digits to its numerical value."""
 
     reader_id: str = required()

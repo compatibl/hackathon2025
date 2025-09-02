@@ -14,11 +14,12 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class LlmKey(KeyMixin):
+class LlmKey(DataclassMixin, KeyMixin):
     """Provides an API for single query and chat completion."""
 
     llm_id: str = required()

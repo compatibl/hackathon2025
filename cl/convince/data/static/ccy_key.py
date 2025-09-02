@@ -16,6 +16,7 @@ import re
 from dataclasses import dataclass
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.key_mixin import KeyMixin
 
 _ISO_RE = re.compile(r"^[A-Z]{3}$")
@@ -23,7 +24,7 @@ _ISO_RE = re.compile(r"^[A-Z]{3}$")
 
 
 @dataclass(slots=True)
-class CcyKey(KeyMixin):
+class CcyKey(DataclassMixin, KeyMixin):
     """Currency recorded using its 3-letter uppercase ISO-4217 code."""
 
     iso_code: str = required()

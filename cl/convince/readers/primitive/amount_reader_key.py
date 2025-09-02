@@ -14,11 +14,12 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True)
-class AmountReaderKey(KeyMixin):
+class AmountReaderKey(DataclassMixin, KeyMixin):
     """Reader for an amount with or without currency specification."""
 
     reader_id: str = required()
