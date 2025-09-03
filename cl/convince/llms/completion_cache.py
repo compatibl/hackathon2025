@@ -20,7 +20,6 @@ from cl.runtime.contexts.context_manager import active
 from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.qa.qa_util import QaUtil
-from cl.runtime.records.data_mixin import DataMixin
 from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.server.env import Env
 from cl.runtime.settings.project_settings import ProjectSettings
