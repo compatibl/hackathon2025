@@ -23,7 +23,7 @@ from cl.runtime.parsers.locale_keys import LocaleKeys
 from cl.runtime.primitive.timestamp import Timestamp
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
-from cl.runtime.schema.type_cache import TypeCache
+from cl.runtime.schema.type_info import TypeInfo
 from cl.convince.llms.completion_cache import CompletionCache
 from cl.convince.llms.completion_util import CompletionUtil
 from cl.convince.llms.llm_key import LlmKey
@@ -47,7 +47,7 @@ class Llm(LlmKey, RecordMixin, ABC):
     def default(cls) -> Self:
         # Default instance based on LlmSettings
         llm_settings = LlmSettings.instance()
-        llm_type = TypeCache.from_type_name(llm_settings.llm_type)
+        llm_type = TypeInfo.from_type_name(llm_settings.llm_type)
         llm_id = llm_settings.llm_id
         llm_locale = LocaleKey(locale_id=llm_settings.llm_locale).build()
         return llm_type(llm_id=llm_id, llm_locale=llm_locale).build()
