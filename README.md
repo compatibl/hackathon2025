@@ -1,4 +1,28 @@
-# CompatibL Hackathon Package
+# 2025 QuantMinds-CompatibL Hackathon
+
+# Overview
+
+- **Date**: Monday, November 17
+- **Format**: In person at the QuantMinds venue and online
+- **Topic**: Cognitive biases of LLMs
+- **Awards**:
+  - Certificates for the top three spots in each stream
+  - A free QuantMinds 2026 pass for the Grand Prize winner (one individual pass per team)
+- **Stay Updated**:
+  - Due to restrictions on bulk email, announcements and updates will be on LinkedIn at [https://www.linkedin.com/company/tradeentry](https://www.linkedin.com/company/tradeentry)
+  - Follow the page to receive notifications
+
+# Rules
+
+- TBD
+
+# Scoring
+
+- TBD
+
+# Score Calculation
+
+- TBD
 
 ## Copyright
 

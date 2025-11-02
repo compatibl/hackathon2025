@@ -1,8 +1,14 @@
 # Submodule package requirements
+-r ./tools/cl/runtime/package_requirements.txt
+-r ./tools/cl/convince/package_requirements.txt
 -r ./tools/cl/hackathon/package_requirements.txt
 
 # Submodule build requirements
+-r ./tools/cl/runtime/build_requirements.txt
+-r ./tools/cl/convince/build_requirements.txt
 -r ./tools/cl/hackathon/build_requirements.txt
 
 # Submodule test requirements
+-r ./tools/cl/runtime/test_requirements.txt
+-r ./tools/cl/convince/test_requirements.txt
 -r ./tools/cl/hackathon/test_requirements.txt

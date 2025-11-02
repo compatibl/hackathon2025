@@ -1,0 +1,47 @@
+# Default environment
+default:
+
+  # Default log level (documented in LogSettings class)
+  log_level: info
+
+  # Default log filename prefix (documented in LogSettings class)
+  log_filename_prefix: main
+
+  # Documented in EnvSettings class
+  env_id: temp_hackathon_main
+  env_tenant: temp_tenant
+  env_packages:
+    - cl.runtime
+    - cl.convince
+    - cl.hackathon
+    - stubs.cl.runtime
+    - stubs.cl.convince
+    - stubs.cl.hackathon
+
+  # Documented in DbSettings class
+  db_id: temp_hackathon_main
+  db_type: SqliteDb
+
+  # REST API hostname and port (documented in ApiSettings class)
+  api_hostname: localhost
+  api_port: 7008
+
+  # Preload directories to include (documented in PreloadSettings class)
+  preload_dirs:
+    - cl
+
+  # Documented in LlmSettings class
+  llm_type: GptLlm
+  llm_id: gpt-4o
+  llm_locale: en-US
+
+# Test environment
+testing:
+
+  # Documented in QaSettings class
+  qa_db_types:
+    - SqliteDb
+    - BasicMongoMockDb
+
+  # Test log filename prefix (documented in LogSettings class)
+  log_filename_prefix: tests
