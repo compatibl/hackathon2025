@@ -14,6 +14,8 @@
 
 from dataclasses import dataclass
 import fireworks.client  # noqa
+from fireworks.client import Fireworks
+
 from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.contexts.user_context import UserContext
 from cl.runtime.log.exceptions.user_error import UserError
@@ -48,11 +50,7 @@ class FireworksLlamaLlm(LlamaLlm):
         # to stop model provider from caching the results
         query_with_request_id = f"RequestID: {request_id}\n\n{query}"
 
-        model_name = self.model_name if self.model_name is not None else self.llm_id
-        prompt = f"""<|begin_of_text|><|start_header_id|>user<|end_header_id|>
 
-{query_with_request_id}<|eot_id|>
-<|start_header_id|>assistant<|end_header_id|>"""
 
         # Try loading API key from context.secrets first and then from settings
         api_key = (
@@ -61,13 +59,16 @@ class FireworksLlamaLlm(LlamaLlm):
         )
         if api_key is None:
             raise UserError("Provide FIREWORKS_API_KEY in Account > My Keys (users) or using Dynaconf (developers).")
-        fireworks.client.api_key = api_key
 
-        response = fireworks.client.Completion.create(
-            model=f"accounts/fireworks/models/{model_name}",
-            prompt=prompt,
-            max_tokens=self.max_tokens,
-            temperature=self.temperature,
+        fireworks_client = Fireworks(api_key=api_key)
+        model_name = self.model_name if self.model_name is not None else self.llm_id
+        response = fireworks_client.chat.completions.create(
+            model=f"fireworks/{model_name}",
+            messages=[
+                {"role": "user", "content": query_with_request_id},
+            ],
+            temperature=self.temperature if self.temperature is not None else None,
+            max_tokens=self.max_tokens if self.max_tokens is not None else None,
         )
-        result = response.choices[0].text
+        result = response.choices[0].message.content
         return result
