@@ -14,6 +14,7 @@
 
 from dataclasses import dataclass
 from cl.convince.llms.gpt.gpt_llm import GptLlm
+from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm
 from cl.hackathon.hackathon_trade_entry_experiment_condition import HackathonTradeEntryExperimentCondition
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
@@ -39,7 +40,7 @@ class HackathonTradeEntryExperiment(BinaryExperiment):
                   f"Respond with yes or no in lowercase and output no other text.\n"
                   f"Any other output or any additional text will be considered a failed response.\n")
 
-        llm = GptLlm(llm_id="gpt-5-mini", temperature=1).build()
+        llm = FireworksLlamaLlm(llm_id="llama4-scout-instruct-basic").build()
         response = llm.completion(prompt)
         if response == condition_obj.expected_response:
             # Must match the expected response exactly
