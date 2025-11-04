@@ -13,12 +13,9 @@
 # limitations under the License.
 
 import pytest
-
-from cl.hackathon.hackathon_binary_experiment import HackathonBinaryExperiment
 from cl.runtime.settings.preload_settings import PreloadSettings
-from cl.runtime.stats.condition import Condition
 from cl.runtime.stats.condition_key import ConditionKey
-from stubs.cl.runtime.stats.stub_classifier_experiment import StubClassifierExperiment
+from cl.hackathon.hackathon_binary_experiment import HackathonBinaryExperiment
 
 
 def test_smoke(default_db_fixture):
@@ -37,6 +34,7 @@ def test_smoke(default_db_fixture):
     )
     experiment.run_launch_all_trials()
     experiment.get_plot("test_hackathon_binary_experiment.results").save(format_="svg")
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

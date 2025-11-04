@@ -13,21 +13,20 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.convince.llms.gpt.gpt_llm import GptLlm
-from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm
-from cl.hackathon.hackathon_condition import HackathonCondition
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.primitive.timestamp import Timestamp
 from cl.runtime.stats.binary_experiment import BinaryExperiment
 from cl.runtime.stats.binary_trial import BinaryTrial
 from cl.runtime.stats.condition_key import ConditionKey
+from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm
+from cl.hackathon.hackathon_condition import HackathonCondition
 
 
 @dataclass(slots=True, kw_only=True)
 class HackathonBinaryExperiment(BinaryExperiment):
     """Trade entry experiment."""
-    
+
     def create_trial(self, condition: ConditionKey) -> BinaryTrial:
         """
         Create and return a new trial record with actual and (if applicable) expected fields
@@ -35,10 +34,12 @@ class HackathonBinaryExperiment(BinaryExperiment):
         """
 
         condition_obj = active(DataSource).load_one(condition, cast_to=HackathonCondition)
-        prompt = (f"{Timestamp.create()}: {condition_obj.preamble}\n\n"
-                  f"{condition_obj.query}\n\n"
-                  f"Respond with yes or no in lowercase and output no other text.\n"
-                  f"Any other output or any additional text will be considered a failed response.\n")
+        prompt = (
+            f"{Timestamp.create()}: {condition_obj.preamble}\n\n"
+            f"{condition_obj.query}\n\n"
+            f"Respond with yes or no in lowercase and output no other text.\n"
+            f"Any other output or any additional text will be considered a failed response.\n"
+        )
 
         llm = FireworksLlamaLlm(llm_id="llama4-scout-instruct-basic").build()
         response = llm.completion(prompt)
