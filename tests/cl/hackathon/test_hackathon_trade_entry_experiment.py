@@ -16,8 +16,8 @@ import pytest
 
 from cl.hackathon.hackathon_trade_entry_experiment import HackathonTradeEntryExperiment
 from cl.runtime.settings.preload_settings import PreloadSettings
-from cl.runtime.stats.experiment_condition import ExperimentCondition
-from cl.runtime.stats.experiment_condition_key import ExperimentConditionKey
+from cl.runtime.stats.condition import Condition
+from cl.runtime.stats.condition_key import ConditionKey
 from stubs.cl.runtime.stats.stub_classifier_experiment import StubClassifierExperiment
 
 
@@ -31,8 +31,8 @@ def test_smoke(default_db_fixture):
         experiment_id="test_hackathon_trade_entry_experiment.test_smoke",
         max_trials=5,
         conditions=[
-            ExperimentConditionKey(experiment_condition_id="TradeEntry.Baseline").build(),
-            ExperimentConditionKey(experiment_condition_id="TradeEntry.EmbeddedOption").build(),
+            ConditionKey(condition_id="TradeEntry.Baseline").build(),
+            ConditionKey(condition_id="TradeEntry.EmbeddedOption").build(),
         ],
     )
     experiment.run_launch_all_trials()
