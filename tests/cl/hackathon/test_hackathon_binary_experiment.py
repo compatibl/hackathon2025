@@ -14,7 +14,7 @@
 
 import pytest
 
-from cl.hackathon.hackathon_trade_entry_experiment import HackathonTradeEntryExperiment
+from cl.hackathon.hackathon_binary_experiment import HackathonBinaryExperiment
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.stats.condition import Condition
 from cl.runtime.stats.condition_key import ConditionKey
@@ -27,8 +27,8 @@ def test_smoke(default_db_fixture):
     PreloadSettings.instance().save_and_configure()
 
     # Create and run the experiment
-    experiment = HackathonTradeEntryExperiment(
-        experiment_id="test_hackathon_trade_entry_experiment.test_smoke",
+    experiment = HackathonBinaryExperiment(
+        experiment_id="test_hackathon_binary_experiment.test_smoke",
         max_trials=5,
         conditions=[
             ConditionKey(condition_id="TradeEntry.Baseline").build(),
@@ -36,7 +36,7 @@ def test_smoke(default_db_fixture):
         ],
     )
     experiment.run_launch_all_trials()
-    experiment.get_plot("test_hackathon_trade_entry_experiment.results").save(format_="svg")
+    experiment.get_plot("test_hackathon_binary_experiment.results").save(format_="svg")
 
 if __name__ == "__main__":
     pytest.main([__file__])

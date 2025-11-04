@@ -15,7 +15,7 @@
 from dataclasses import dataclass
 from cl.convince.llms.gpt.gpt_llm import GptLlm
 from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm
-from cl.hackathon.hackathon_trade_entry_condition import HackathonTradeEntryCondition
+from cl.hackathon.hackathon_condition import HackathonCondition
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.primitive.timestamp import Timestamp
@@ -25,7 +25,7 @@ from cl.runtime.stats.condition_key import ConditionKey
 
 
 @dataclass(slots=True, kw_only=True)
-class HackathonTradeEntryExperiment(BinaryExperiment):
+class HackathonBinaryExperiment(BinaryExperiment):
     """Trade entry experiment."""
     
     def create_trial(self, condition: ConditionKey) -> BinaryTrial:
@@ -34,7 +34,7 @@ class HackathonTradeEntryExperiment(BinaryExperiment):
         without checking if max_trials has already been reached.
         """
 
-        condition_obj = active(DataSource).load_one(condition, cast_to=HackathonTradeEntryCondition)
+        condition_obj = active(DataSource).load_one(condition, cast_to=HackathonCondition)
         prompt = (f"{Timestamp.create()}: {condition_obj.preamble}\n\n"
                   f"{condition_obj.query}\n\n"
                   f"Respond with yes or no in lowercase and output no other text.\n"

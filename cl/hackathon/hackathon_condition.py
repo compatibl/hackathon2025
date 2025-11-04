@@ -21,7 +21,7 @@ from cl.runtime.stats.condition_key import ConditionKey
 
 
 @dataclass(slots=True, kw_only=True)
-class HackathonTradeEntryCondition(Condition):
+class HackathonCondition(Condition):
     """Condition under which the hackathon classifier experiment is performed."""
 
     preamble: str | None = None
