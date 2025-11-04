@@ -15,7 +15,6 @@
 from dataclasses import dataclass
 import fireworks.client  # noqa
 from fireworks.client import Fireworks
-
 from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.contexts.user_context import UserContext
 from cl.runtime.log.exceptions.user_error import UserError
@@ -49,8 +48,6 @@ class FireworksLlamaLlm(LlamaLlm):
         # Prefix a unique RequestID to the model for audit log purposes and
         # to stop model provider from caching the results
         query_with_request_id = f"RequestID: {request_id}\n\n{query}"
-
-
 
         # Try loading API key from context.secrets first and then from settings
         api_key = (
