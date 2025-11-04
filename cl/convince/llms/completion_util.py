@@ -16,7 +16,7 @@ import collections
 import os
 from typing import Iterable
 from cl.runtime.contexts.context_manager import active_or_none
-from cl.runtime.stats.draw import Draw
+from cl.runtime.stat.draw import Draw
 
 
 class CompletionUtil:
