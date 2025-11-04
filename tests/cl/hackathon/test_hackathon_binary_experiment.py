@@ -13,9 +13,14 @@
 # limitations under the License.
 
 import pytest
+from more_itertools import consume
+
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.stats.condition_key import ConditionKey
 from cl.hackathon.hackathon_binary_experiment import HackathonBinaryExperiment
+from cl.runtime.stats.experiment_key import ExperimentKey
 
 
 def test_smoke(default_db_fixture):
@@ -24,17 +29,13 @@ def test_smoke(default_db_fixture):
     PreloadSettings.instance().save_and_configure()
 
     # Create and run the experiment
-    experiment = HackathonBinaryExperiment(
-        experiment_id="test_hackathon_binary_experiment.test_smoke",
-        max_trials=5,
-        conditions=[
-            ConditionKey(condition_id="TradeEntry.Baseline").build(),
-            ConditionKey(condition_id="TradeEntry.EmbeddedOption").build(),
-        ],
-    )
-    experiment.run_launch_all_trials()
-    experiment.get_plot("test_hackathon_binary_experiment.results").save(format_="svg")
-
+    experiment_keys = [
+        ExperimentKey("TradeEntry.0"),
+        ExperimentKey("TradeEntry.1"),
+    ]
+    experiments = active(DataSource).load_many(tuple(x.build() for x in experiment_keys))
+    consume(x.run_launch_all_trials() for x in experiments)
+    consume(x.get_plot(x.experiment_id).save(format_="svg") for x in experiments)
 
 if __name__ == "__main__":
     pytest.main([__file__])

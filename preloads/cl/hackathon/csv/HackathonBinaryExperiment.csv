@@ -1,2 +1,3 @@
-experiment_id,conditions,max_trials,max_parallel
-TradeEntry,"[""TradeEntry.Baseline"",""TradeEntry.EmbeddedOption""]","""10""",
+experiment_id,conditions,solution,max_trials,max_parallel
+TradeEntry.0,"[""TradeEntry.Baseline"",""TradeEntry.EmbeddedOption""]",,"""10""",
+TradeEntry.1,"[""TradeEntry.Baseline"",""TradeEntry.EmbeddedOption""]",Important - consider only what is in this instrument and ignore any general statements about other instruments.,"""10""",

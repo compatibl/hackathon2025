@@ -27,6 +27,9 @@ from cl.hackathon.hackathon_condition import HackathonCondition
 class HackathonBinaryExperiment(BinaryExperiment):
     """Trade entry experiment."""
 
+    solution: str | None = None
+    """Solution for the hackathon challenge is the text added after the query to counteract the cognitive bias."""
+
     def create_trial(self, condition: ConditionKey) -> BinaryTrial:
         """
         Create and return a new trial record with actual and (if applicable) expected fields
@@ -34,11 +37,13 @@ class HackathonBinaryExperiment(BinaryExperiment):
         """
 
         condition_obj = active(DataSource).load_one(condition, cast_to=HackathonCondition)
+        solution_txt = f"\n{self.solution}\n" if self.solution else ""
         prompt = (
             f"{Timestamp.create()}: {condition_obj.preamble}\n\n"
             f"{condition_obj.query}\n\n"
             f"Respond with yes or no in lowercase and output no other text.\n"
             f"Any other output or any additional text will be considered a failed response.\n"
+            f"{solution_txt}"
         )
 
         llm = FireworksLlamaLlm(llm_id="llama4-scout-instruct-basic").build()
