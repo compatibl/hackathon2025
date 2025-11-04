@@ -18,9 +18,9 @@ from more_itertools import consume
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.settings.preload_settings import PreloadSettings
-from cl.runtime.stats.condition_key import ConditionKey
+from cl.runtime.stat.condition_key import ConditionKey
 from cl.hackathon.hackathon_binary_experiment import HackathonBinaryExperiment
-from cl.runtime.stats.experiment_key import ExperimentKey
+from cl.runtime.stat.experiment_key import ExperimentKey
 
 
 def test_smoke(default_db_fixture):

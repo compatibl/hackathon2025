@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.stats.condition import Condition
+from cl.runtime.stat.condition import Condition
 
 
 @dataclass(slots=True, kw_only=True)

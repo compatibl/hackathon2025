@@ -16,9 +16,9 @@ from dataclasses import dataclass
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.primitive.timestamp import Timestamp
-from cl.runtime.stats.binary_experiment import BinaryExperiment
-from cl.runtime.stats.binary_trial import BinaryTrial
-from cl.runtime.stats.condition_key import ConditionKey
+from cl.runtime.stat.binary_experiment import BinaryExperiment
+from cl.runtime.stat.binary_trial import BinaryTrial
+from cl.runtime.stat.condition_key import ConditionKey
 from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm
 from cl.hackathon.hackathon_condition import HackathonCondition
 
