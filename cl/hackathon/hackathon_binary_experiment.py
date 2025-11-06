@@ -46,7 +46,7 @@ class HackathonBinaryExperiment(BinaryExperiment):
             f"{solution_txt}"
         )
 
-        llm = FireworksLlamaLlm(llm_id="llama4-scout-instruct-basic").build()
+        llm = FireworksLlamaLlm(llm_id="llama-v3p3-70b-instruct").build()
         response = llm.completion(prompt)
         if response == condition_obj.expected_response:
             # Must match the expected response exactly
