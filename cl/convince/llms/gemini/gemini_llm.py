@@ -14,7 +14,8 @@
 
 from dataclasses import dataclass
 from google.genai import Client
-from google.genai.types import GenerateContentConfig, ThinkingConfig
+from google.genai.types import GenerateContentConfig
+from google.genai.types import ThinkingConfig
 from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.contexts.user_context import UserContext
 from cl.runtime.log.exceptions.user_error import UserError
