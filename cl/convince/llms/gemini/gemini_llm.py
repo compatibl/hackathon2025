@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from google.genai import Client
-from google.genai.types import GenerateContentConfig
+from google.genai.types import GenerateContentConfig, ThinkingConfig
 from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.contexts.user_context import UserContext
 from cl.runtime.log.exceptions.user_error import UserError
@@ -68,7 +68,10 @@ class GeminiLlm(Llm):
             top_p=self.top_p,
             top_k=self.top_k,
             seed=self.seed,
+            thinking_config=ThinkingConfig(thinking_budget=0),
+            # TODO !!! Determine how to limit max_output_tokens=value
         )
+
         generation_params = dict(
             model=model_name,
             contents=query,
