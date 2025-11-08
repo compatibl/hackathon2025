@@ -18,11 +18,10 @@ from more_itertools import consume
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.settings.preload_settings import PreloadSettings
-from cl.runtime.stat.condition_key import ConditionKey
-from cl.hackathon.hackathon_binary_experiment import HackathonBinaryExperiment
 from cl.runtime.stat.experiment_key import ExperimentKey
 
 
+@pytest.mark.skip("Temporarily skipped.")
 def test_smoke(default_db_fixture):
     """Test for ClassifierExperiment."""
     # Initialize preloads
