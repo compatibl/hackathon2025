@@ -36,11 +36,11 @@ class HackathonBinaryExperiment(BinaryExperiment):
         without checking if max_trials has already been reached.
         """
 
-        condition_obj = active(DataSource).load_one(condition, cast_to=HackathonCondition)
+        param_obj = active(DataSource).load_one(condition, cast_to=HackathonCondition)
         solution_txt = f"\n{self.solution}\n" if self.solution else ""
         prompt = (
-            f"{Timestamp.create()}: {condition_obj.preamble}\n\n"
-            f"{condition_obj.query}\n\n"
+            f"{Timestamp.create()}: {param_obj.preamble}\n\n"
+            f"{param_obj.query}\n\n"
             f"Respond with yes or no in lowercase and output no other text.\n"
             f"Any other output or any additional text will be considered a failed response.\n"
             f"{solution_txt}"
@@ -48,7 +48,7 @@ class HackathonBinaryExperiment(BinaryExperiment):
 
         llm = FireworksLlamaLlm(llm_id="llama-v3p3-70b-instruct").build()
         response = llm.completion(prompt)
-        if response == condition_obj.expected_response:
+        if response == param_obj.expected_response:
             # Must match the expected response exactly
             outcome = True
         else:
@@ -57,7 +57,7 @@ class HackathonBinaryExperiment(BinaryExperiment):
 
         result = BinaryTrial(
             experiment=self.get_key(),
-            condition=condition,
+            param=condition,
             outcome=outcome,
         ).build()
         return result
