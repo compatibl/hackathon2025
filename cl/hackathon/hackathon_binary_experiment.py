@@ -18,7 +18,7 @@ from cl.runtime.db.data_source import DataSource
 from cl.runtime.primitive.timestamp import Timestamp
 from cl.runtime.stat.binary_experiment import BinaryExperiment
 from cl.runtime.stat.binary_trial import BinaryTrial
-from cl.runtime.stat.condition_key import ConditionKey
+from cl.runtime.params.param_key import ParamKey
 from cl.convince.llms.llama.fireworks.fireworks_llama_llm import FireworksLlamaLlm
 from cl.hackathon.hackathon_condition import HackathonCondition
 
@@ -30,7 +30,7 @@ class HackathonBinaryExperiment(BinaryExperiment):
     solution: str | None = None
     """Solution for the hackathon challenge is the text added after the query to counteract the cognitive bias."""
 
-    def create_trial(self, condition: ConditionKey) -> BinaryTrial:
+    def create_trial(self, condition: ParamKey) -> BinaryTrial:
         """
         Create and return a new trial record with actual and (if applicable) expected fields
         without checking if max_trials has already been reached.

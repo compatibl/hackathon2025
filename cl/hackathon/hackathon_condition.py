@@ -14,11 +14,11 @@
 
 from dataclasses import dataclass
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.stat.condition import Condition
+from cl.runtime.params.param import Param
 
 
 @dataclass(slots=True, kw_only=True)
-class HackathonCondition(Condition):
+class HackathonCondition(Param):
     """Condition under which the hackathon classifier experiment is performed."""
 
     preamble: str | None = None
