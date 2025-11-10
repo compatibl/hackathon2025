@@ -17,8 +17,7 @@ import re
 from math import ceil
 from math import floor
 from typing import Callable
-from typing import Tuple
-from cl.runtime.primitive.ordered_uuid import OrderedUuid
+from cl.runtime.primitive.timestamp import Timestamp
 
 # Compile the regex pattern for datetime in ISO-8601 format yyyy-mm-ddThh:mm:ss.fffZ
 datetime_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
@@ -30,7 +29,9 @@ class DatetimeUtil:
     @classmethod
     def now(cls) -> dt.datetime:
         """Current datetime in UTC timezone rounded to the nearest whole milliseconds to match UUIDv7 RFC-9562 spec."""
-        return OrderedUuid.datetime_of(OrderedUuid.create_one())
+        # Use Timestamp which relies on uuid_utils to avoid time ordering errors due to the difference
+        # in how dt.datetime and uuid_utils read the system timer
+        return Timestamp.to_datetime(Timestamp.create())
 
     @classmethod
     def round(cls, value: dt.datetime) -> dt.datetime:
@@ -86,7 +87,7 @@ class DatetimeUtil:
         return result
 
     @classmethod
-    def to_fields(cls, value: dt.datetime) -> Tuple[int, int, int, int, int, int, int]:
+    def to_fields(cls, value: dt.datetime) -> tuple[int, int, int, int, int, int, int]:
         """Convert dt.datetime in UTC timezone with millisecond precision to fields."""
 
         # Validate the datetime first, this will also confirm rounding to milliseconds
@@ -245,30 +246,10 @@ class DatetimeUtil:
                 f"Only UTC timezone is accepted and must be specified explicitly."
             )
 
-        if value.microsecond % 1_000 == 0:
-            # Already whole milliseconds
-            rounded_milliseconds = 1_000 * value.second + value.microsecond // 1_000
-        else:
-            # Round to whole milliseconds
-            fractional_milliseconds_float = 1_000 * value.second + value.microsecond / 1_000
-            rounded_milliseconds = rounding_function(fractional_milliseconds_float)
+        total_ms: float = value.second * 1_000 + value.microsecond / 1_000
+        rounded_ms: int = rounding_function(total_ms)
 
-        second: int = rounded_milliseconds // 1_000
-        rounded_milliseconds -= second * 1_000
-        if second > 59 or second < 0:
-            raise RuntimeError(f"Invalid second {second} for datetime {value} after rounding.")
+        delta_ms = rounded_ms - total_ms
+        rounded_dt = value + dt.timedelta(milliseconds=delta_ms)
 
-        if rounded_milliseconds > 999 or rounded_milliseconds < 0:
-            raise RuntimeError(f"Invalid millisecond {rounded_milliseconds} for datetime {value} after rounding.")
-
-        result = dt.datetime(
-            value.year,
-            value.month,
-            value.day,
-            value.hour,
-            value.minute,
-            second,  # New value from rounding
-            1_000 * rounded_milliseconds,
-            dt.timezone.utc,  # New value from rounding
-        )
-        return result
+        return rounded_dt

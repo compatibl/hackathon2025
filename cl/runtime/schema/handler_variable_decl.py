@@ -15,14 +15,14 @@
 import inspect
 import types
 from dataclasses import dataclass
-from typing import Type
+from typing import Self
 from typing import Union
 from typing import get_args
 from typing import get_origin
 from memoization import cached
-from typing_extensions import Self
-from cl.runtime.primitive.primitive_util import PrimitiveUtil
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.protocols import is_mapping_type
+from cl.runtime.records.protocols import is_primitive_type
+from cl.runtime.records.protocols import is_sequence_type
 from cl.runtime.schema.member_decl import MemberDecl
 from cl.runtime.schema.value_decl import ValueDecl
 
@@ -31,21 +31,21 @@ from cl.runtime.schema.value_decl import ValueDecl
 class HandlerVariableDecl(MemberDecl):
     """Handler parameter or return variable declaration."""
 
-    vector: bool | None = missing()  # TODO: Similar change to vector in element decl
+    vector: bool | None = None
     """Flag indicating variable size array (vector) container."""
 
-    optional: bool | None = missing()
+    optional: bool | None = None
     """Flag indicating optional element."""
 
-    label: str | None = missing()
+    label: str | None = None
     """Parameter label."""
 
-    comment: str | None = missing()
+    comment: str | None = None
     """Parameter comment. Contains addition information about handler parameter."""
 
     @classmethod
     @cached
-    def create(cls, value_type: Type, record_type: Type) -> Self:
+    def create(cls, value_type: type, record_type: type) -> Self:
         """
         Create from field name and type.
 
@@ -74,17 +74,15 @@ class HandlerVariableDecl(MemberDecl):
             value_type_ = type_args[0]
             type_origin = get_origin(value_type_)
             type_args = get_args(value_type_)
-        else:
-            # Indicate that field cannot be None
-            result.optional = False
 
         # Check for one of the supported container types
-        if type_origin is list:
-            # Get the type of value inside the container
-            value_type_ = type_args[0]
-        else:
-            # No container
-            result.vector = False
+        if type_origin is not None:
+            if is_sequence_type(type_origin):
+                # Get the type of value inside the container
+                result.vector = True
+                value_type_ = type_args[0]
+            elif is_mapping_type(type_origin):
+                raise RuntimeError("Mapping types are not supported in legacy type declarations.")
 
         # Check if value_type is Self
         if value_type_ == Self:
@@ -92,8 +90,8 @@ class HandlerVariableDecl(MemberDecl):
 
         # Handle primitive types
         # TODO (Ina): Add Enum and Dict supporting, handle unexpected types
-        if PrimitiveUtil.is_primitive(value_type_):
-            result.value = ValueDecl.create(value_type_)
+        if is_primitive_type(value_type_):
+            result.value = ValueDecl.for_type(value_type_)
         elif value_type_.__name__.endswith("Key"):
             result.key_ = TypeDecl.for_type(value_type_, skip_handlers=True)
         elif inspect.isclass(value_type_):

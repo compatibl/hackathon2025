@@ -14,47 +14,57 @@
 
 import pytest
 import os
-from cl.runtime.context.env_util import EnvUtil
-from cl.runtime.context.testing_context import TestingContext
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.file.csv_file_reader import CsvFileReader
-from stubs.cl.runtime import StubDataclassDerivedRecord
+from cl.runtime.qa.qa_util import QaUtil
+from stubs.cl.runtime import StubDataclassComposite
+from stubs.cl.runtime import StubDataclassDerived
+from stubs.cl.runtime import StubDataclassKey
 from stubs.cl.runtime import StubDataclassNestedFields
-from stubs.cl.runtime import StubDataclassRecord
-from stubs.cl.runtime import StubDataclassRecordKey
 
 
-def test_csv_file_reader():
+def test_csv_file_reader(default_db_fixture):
     """Test CsvFileReader class."""
 
     # Create a new instance of local cache for the test
-    with TestingContext() as context:
-        env_dir = EnvUtil.get_env_dir()
-        file_path = os.path.join(env_dir, "StubDataclassDerivedRecord.csv")
-        # TODO: Change the API not to take record type or make it optional
-        file_reader = CsvFileReader(record_type=StubDataclassDerivedRecord, file_path=file_path)
-        file_reader.read()
+    env_dir = QaUtil.get_test_dir_from_call_stack()
+    file_path = os.path.join(env_dir, "StubDataclassDerived.csv")
+    # TODO: Change the API not to take record type or make it optional
+    file_reader = CsvFileReader(file_path=file_path)
+    file_reader.csv_to_db()
 
-        file_path = os.path.join(env_dir, "StubDataclassNestedFields.csv")
-        file_reader = CsvFileReader(record_type=StubDataclassNestedFields, file_path=file_path)
-        file_reader.read()
+    file_path = os.path.join(env_dir, "StubDataclassNestedFields.csv")
+    file_reader = CsvFileReader(file_path=file_path)
+    file_reader.csv_to_db()
 
-        # Verify
-        # TODO: Check count using load_all or count method of Db when created
-        for i in range(1, 3):
-            key = StubDataclassRecordKey(id=f"derived_id_{i}")
-            record = context.load_one(StubDataclassRecord, key)
-            assert record == StubDataclassDerivedRecord(
-                id=f"derived_id_{i}", derived_field=f"test_derived_field_value_{i}"
-            )
+    file_path = os.path.join(env_dir, "StubDataclassComposite.csv")
+    file_reader = CsvFileReader(file_path=file_path)
+    file_reader.csv_to_db()
 
-        for i in range(1, 4):
-            expected_record = StubDataclassNestedFields(
-                primitive=f"nested_primitive_{i}",
-                embedded_1=StubDataclassRecordKey(id=f"embedded_key_id_{i}a"),
-                embedded_2=StubDataclassRecordKey(id=f"embedded_key_id_{i}b"),
-            )
-            record = context.load_one(StubDataclassNestedFields, expected_record.get_key())
-            assert record == expected_record
+    # Verify
+    # TODO: Check count using load_by_type or count method of Db when created
+    for i in range(1, 3):
+        expected_record = StubDataclassDerived(
+            id=f"derived_id_{i}", derived_str_field=f"test_derived_str_field_value_{i}"
+        ).build()
+        key = StubDataclassKey(id=f"derived_id_{i}").build()
+        record = active(DataSource).load_one(key)
+        assert record == expected_record
+
+    for i in range(1, 4):
+        expected_record = StubDataclassNestedFields().build()
+        record = active(DataSource).load_one(expected_record.get_key())
+        assert record == expected_record
+
+    for i in range(1, 4):
+        expected_record = StubDataclassComposite(
+            primitive=f"nested_primitive_{i}",
+            embedded_1=StubDataclassKey(id=f"embedded_key_id_{i}a"),
+            embedded_2=StubDataclassKey(id=f"embedded_key_id_{i}b"),
+        ).build()
+        record = active(DataSource).load_one(expected_record.get_key())
+        assert record == expected_record
 
 
 if __name__ == "__main__":

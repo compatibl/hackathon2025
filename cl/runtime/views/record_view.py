@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import final
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from typing_extensions import final
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.views.view import View
 
 
@@ -24,5 +24,5 @@ from cl.runtime.views.view import View
 class RecordView(View):
     """View that displays another record specified via its primary key."""
 
-    view_of: str = missing()
+    record: KeyMixin = required()
     """Primary key of the displayed record."""

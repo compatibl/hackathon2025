@@ -12,83 +12,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Annotated
 from typing import Any
-from typing import Dict
-from typing import List
 from fastapi import APIRouter
-from fastapi import Body
-from fastapi import Header
+from fastapi import Depends
 from fastapi import Query
-from cl.runtime.routers.entity.delete_request import DeleteRequest
-from cl.runtime.routers.entity.delete_response import DeleteResponse
-from cl.runtime.routers.entity.list_panels_request import ListPanelsRequest
-from cl.runtime.routers.entity.list_panels_response_item import ListPanelsResponseItem
+from cl.runtime.routers.dependencies.context_headers import ContextHeaders
+from cl.runtime.routers.dependencies.context_headers import get_context_headers
 from cl.runtime.routers.entity.panel_request import PanelRequest
 from cl.runtime.routers.entity.panel_response_util import PanelResponseUtil
-from cl.runtime.routers.entity.save_request import SaveRequest
-from cl.runtime.routers.entity.save_response import SaveResponse
-
-ListPanelsResponse = List[ListPanelsResponseItem]
-PanelResponseDataItem = Dict[str, Any]
-PanelResponse = Dict[str, PanelResponseDataItem | List[PanelResponseDataItem] | None]
+from cl.runtime.routers.entity.panels_request import PanelsRequest
+from cl.runtime.routers.entity.panels_response_item import PanelsResponseItem
 
 router = APIRouter()
 
 
-# TODO: Consider changing to /panels for consistency
-@router.get("/list_panels", response_model=ListPanelsResponse)
-async def get_list_panels(
-    type: str = Query(..., description="Class name"),  # noqa Suppress report about shadowed built-in type
-    key: str = Query(None, description="Primary key fields in semicolon-delimited format"),
-    dataset: str = Query(None, description="Dataset string"),
-    user: str = Header(None, description="User identifier or identity token"),
-) -> ListPanelsResponse:
+@router.get("/panels", response_model=list[PanelsResponseItem])
+async def get_panels(
+    context_headers: Annotated[ContextHeaders, Depends(get_context_headers)],
+    type_name: Annotated[str, Query(description="Type name")],
+    key: Annotated[str | None, Query(description="Primary key fields in semicolon-delimited format")] = None,
+) -> list[PanelsResponseItem]:
     """List of panels for the specified record."""
-    return ListPanelsResponseItem.list_panels(ListPanelsRequest(type=type, key=key, dataset=dataset, user=user))
-
-
-@router.get("/panel", response_model=PanelResponse)
-async def get_panel(
-    type: str = Query(..., description="Class name"),  # noqa Suppress report about shadowed built-in type
-    panel_id: str = Query(..., description="View name"),
-    key: str = Query(None, description="Primary key fields in semicolon-delimited format"),
-    dataset: str = Query(None, description="Dataset string"),
-):
-    """Return panel content by its displayed name."""
-    return PanelResponseUtil.get_content(PanelRequest(type=type, panel_id=panel_id, key=key, dataset=dataset))
-
-
-@router.post("/save", response_model=SaveResponse)
-async def save(
-    record_in_dict: Dict = Body(..., description="Dict representation of the record to be saved/updated."),
-    old_record_key: str = Query(None, description="Optional key of the record to be updated"),
-    dataset: str = Query(None, description="Dataset string"),
-    user: str = Header(None, description="User identifier or identity token"),
-) -> SaveResponse:
-    """Save panel content."""
-
-    return SaveResponse.save_entity(
-        SaveRequest(
-            record_dict=record_in_dict,
-            old_record_key=old_record_key,
-            dataset=dataset,
-            user=user,
-        ),
+    return PanelsResponseItem.get_response(
+        PanelsRequest(
+            user=context_headers.user,
+            env=context_headers.env,
+            dataset=context_headers.dataset,
+            type_name=type_name,
+            key=key,
+        )
     )
 
 
-@router.post("/delete_many", response_model=DeleteResponse)
-async def delete_many(
-    record_keys: List[Dict] = Body(..., description="The list of keys to delete."),
-    dataset: str = Query(None, description="Dataset string"),
-    user: str = Header(None, description="User identifier or identity token"),
-) -> DeleteResponse:
-    """Delete entities."""
+@router.get("/panel", response_model=Any)
+async def get_panel(
+    context_headers: Annotated[ContextHeaders, Depends(get_context_headers)],
+    type_name: Annotated[str, Query(description="Class name")],
+    panel_id: Annotated[str, Query(description="View name")],
+    key: Annotated[str | None, Query(description="Primary key fields in semicolon-delimited format")] = None,
+) -> Any:
+    """Return panel content by its displayed name."""
 
-    return DeleteResponse.delete_many(
-        DeleteRequest(
-            record_keys=record_keys,
-            dataset=dataset,
-            user=user,
-        ),
+    return PanelResponseUtil.get_response(
+        PanelRequest(
+            user=context_headers.user,
+            env=context_headers.env,
+            dataset=context_headers.dataset,
+            type_name=type_name,
+            panel_id=panel_id,
+            key=key,
+        )
     )

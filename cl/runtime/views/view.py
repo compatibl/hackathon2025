@@ -23,5 +23,13 @@ class View(ViewKey, RecordMixin, ABC):
     """This type is returned from a viewer method as object or key."""
 
     def get_key(self) -> ViewKey:
-        """Return primary key of this instance in semicolon-delimited string format."""
-        return ViewKey(view_for=self.view_for, view_name=self.view_name)
+        return ViewKey(view_for=self.view_for, view_name=self.view_name).build()
+
+    def materialize(self) -> "View":
+        """
+        Method called before returning the View to the UI.
+
+        For example, if View is a reference object, we need to load the key fields before returning the View to the UI.
+        Can return Self type or another View.
+        """
+        return self

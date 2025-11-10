@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
 from dataclasses import Field
 from dataclasses import dataclass
-from typing import Type
-from typing_extensions import Self
+from typing import Self
 from cl.runtime.schema.field_decl import FieldDecl
+from cl.runtime.schema.primitive_decl_keys import PrimitiveDeclKeys
 
 
 @dataclass(slots=True, kw_only=True)
@@ -25,7 +24,7 @@ class DataclassFieldDecl(FieldDecl):
     """Field declaration for a dataclass type."""
 
     @classmethod
-    def create(cls, record_type: Type, field: Field, field_type: Type, field_comment: str) -> Self:
+    def create(cls, record_type: type, field: Field, field_type: type, field_comment: str) -> Self:
         """
         Create from dataclass field definition and field_type obtained from get_type_hints.
 
@@ -44,24 +43,31 @@ class DataclassFieldDecl(FieldDecl):
         result = FieldDecl.create(record_type, field.name, field_type, field_comment)
 
         # Populate fields that require access to dataclasses metadata
+        # TODO: !!! Check why PyCharm considers this code is unreachable
         metadata = dict(field.metadata)
+        if (name := metadata.pop("optional", None)) is not None:
+            # Already checked in field spec
+            pass
+        if (subtype := metadata.pop("subtype", None)) is not None:
+            if subtype == "long":
+                if result.field_type_decl == PrimitiveDeclKeys.INT:
+                    result.field_type_decl = PrimitiveDeclKeys.LONG
+                else:
+                    raise RuntimeError(f"Subtype 'long' is not valid for field type {result.field_type_decl.name}")
+            else:
+                raise RuntimeError(f"Subtype {subtype} is not recognized.")
         if (name := metadata.pop("name", None)) is not None:
             result.name = name
         if (label := metadata.pop("label", None)) is not None:
             result.label = label
         if (formatter := metadata.pop("formatter", None)) is not None:
             result.formatter = formatter
-        if (subtype := metadata.pop("subtype", None)) is not None:
-            if subtype == "long":
-                if result.field_type == "int":
-                    result.field_type = "long"
-                else:
-                    raise RuntimeError(f"Subtype 'long' is not valid for field type {result.field_type}")
-            else:
-                raise RuntimeError(f"Subtype {subtype} is not recognized.")
+        if (descending := metadata.pop("descending", None)) is not None:
+            result.descending = descending
 
         # Check that no parsed fields remained in metadata
         if len(metadata) > 0:
-            raise RuntimeError(f"Unrecognized attributes in dataclass field metadata: {metadata.keys()}")
+            unused_keys_str = ", ".join(k for k in metadata.keys())
+            raise RuntimeError(f"Unrecognized attributes in dataclass field metadata: {unused_keys_str}")
 
         return result

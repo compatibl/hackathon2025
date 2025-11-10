@@ -13,47 +13,39 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
-from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.records.for_dataclasses.extensions import required
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclass
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclassKey
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data import StubDataclassData
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_derived_data import StubDataclassDerivedData
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_derived_from_derived_data import (
-    StubDataclassDerivedFromDerivedData,
-)
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_nested_fields_key import StubDataclassNestedFieldsKey
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record import StubDataclassRecord
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record import StubDataclassRecordKey
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_double_derived_data import StubDataclassDoubleDerivedData
 
 
 @dataclass(slots=True, kw_only=True)
-class StubDataclassNestedFields(StubDataclassNestedFieldsKey, RecordMixin[StubDataclassNestedFieldsKey]):
+class StubDataclassNestedFields(StubDataclass):
     """Stub derived class."""
 
-    base_field: StubDataclassData = field(default_factory=StubDataclassData)
+    base_field: StubDataclassData = required(default_factory=lambda: StubDataclassData())
     """Stub field."""
 
-    derived_field: StubDataclassDerivedData = field(default_factory=StubDataclassDerivedData)
+    derived_field: StubDataclassDerivedData = required(default_factory=lambda: StubDataclassDerivedData())
     """Stub field."""
 
-    derived_from_derived_field: StubDataclassDerivedFromDerivedData = field(
-        default_factory=StubDataclassDerivedFromDerivedData
+    double_derived_field: StubDataclassDoubleDerivedData = required(
+        default_factory=lambda: StubDataclassDoubleDerivedData()
     )
     """Stub field."""
 
-    polymorphic_field: StubDataclassData = field(default_factory=StubDataclassDerivedData)
+    polymorphic_field: StubDataclassData = required(default_factory=lambda: StubDataclassDerivedData())
     """Declared StubDataclassData but provided an instance of StubDataclassDerivedData."""
 
-    polymorphic_derived_field: StubDataclassDerivedData = field(default_factory=StubDataclassDerivedFromDerivedData)
-    """Declared StubDataclassDerivedData but provided an instance of StubDataclassDerivedFromDerivedData."""
+    polymorphic_derived_field: StubDataclassDerivedData = required(
+        default_factory=lambda: StubDataclassDoubleDerivedData()
+    )
+    """Declared StubDataclassDerivedData but provided an instance of StubDataclassDoubleDerivedData."""
 
-    key_field: StubDataclassRecordKey = field(default_factory=lambda: StubDataclassRecordKey(id="uvw"))
+    key_field: StubDataclassKey = required(default_factory=lambda: StubDataclassKey(id="uvw"))
     """Stub field."""
 
-    record_as_key_field: StubDataclassRecordKey = field(default_factory=lambda: StubDataclassRecord())
+    record_as_key_field: StubDataclassKey = required(default_factory=lambda: StubDataclass())
     """Stub field with key type initialized to record type instance."""
-
-    def get_key(self) -> StubDataclassNestedFieldsKey:
-        return StubDataclassNestedFieldsKey(
-            primitive=self.primitive, embedded_1=self.embedded_1, embedded_2=self.embedded_2
-        )

@@ -17,11 +17,10 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar
-from typing import List
-from typing import Literal
-from typing import cast
-from typing_extensions import Self
-from cl.runtime.records.dataclasses_extensions import missing
+from typing import Iterable
+from typing import Self
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.typename import typename
 
 SETTINGS_FILES_ENVVAR = "CL_SETTINGS_FILES"
 """The name of environment variable used to override the settings file(s) names or locations."""
@@ -45,17 +44,17 @@ class ProjectSettings:
                 --- package files (files from each package are under a separate package root)
     """
 
-    project_root: str = missing()
+    project_root: str = required()
     """Project root directory is the location of .env or settings.yaml file."""
 
-    project_levels: int = missing()
+    project_levels: int = required()
     """Number of levels in project layout (one or two)."""
 
     __instance: ClassVar[ProjectSettings] = None
     """Singleton instance."""
 
-    def init(self) -> None:
-        """Same as __init__ but can be used when field values are set both during and after construction."""
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
         if self.project_levels != 1 and self.project_levels != 2:
             raise RuntimeError(f"Field 'ProjectSettings.project_levels' must be 1 or 2.")
 
@@ -63,6 +62,11 @@ class ProjectSettings:
     def get_project_root(cls) -> str:
         """Project root directory is the location of .env or settings.yaml file."""
         return cls.instance().project_root
+
+    @classmethod
+    def get_resources_root(cls) -> str:
+        """Contains resources that persist across multiple code runs."""
+        return os.path.join(cls.instance().project_root, "resources")
 
     @classmethod
     def get_package_root(cls, package: str) -> str:
@@ -114,7 +118,7 @@ class ProjectSettings:
         else:
             search_paths_str = "\n".join(search_paths)
             raise RuntimeError(
-                f"Did not find  __init__.py for package '{package}'. Location searched:\n" f"{search_paths_str}\n"
+                f"Did not find  __init__.py for package '{package}'. Location searched:\n{search_paths_str}\n"
             )
 
     @classmethod
@@ -176,6 +180,32 @@ class ProjectSettings:
                 return None
 
     @classmethod
+    def get_preloads_root(cls, package: str) -> str | None:
+        """
+        Preloads root directory for the specified package.
+
+        Notes:
+            The presence of __init__.py is not required for preloads
+
+        Args:
+            package: Dot-delimited package root, e.g. 'cl.runtime'
+        """
+        package_tokens = package.split(".")
+        package_tokens_len = len(package_tokens)
+        source_root = cls.get_source_root(package)
+        common_root = str(Path(source_root).parents[package_tokens_len - 1])
+        if package_tokens[0] == "preloads":
+            # Preloads directory is specified directly in module format
+            return source_root
+        else:
+            # Look for tests package relative to source, return if exists
+            preloads_root = os.path.normpath(os.path.join(common_root, "preloads", *package_tokens))
+            if os.path.exists(preloads_root):
+                return preloads_root
+            else:
+                return None
+
+    @classmethod
     def get_wwwroot(cls) -> str:
         """Class method returning path to wwwroot directory under project root directory."""
         project_root = cls.get_project_root()
@@ -190,6 +220,53 @@ class ProjectSettings:
             # Create the directory if does not exist
             os.makedirs(db_dir)
         return db_dir
+
+    @classmethod
+    def normalize_paths(cls, field_name: str, field_value: Iterable[str] | str | None) -> list[str]:
+        """
+        Convert to absolute path if path relative to the location of .env or Dynaconf file is specified
+        and convert to list if single value is specified.
+        """
+
+        # Check that the argument is either None, a string or, an iterable
+        if field_value is None:
+            # Accept None and treat it as an empty list
+            return []
+        elif isinstance(field_value, str):
+            paths = [field_value]
+        elif hasattr(field_value, "__iter__"):
+            paths = list(field_value)
+        else:
+            raise RuntimeError(
+                f"Field '{field_name}' with value '{field_value}' in class '{typename(cls)}' "
+                f"must be a string or an iterable of strings."
+            )
+
+        result = [cls.normalize_path(field_name, path) for path in paths]
+        return result
+
+    @classmethod
+    def normalize_path(cls, field_name: str, field_value: str | None) -> str:
+        """Convert to absolute path if path relative to the location of .env or Dynaconf file is specified."""
+
+        if field_value is None or field_value == "":
+            raise RuntimeError(f"Field '{field_name}' in class '{typename(cls)}' has an empty element.")
+        elif isinstance(field_value, str):
+            # Check that 'field_value' is a string
+            result = field_value
+        else:
+            raise RuntimeError(
+                f"Field '{field_name}' in class '{typename(cls)}' has an element "
+                f"with type {type(field_value)} which is not a string."
+            )
+
+        if not os.path.isabs(result):
+            project_root = cls.get_project_root()
+            result = os.path.join(project_root, result)
+
+        # Return as a normalized path string
+        result = os.path.normpath(result)
+        return result
 
     @classmethod
     def instance(cls) -> Self:

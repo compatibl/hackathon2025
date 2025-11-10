@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class PackageLabelKey(KeyMixin):
+@dataclass(slots=True)
+class PackageLabelKey(DataclassMixin, KeyMixin):
     """
     Define custom label for package alias to override the default 'package_alias' -> 'Package Alias'.
 
@@ -28,9 +28,9 @@ class PackageLabelKey(KeyMixin):
         - This UI setting does not affect the REST API
     """
 
-    package_alias: str = missing()
+    package_alias: str = required()
     """Package alias for which the package label is defined."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return PackageLabelKey

@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class EnumItemLabelKey(KeyMixin):
+@dataclass(slots=True)
+class EnumItemLabelKey(DataclassMixin, KeyMixin):
     """
     Custom enum item label overrides the standard 'ITEM_NAME' -> 'Item Name' transformation.
 
@@ -28,9 +28,9 @@ class EnumItemLabelKey(KeyMixin):
         - This UI setting does not affect the REST API
     """
 
-    enum_item_name: str = missing()
+    enum_item_name: str = required()
     """Item name without reference to an enum (the setting will apply to this field name in every enum)."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return EnumItemLabelKey

@@ -13,27 +13,42 @@
 # limitations under the License.
 
 from abc import ABC
-from abc import abstractmethod
 from dataclasses import dataclass
 from cl.runtime.plots.plot_key import PlotKey
-from cl.runtime.plots.plot_style_key import PlotStyleKey
+from cl.runtime.primitive.timestamp import Timestamp
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 
 
 @dataclass(slots=True, kw_only=True)
-class Plot(PlotKey, RecordMixin[PlotKey], ABC):
+class Plot(PlotKey, RecordMixin, ABC):
     """Base class for plot objects."""
 
-    style: PlotStyleKey | None = None
-    """Color and layout options."""
+    title: str = required()
+    """Plot title."""
 
     def get_key(self) -> PlotKey:
-        return PlotKey(plot_id=self.plot_id)
+        return PlotKey(plot_id=self.plot_id).build()
 
-    @abstractmethod
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        if self.plot_id is None:
+            # Use globally unique UUIDv7-based timestamp if not specified
+            self.plot_id = Timestamp.create()
+        if self.title is None:
+            # Use plot_id as title if not specified
+            self.title = self.plot_id
+
+    def view_plot(self):
+        """Default plot viewer."""
+        return self.get_view()
+
     def get_view(self) -> None:
         """Return a view object for the plot."""
+        # TODO: !!!! Replace by methods using the plotting engine
+        raise RuntimeError("Plot get_view method is deprecated, use plotting engine render methods instead.")
 
-    @abstractmethod
-    def save_png(self) -> None:
-        """Save in png format to 'base_dir/plot_id.png'."""
+    def save(self, format_: str = "png") -> None:
+        """Save in given format to 'base_dir/plot_id.format_'."""
+        # TODO: !!!! Replace by methods using the plotting engine
+        raise RuntimeError("Plot save method is deprecated, use plotting engine render methods instead.")

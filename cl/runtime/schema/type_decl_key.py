@@ -13,23 +13,28 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from typing import Self
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.schema.module_decl_key import ModuleDeclKey
 
 
-@dataclass(slots=True, kw_only=True)
-class TypeDeclKey(KeyMixin):
+@dataclass(slots=True)
+class TypeDeclKey(DataclassMixin, KeyMixin):
     """Provides information about a class, its fields, and its methods."""
 
-    module: ModuleDeclKey = missing()  # TODO: Merge with name to always use full name
+    module: ModuleDeclKey = required()  # TODO: Merge with name to always use full name
     """Module reference."""
 
-    name: str = missing()
+    name: str = required()
     """Type name is unique when combined with module."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return TypeDeclKey
+
+    @classmethod
+    def for_type(cls, type_: type) -> Self:
+        """Create primitive type declaration from Python type."""
+        return TypeDeclKey(module=ModuleDeclKey(), name=type_.__name__).build()

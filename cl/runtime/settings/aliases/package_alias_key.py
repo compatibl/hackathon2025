@@ -13,25 +13,18 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class PackageAliasKey(KeyMixin):
-    """
-    Custom package alias defined using module glob pattern.
+@dataclass(slots=True)
+class PackageAliasKey(DataclassMixin, KeyMixin):
+    """Custom package alias defined using module glob pattern, use to organize types and DB tables by package."""
 
-    Notes:
-        - When specified, alias.ClassName is used in storage and REST API, otherwise ClassName is used without a prefix
-        - Use to resolve conflicts when multiple packages use the same class name
-        - Use to organize types and DB tables by package in large projects
-    """
-
-    package_pattern: str = missing()
+    package_pattern: str = required()
     """Glob pattern for the dot-delimited module determines if the alias applies to a class."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return PackageAliasKey

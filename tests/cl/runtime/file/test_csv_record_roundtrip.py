@@ -15,48 +15,44 @@
 import pytest
 from pathlib import Path
 from typing import Iterable
-from typing import List
-from typing import Tuple
-from typing import Type
 import pandas as pd
-from cl.runtime.context.testing_context import TestingContext
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.file.csv_file_reader import CsvFileReader
-from cl.runtime.records.protocols import RecordProtocol
-from cl.runtime.records.protocols import is_key
-from cl.runtime.serialization.flat_dict_serializer import FlatDictSerializer
-from cl.runtime.serialization.string_serializer import StringSerializer
-from stubs.cl.runtime import StubDataclassDerivedFromDerivedRecord
-from stubs.cl.runtime import StubDataclassDerivedRecord
+from cl.runtime.records.builder_checks import BuilderChecks
+from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.records.typename import typename
+from cl.runtime.serializers.data_serializers import DataSerializers
+from stubs.cl.runtime import StubDataclass
+from stubs.cl.runtime import StubDataclassComposite
+from stubs.cl.runtime import StubDataclassDerived
 from stubs.cl.runtime import StubDataclassDictFields
 from stubs.cl.runtime import StubDataclassDictListFields
+from stubs.cl.runtime import StubDataclassDoubleDerived
 from stubs.cl.runtime import StubDataclassListDictFields
 from stubs.cl.runtime import StubDataclassListFields
 from stubs.cl.runtime import StubDataclassNestedFields
 from stubs.cl.runtime import StubDataclassOptionalFields
-from stubs.cl.runtime import StubDataclassOtherDerivedRecord
+from stubs.cl.runtime import StubDataclassOtherDerived
 from stubs.cl.runtime import StubDataclassPrimitiveFields
-from stubs.cl.runtime import StubDataclassRecord
 
-flat_serializer = FlatDictSerializer()
-"""Serializer for file serialization."""
-
-key_serializer = StringSerializer()
-"""Serializer for keys."""
+_CSV_SERIALIZER = DataSerializers.FOR_CSV
+"""Serializer for CSV serialization."""
 
 
-stub_entries: List[List[RecordProtocol]] = [  # noqa
-    [StubDataclassRecord(id=f"abc1_n{i}") for i in range(5)],
-    [StubDataclassNestedFields(primitive=f"abc2_n{i}") for i in range(5)],
-    [StubDataclassDerivedRecord(id=f"abc3_n{i}") for i in range(5)],
-    [StubDataclassDerivedFromDerivedRecord(id=f"abc4_n{i}") for i in range(5)],
-    [StubDataclassOtherDerivedRecord(id=f"abc5_n{i}") for i in range(5)],
-    [StubDataclassOptionalFields(id=f"abc7_n{i}") for i in range(5)],
-    # TODO(Roman): Restore after supporting dt.date and dt.time for Mongo
-    # [StubDataclassListFields(id=f"abc6_n{i}") for i in range(5)],
-    # [StubDataclassDictFields(id=f"abc8_n{i}") for i in range(5)],
-    # [StubDataclassDictListFields(id=f"abc9_n{i}") for i in range(5)],
-    # [StubDataclassListDictFields(id=f"abc10_n{i}") for i in range(5)],
-    # [StubDataclassPrimitiveFields(key_str_field=f"abc11_n{i}") for i in range(5)],
+stub_entries: list[list[RecordMixin]] = [  # noqa
+    [StubDataclass(id=f"abc1_n{i}").build() for i in range(5)],
+    [StubDataclassNestedFields(id=f"abc2_n{i}").build() for i in range(5)],
+    [StubDataclassComposite(primitive=f"abc{i}").build() for i in range(5)],
+    [StubDataclassDerived(id=f"abc3_n{i}").build() for i in range(5)],
+    [StubDataclassDoubleDerived(id=f"abc4_n{i}").build() for i in range(5)],
+    [StubDataclassOtherDerived(id=f"abc5_n{i}").build() for i in range(5)],
+    [StubDataclassOptionalFields(id=f"abc7_n{i}").build() for i in range(5)],
+    [StubDataclassListFields(id=f"abc6_n{i}").build() for i in range(5)],
+    [StubDataclassDictFields(id=f"abc8_n{i}").build() for i in range(5)],
+    [StubDataclassDictListFields(id=f"abc9_n{i}").build() for i in range(5)],
+    [StubDataclassListDictFields(id=f"abc10_n{i}").build() for i in range(5)],
+    [StubDataclassPrimitiveFields(key_str_field=f"abc11_n{i}").build() for i in range(5)],
 ]
 """Stub entries for testing."""
 
@@ -64,53 +60,42 @@ stub_entries: List[List[RecordProtocol]] = [  # noqa
 def save_records_to_csv(records: Iterable, file_path: str) -> None:
     """Save records to file with specified path."""
 
-    # Serialize records with flat serializer but use StringSerializer for keys
+    # Serialize records with flat serializer but use delimited serializer for keys
     record_dicts = []
     for rec in records:
-        serialized_record = flat_serializer.serialize_data(rec, is_root=True)
+        serialized_record = _CSV_SERIALIZER.serialize(rec)
         serialized_record.pop("_type", None)
-        serialized_record_with_str_keys = {}
-        for k, v in serialized_record.items():
-            if is_key(key_v := getattr(rec, k, None)):
-                serialized_record_with_str_keys[k] = key_serializer.serialize_key(key_v)
-            else:
-                serialized_record_with_str_keys[k] = v
-
-        record_dicts.append(serialized_record_with_str_keys)
+        record_dicts.append(serialized_record)
 
     # Use pandas df to transform list of dicts to table format and write to file
     df = pd.DataFrame(record_dicts)
     df.to_csv(file_path, index=False)
 
 
-def save_test_records(entries: List[RecordProtocol]) -> Tuple[List[RecordProtocol], Path]:
-    file_path = Path(__file__).parent.joinpath(f"{entries[0].__class__.__name__}.csv")
+def save_test_records(entries: list[RecordMixin]) -> tuple[list[RecordMixin], Path]:
+    file_path = Path(__file__).parent.joinpath(f"{typename(type(entries[0]))}.csv")
     save_records_to_csv(entries, str(file_path.absolute()))
     return entries, file_path
 
 
-def read_records_from_csv(file_path: Path, entry_type: Type[RecordProtocol]):
-    loader = CsvFileReader(record_type=entry_type, file_path=str(file_path.absolute()))
-    loader.read()
+def read_records_from_csv(file_path: Path, entry_type: type[RecordMixin]):
+    loader = CsvFileReader(file_path=str(file_path.absolute()))
+    loader.csv_to_db()
 
 
-def test_roundtrip():
+def test_roundtrip(default_db_fixture):
+    for test_entries in (*stub_entries,):
+        file_path = None
+        try:
+            expected_entries, file_path = save_test_records(test_entries)
+            entry_type = type(expected_entries[0])
 
-    with TestingContext() as context:
-        for test_entries in (*stub_entries,):
-            file_path = None
-            try:
-                expected_entries, file_path = save_test_records(test_entries)
-                entry_type = type(expected_entries[0])
-
-                read_records_from_csv(file_path, entry_type)
-
-                actual_records = list(context.load_all(entry_type))
-
-                assert actual_records == expected_entries
-            finally:
-                if file_path is not None:
-                    file_path.unlink(missing_ok=True)
+            read_records_from_csv(file_path, entry_type)
+            actual_records = tuple(active(DataSource).load_by_type(entry_type))
+            assert BuilderChecks.is_equal(actual_records, expected_entries)
+        finally:
+            if file_path is not None:
+                file_path.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

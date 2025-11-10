@@ -13,89 +13,72 @@
 # limitations under the License.
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from cl.runtime.context.testing_context import TestingContext
-from cl.runtime.routers.entity import entity_router
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.qa.qa_client import QaClient
+from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.runtime.routers.entity.panel_request import PanelRequest
 from cl.runtime.routers.entity.panel_response_util import PanelResponseUtil
-from cl.runtime.serialization.string_serializer import StringSerializer
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_viewers import StubViewers
+from cl.runtime.serializers.bootstrap_serializers import BootstrapSerializers
+from cl.runtime.serializers.key_serializers import KeySerializers
+from stubs.cl.runtime import StubDataViewers
+from stubs.cl.runtime import StubMediaViewers
 
-# create stub with viewers
-stub_viewers = StubViewers()
-key_serializer = StringSerializer()
-key_str = key_serializer.serialize_key(stub_viewers.get_key())
+_KEY_SERIALIZER = KeySerializers.DELIMITED
+
+_stub_data_viewers = StubDataViewers(stub_id="data_viewers").build()
+_stub_media_viewers = StubMediaViewers(stub_id="media_viewers").build()
 
 
-requests = [
-    {"type": "StubViewers", "panel_id": "View Instance 1A", "key": key_str},
-    {"type": "StubViewers", "panel_id": "View Instance 1B", "key": key_str},
-    {"type": "StubViewers", "panel_id": "View Instance 1C", "key": key_str},
-]
+_data_key = _KEY_SERIALIZER.serialize(_stub_data_viewers.get_key())
+_media_key = _KEY_SERIALIZER.serialize(_stub_media_viewers.get_key())
 
-expected_results = [
-    {
-        "ViewOf": {
-            "_t": "Script",
-            "Name": None,
-            "Language": "Markdown",
-            "Body": ["# Viewer with UI element", "### _Script_"],
-            "WordWrap": None,
-        }
-    },
-    {"ViewOf": None},
-    {"ViewOf": {"StubId": key_str, "_t": "StubViewersKey"}},
+panel_requests = [
+    {"type_name": "StubDataViewers", "panel_id": "None", "key": _data_key},
+    {"type_name": "StubDataViewers", "panel_id": "Nested Fields", "key": _data_key},
+    {"type_name": "StubDataViewers", "panel_id": "Record List", "key": _data_key},
+    {"type_name": "StubMediaViewers", "panel_id": "Png", "key": _media_key},
+    {"type_name": "StubMediaViewers", "panel_id": "Pdf", "key": _media_key},
+    {"type_name": "StubMediaViewers", "panel_id": "Html", "key": _media_key},
+    {"type_name": "StubMediaViewers", "panel_id": "Dag", "key": _media_key},
+    {"type_name": "StubMediaViewers", "panel_id": "Markdown", "key": _media_key},
 ]
 
 
-@pytest.mark.skip("Temporarily skip due to SQLite concurrency issue.")  # TODO: Switch test to MongoMock
-def test_method():
+def test_method(default_db_fixture):
     """Test coroutine for /entity/panel route."""
 
-    # TODO: Use TestingContext instead
-    with TestingContext() as context:
-        context.save_one(stub_viewers)
+    active(DataSource).replace_one(_stub_data_viewers, commit=True)
+    active(DataSource).replace_one(_stub_media_viewers, commit=True)
 
-        for request, expected_result in zip(requests, expected_results):
-            request_object = PanelRequest(**request)
-            result = PanelResponseUtil.get_content(request_object)
+    for request in panel_requests:
+        request_object = PanelRequest(**request)
+        result = PanelResponseUtil.get_response(request_object)
 
-            assert isinstance(result, dict)
-            assert result == expected_result
+        result = BootstrapSerializers.YAML.serialize(result)
+        RegressionGuard(channel=request_object.panel_id).write(result)
+
+    RegressionGuard().verify_all()
 
 
-@pytest.mark.skip("Temporarily skip due to SQLite concurrency issue.")  # TODO: Switch test to MongoMock
-def test_api():
+def test_api(default_db_fixture):
     """Test REST API for /entity/panel route."""
 
-    # TODO: Use TestingContext instead
-    with TestingContext() as context:
-        context.save_one(stub_viewers)
+    active(DataSource).replace_one(_stub_data_viewers, commit=True)
+    active(DataSource).replace_one(_stub_media_viewers, commit=True)
 
-        test_app = FastAPI()
-        test_app.include_router(entity_router.router, prefix="/entity", tags=["Entity"])
-        with TestClient(test_app) as test_client:
-            for request, expected_result in zip(requests, expected_results):
-                # Split request headers and query
-                request_headers = {"user": request.get("user")}
-                request_params = {
-                    "type": request.get("type"),
-                    "panel_id": request.get("panel_id"),
-                    "key": request.get("key"),
-                }
+    with QaClient() as test_client:
+        for request in panel_requests:
 
-                # Eliminate empty keys
-                request_headers = {k: v for k, v in request_headers.items() if v is not None}
-                request_params = {k: v for k, v in request_params.items() if v is not None}
+            # Get response
+            response = test_client.get("/entity/panel", params=request)
+            assert response.status_code == 200
+            result = response.json()
 
-                # Get response
-                response = test_client.get("/entity/panel", headers=request_headers, params=request_params)
-                assert response.status_code == 200
-                result = response.json()
+            result = BootstrapSerializers.YAML.serialize(result)
+            RegressionGuard(channel=request["panel_id"]).write(result)
 
-                # Check result
-                assert result == expected_result
+    RegressionGuard().verify_all()
 
 
 if __name__ == "__main__":

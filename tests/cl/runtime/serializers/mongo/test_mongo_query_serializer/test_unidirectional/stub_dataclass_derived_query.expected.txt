@@ -1,0 +1,19 @@
+{
+  "derived_str_field": {
+    "op_exists": true
+  }
+}
+{
+  "derived_str_field": {
+    "op_in": [
+      "def"
+    ]
+  }
+}
+{
+  "derived_str_field": {
+    "op_nin": [
+      "def"
+    ]
+  }
+}

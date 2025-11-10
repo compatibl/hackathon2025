@@ -1,0 +1,92 @@
+type_: StubDataclassOptionalFields
+type_kind: Record
+fields:
+- field_name: id
+  field_type_hint:
+    schema_type: str
+- field_name: optional_str
+  field_type_hint:
+    schema_type: str
+    optional: true
+- field_name: required_list_of_optional_str
+  field_type_hint:
+    schema_type: list
+    remaining:
+      schema_type: str
+      optional: true
+- field_name: optional_list_of_optional_str
+  field_type_hint:
+    schema_type: list
+    optional: true
+    remaining:
+      schema_type: str
+      optional: true
+- field_name: optional_float
+  field_type_hint:
+    schema_type: float
+    optional: true
+- field_name: required_list_of_optional_float
+  field_type_hint:
+    schema_type: list
+    remaining:
+      schema_type: float
+      optional: true
+- field_name: optional_list_of_optional_float
+  field_type_hint:
+    schema_type: list
+    optional: true
+    remaining:
+      schema_type: float
+      optional: true
+- field_name: optional_data
+  field_type_hint:
+    schema_type: StubDataclassData
+    optional: true
+- field_name: required_list_of_optional_data
+  field_type_hint:
+    schema_type: list
+    remaining:
+      schema_type: StubDataclassData
+      optional: true
+- field_name: optional_list_of_optional_data
+  field_type_hint:
+    schema_type: list
+    optional: true
+    remaining:
+      schema_type: StubDataclassData
+      optional: true
+- field_name: optional_key
+  field_type_hint:
+    schema_type: StubDataclassKey
+    optional: true
+- field_name: required_list_of_optional_key
+  field_type_hint:
+    schema_type: list
+    remaining:
+      schema_type: StubDataclassKey
+      optional: true
+- field_name: optional_list_of_optional_key
+  field_type_hint:
+    schema_type: list
+    optional: true
+    remaining:
+      schema_type: StubDataclassKey
+      optional: true
+- field_name: optional_record
+  field_type_hint:
+    schema_type: StubDataclass
+    optional: true
+- field_name: required_list_of_optional_record
+  field_type_hint:
+    schema_type: list
+    remaining:
+      schema_type: StubDataclass
+      optional: true
+- field_name: optional_list_of_optional_record
+  field_type_hint:
+    schema_type: list
+    optional: true
+    remaining:
+      schema_type: StubDataclass
+      optional: true
+

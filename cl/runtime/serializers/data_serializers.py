@@ -1,0 +1,123 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from cl.runtime.serializers.data_serializer import DataSerializer
+from cl.runtime.serializers.enum_serializers import EnumSerializers
+from cl.runtime.serializers.json_encoders import JsonEncoders
+from cl.runtime.serializers.key_serializers import KeySerializers
+from cl.runtime.serializers.primitive_serializers import PrimitiveSerializers
+from cl.runtime.serializers.type_inclusion import TypeInclusion
+from cl.runtime.serializers.type_placement import TypePlacement
+
+
+class DataSerializers:
+    """Standard combinations of primitive formats."""
+
+    PASSTHROUGH = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.PASSTHROUGH,
+        enum_serializer=EnumSerializers.PASSTHROUGH,
+    ).build()
+    """Bidirectional conversion of classes to dicts and back without any conversion of primitive types or enums."""
+
+    DEFAULT = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.DEFAULT,
+        enum_serializer=EnumSerializers.DEFAULT,
+    ).build()
+    """Default bidirectional data serializer with default serialization for primitive types and enums."""
+
+    FOR_REPORTING = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.DEFAULT,
+        enum_serializer=EnumSerializers.DEFAULT,
+        type_inclusion=TypeInclusion.OMIT,
+    ).build()
+    """Omit type information when the output is used for reporting, deserialization is not possible."""
+
+    FOR_JSON = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.FOR_JSON,
+        enum_serializer=EnumSerializers.DEFAULT,
+    ).build()
+    """Default bidirectional data serializer settings for JSON."""
+
+    FOR_JSON_REPORTING = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.FOR_JSON,
+        enum_serializer=EnumSerializers.DEFAULT,
+        type_inclusion=TypeInclusion.OMIT,
+    ).build()
+    """Default bidirectional data serializer settings for JSON."""
+
+    FOR_YAML_SERIALIZATION = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.FOR_YAML_SERIALIZATION,
+        enum_serializer=EnumSerializers.DEFAULT,
+    ).build()
+    """Default bidirectional data serializer settings for JSON."""
+
+    FOR_YAML_DESERIALIZATION = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.DEFAULT,
+        enum_serializer=EnumSerializers.DEFAULT,
+    ).build()
+    """Default bidirectional data serializer settings for JSON."""
+
+    FOR_YAML_REPORTING = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.FOR_YAML_SERIALIZATION,
+        enum_serializer=EnumSerializers.DEFAULT,
+        type_inclusion=TypeInclusion.OMIT,
+    ).build()
+    """Default bidirectional data serializer settings for JSON."""
+
+    FOR_UI = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.FOR_UI,
+        enum_serializer=EnumSerializers.DEFAULT,
+        key_serializer=KeySerializers.DELIMITED,
+        type_inclusion=TypeInclusion.ALWAYS,
+        type_field="_t",
+        pascalize_keys=True,
+    ).build()
+    """Default bidirectional data serializer settings for UI."""
+
+    FOR_CSV = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.FOR_CSV,
+        enum_serializer=EnumSerializers.DEFAULT,
+        key_serializer=KeySerializers.DELIMITED,
+        inner_serializer=DataSerializer(
+            primitive_serializer=PrimitiveSerializers.FOR_JSON,
+            enum_serializer=EnumSerializers.DEFAULT,
+            key_serializer=KeySerializers.DELIMITED,
+            type_inclusion=TypeInclusion.ALWAYS,  # TODO: Consider changing to AS_NEEDED
+        ).build(),
+        inner_encoder=JsonEncoders.COMPACT,
+    ).build()
+    """Default bidirectional data serializer settings for CSV."""
+
+    FOR_SQLITE = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.FOR_SQLITE,
+        enum_serializer=EnumSerializers.DEFAULT,
+        key_serializer=KeySerializers.DELIMITED,
+        inner_serializer=DataSerializer(
+            primitive_serializer=PrimitiveSerializers.FOR_JSON,
+            enum_serializer=EnumSerializers.DEFAULT,
+            key_serializer=KeySerializers.DELIMITED,
+            type_inclusion=TypeInclusion.ALWAYS,  # TODO: Consider changing to AS_NEEDED
+            type_placement=TypePlacement.LAST,  # TODO: Remove after all tests pass
+        ).build(),
+        inner_encoder=JsonEncoders.COMPACT,
+        type_inclusion=TypeInclusion.ALWAYS,  # TODO: Consider changing to AS_NEEDED
+        type_placement=TypePlacement.LAST,  # TODO: Remove after all tests pass
+    ).build()
+    """Default bidirectional data serializer settings for UI."""
+
+    FOR_MONGO = DataSerializer(
+        primitive_serializer=PrimitiveSerializers.FOR_MONGO,
+        enum_serializer=EnumSerializers.DEFAULT,
+    ).build()
+    """Default bidirectional data serializer settings for MongoDB."""

@@ -37,13 +37,33 @@ def test_format():
     assert FloatUtil.format(0.000000000000000000000000123) == "0."
 
 
-def test_get_int():
-    """Test get_int method."""
+def test_round():
+    """Test round method."""
+    # Return float even for int arg
+    assert isinstance(FloatUtil.round(1), float)
+    # Round to tolerance
+    assert FloatUtil.round(1.0) == 1.0
+    assert FloatUtil.round(-1.000000000000000000000000123) == -1.0
+    assert FloatUtil.round(1.000000000000000000000000123) == 1.0
 
-    assert FloatUtil.get_int(value=1.0) == 1
-    assert FloatUtil.get_int(value=-1.0) == -1
+
+def test_to_int():
+    """Test to_int method."""
+
+    assert FloatUtil.to_int_or_none(value=None) is None
+    assert FloatUtil.to_int_or_none(value=1.0) == 1
+    assert FloatUtil.to_int_or_none(value=-1.0) == -1
     with pytest.raises(RuntimeError):
-        assert FloatUtil.get_int(value=0.5) == 1
+        assert FloatUtil.to_int_or_none(value=0.5) == 1
+
+
+def test_to_int_or_float():
+    """Test to_int_or_float method."""
+
+    assert FloatUtil.to_int_or_float_or_none(value=None) is None
+    assert FloatUtil.to_int_or_float_or_none(value=1.0) == 1
+    assert FloatUtil.to_int_or_float_or_none(value=-1.0) == -1
+    assert FloatUtil.to_int_or_float_or_none(value=0.5) == 0.5
 
 
 if __name__ == "__main__":

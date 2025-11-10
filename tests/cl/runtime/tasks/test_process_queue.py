@@ -1,0 +1,48 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import pytest
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.qa.regression_guard import RegressionGuard
+from cl.runtime.tasks.process_queue import ProcessQueue
+from stubs.cl.runtime.tasks.stub_task import StubTask
+
+
+def test_process_queue(default_db_fixture, event_broker_fixture):
+    """Test ProcessQueue class."""
+
+    guard = RegressionGuard()
+
+    # Create queue
+    queue = ProcessQueue(queue_id="test_process_queue")
+    queue.timeout_sec = 2
+    queue_key = queue.get_key()
+
+    # Create and save tasks
+    task_count = 2
+    tasks = [StubTask(label=f"{i}", queue=queue_key).build() for i in range(task_count)]
+    active(DataSource).insert_many(tasks, commit=True)
+
+    # Start queue
+    queue.run_start_queue()
+
+    # Stop queue
+    # TODO: Stop queue
+
+    guard.verify()
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

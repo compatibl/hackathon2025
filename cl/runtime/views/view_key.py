@@ -13,23 +13,21 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
-from cl.runtime.records.protocols import KeyProtocol
 
 
-@dataclass(slots=True, kw_only=True)
-class ViewKey(KeyMixin):
+@dataclass(slots=True)
+class ViewKey(DataclassMixin, KeyMixin):
     """This type is returned from a viewer method as object or key."""
 
-    view_for: str = missing()
-    """Generic key in ClassName;key_field_1;key_field_2 format of the record for which the view is provided."""
+    view_for: KeyMixin = required()
+    """Generic key of the record for which the view is provided."""
 
-    view_name: str = missing()
+    view_name: str = required()
     """Name of the view displayed in the front end."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return ViewKey

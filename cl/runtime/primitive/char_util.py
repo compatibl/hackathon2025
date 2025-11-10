@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import re
-from cl.runtime.primitive.string_util import StringUtil
 
 _DESCRIPTION_MAP = {
     "\x00": "Null Byte",
@@ -21,23 +20,23 @@ _DESCRIPTION_MAP = {
     "\t": "Tab",
     "\r": "Carriage Return",
     "\ufeff": "UTF-8 BOM",
-    "\uFFFD": "Unicode replacement character",
-    "\u201C": "Left Double Quotation Mark",
-    "\u201D": "Right Double Quotation Mark",
+    "\ufffd": "Unicode replacement character",
+    "\u201c": "Left Double Quotation Mark",
+    "\u201d": "Right Double Quotation Mark",
 }
 """Map of special unprintable characters to their descriptions."""
 
 _FLAGGED_CHARS = [
     "\x00",  # Null Byte
-    "\uFFFD",  # Unicode replacement character
+    "\ufffd",  # Unicode replacement character
 ]
 """List of characters that will trigger an error during normalization."""
 
 _REMOVED_CHARS = [
     "\r",  # Carriage Return
     "\ufeff",  # UTF-8 BOM
-    "\u201C",  # Left Double Quotation Mark
-    "\u201D",  # Right Double Quotation Mark
+    "\u201c",  # Left Double Quotation Mark
+    "\u201d",  # Right Double Quotation Mark
 ]
 """List of characters that will be removed during normalization."""
 
@@ -53,12 +52,25 @@ class CharUtil:
     """Utilities for working with single characters."""
 
     @classmethod
-    def normalize_chars(cls, value: str) -> str:
-        """Flag _FLAGGED_CHARS, remove _REMOVED_CHARS and _REPLACED_CHARS."""
+    def is_empty(cls, value: str | None) -> bool:
+        """Returns true if the string is None or ''."""
+        return value is None or value == ""
 
-        # Do not normalize chars in None or an empty string
-        if StringUtil.is_empty(value):
-            return value
+    @classmethod
+    def normalize(cls, value: str) -> str:
+        """Flag _FLAGGED_CHARS, remove _REMOVED_CHARS and replace _REPLACED_CHARS, error if argument is None or ''."""
+        if value is not None and value != "":
+            return cls.normalize_or_none(value)
+        else:
+            raise RuntimeError("Argument to CaseUtil.normalize method is None or an empty string.")
+
+    @classmethod
+    def normalize_or_none(cls, value: str | None) -> str | None:
+        """Flag _FLAGGED_CHARS, remove _REMOVED_CHARS and replace _REPLACED_CHARS, return None if argument is None."""
+
+        # Return None if argument is None or an empty string
+        if value is None or value == "":
+            return None
 
         # Search for flagged characters
         flagged_chars = list(set(re.findall(_FLAGGED_CHARS_REGEX, value)))

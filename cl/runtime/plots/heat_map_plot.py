@@ -13,48 +13,41 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-import numpy as np
+import matplotlib.ticker as mticker
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from cl.runtime import Context
-from cl.runtime.plots.heat_map_plot_style import HeatMapPlotStyle
 from cl.runtime.plots.matplotlib_plot import MatplotlibPlot
 from cl.runtime.plots.matplotlib_util import MatplotlibUtil
-from cl.runtime.plots.plot import Plot
-from cl.runtime.records.dataclasses_extensions import field
+from cl.runtime.plots.matrix_util import MatrixUtil
+from cl.runtime.records.for_dataclasses.extensions import required
 
 
 @dataclass(slots=True, kw_only=True)
 class HeatMapPlot(MatplotlibPlot):
     """Heat map visualization."""
 
-    title: str = field()
-    """Plot title."""
-
-    row_labels: List[str] = field()
+    row_labels: list[str] = required()
     """Row label for each cell in the same order of cells as other fields."""
 
-    col_labels: List[str] = field()
+    col_labels: list[str] = required()
     """Column label for each cell in the same order of cells as other fields."""
 
-    received_values: List[str] = field()
+    received_values: list[float] = required()
     """Received value for each cell in the same order of cells as other fields."""
 
-    expected_values: List[str] = field()
+    expected_values: list[float] = required()
     """Expected (correct) value for each cell in the same order of cells as other fields."""
 
-    x_label: str = field()
+    x_label: str = required()
     """x-axis label."""
 
-    y_label: str = field()
+    y_label: str = required()
     """y-axis label."""
 
-    def _create_figure(self) -> plt.Figure:
-        # Load style object or create with default settings if not specified
-        style = self._load_style()
-        theme = self._get_pyplot_theme(style=style)
+    def draw_to_axis(self, axes: plt.Axes) -> None:
+        """Render relatively to axes of some plot."""
+        theme = self._get_pyplot_theme()
 
         received_df, expected_df = (
             pd.DataFrame.from_records([values, self.col_labels, self.row_labels], index=["Value", "Col", "Row"])
@@ -65,27 +58,23 @@ class HeatMapPlot(MatplotlibPlot):
 
         data = (received_df - expected_df).abs()
 
+        cmap = LinearSegmentedColormap.from_list("rg", ["g", "y", "r"], N=256)
+
         with plt.style.context(theme):
-            fig, axes = plt.subplots()
-
-            cmap = LinearSegmentedColormap.from_list("rg", ["g", "y", "r"], N=256)
-
+            data = MatrixUtil.convert_confusion_matrix_to_percent(data)
             im = MatplotlibUtil.heatmap(data.values, data.index.tolist(), data.columns.tolist(), ax=axes, cmap=cmap)
-
-            # Set figure and axes labels
+            MatplotlibUtil.annotate_heatmap(
+                im, labels=MatrixUtil.create_confusion_matrix_labels(data, in_percent=True), text_colors="black", size=6
+            )
+            cbar = plt.colorbar(im, ax=axes)
+            cbar.ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.0f%%"))  # adding percent sign to colorbar
+            axes.set_title(self.title)
             axes.set_xlabel(self.x_label)
             axes.set_ylabel(self.y_label)
-            axes.set_title(self.title)
 
-            fig.tight_layout()
-
+    def _create_figure(self) -> plt.Figure:
+        """Render only this plot."""
+        fig, axes = plt.subplots()
+        self.draw_to_axis(axes)
+        fig.tight_layout()
         return fig
-
-    def _load_style(self) -> HeatMapPlotStyle:
-        """Load style object or create with default settings if not specified."""
-        style = Context.current().load_one(HeatMapPlotStyle, self.style, is_key_optional=True)
-        if style is None:
-            # Use default values if not found
-            style = HeatMapPlotStyle(plot_style_id="Default")
-            style.init_all()
-        return style

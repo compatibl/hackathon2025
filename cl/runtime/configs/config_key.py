@@ -13,18 +13,18 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class ConfigKey(KeyMixin):
+@dataclass(slots=True)
+class ConfigKey(DataclassMixin, KeyMixin):
     """Performs configuration using parameters specified in this record."""
 
-    config_id: str = missing()
+    config_id: str = required()
     """Unique configuration identifier."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return ConfigKey

@@ -13,37 +13,29 @@
 # limitations under the License.
 
 import pytest
+from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.db.local.local_cache import LocalCache
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record import StubDataclassRecord
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclass
 
 
 def test_smoke():
     """Smoke test."""
 
-    # Create an instance of record cache
-    cache = LocalCache.instance()
+    with activate(DataSource(db=LocalCache(db_id="sample")).build()):
 
-    # Create test record and populate with sample data
-    record = StubDataclassRecord()
-    key = record.get_key()
+        # Create test record and populate with sample data
+        record = StubDataclass().build()
+        key = record.get_key()
 
-    # Test saving and loading
-    dataset = None  # TODO: Support datasets "\\sample_dataset"
+        # Save a single record
+        active(DataSource).insert_many([record], commit=True)
 
-    # Save a single record
-    cache.save_many([record], dataset=dataset)
-
-    loaded_records = cache.load_many(
-        StubDataclassRecord,
-        [record, key, None],
-        dataset=dataset,
-    )
-    assert loaded_records[0] is record  # Same object is returned without lookup
-    assert loaded_records[1] is record  # In case of local cache only, also the same object
-    assert loaded_records[2] is None
-
-    assert cache.load_one(StubDataclassRecord, record) is record  # Same object is returned without lookup
-    assert cache.load_one(StubDataclassRecord, key) is record  # In case of local cache only, also the same object
+        loaded_records = active(DataSource).load_many_or_none([record, key, None])
+        assert loaded_records[0] is record  # Same object is returned without lookup
+        assert loaded_records[1] is record  # In case of local cache only, also the same object
+        assert loaded_records[2] is None
 
 
 if __name__ == "__main__":

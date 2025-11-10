@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pydantic import Field
-from cl.runtime.routers.user_request import UserRequest
+from pydantic import BaseModel
 
 
-class DatasetsRequest(UserRequest):
+class DatasetsRequest(BaseModel):
     """Request data type for the /storage/datasets route."""
 
-    type: str
-    """Class name."""
+    env: str | None = None
+    """Name of the environment (database), e.g. 'Dev;Runtime;V2'."""
 
-    module: str | None = None
-    """Dot-delimited module string."""
+    type_name: str
+    """Type shortname."""

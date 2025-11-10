@@ -1,0 +1,37 @@
+Schema:
+  cl.StubDataclass:
+    Module:
+      ModuleName: cl
+    Name: StubDataclass
+    Label: Stub Dataclass
+    Comment: Stub record base class.
+    TypeKind: Record
+    DisplayKind: Basic
+    Inherit:
+      Module:
+        ModuleName: cl
+      Name: StubDataclassKey
+    Elements:
+    - Value:
+        Type: String
+      Name: Id
+      Comment: Unique identifier.
+    Keys:
+    - Id
+  cl.StubDataclassKey:
+    Module:
+      ModuleName: cl
+    Name: StubDataclassKey
+    Label: Stub Dataclass Key
+    Comment: Stub record base class.
+    TypeKind: Data
+    DisplayKind: Basic
+    Elements:
+    - Value:
+        Type: String
+      Name: Id
+      Comment: Unique identifier.
+Data:
+- _t: StubDataclass
+  Id: test_load
+

@@ -13,14 +13,27 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime import View
+from typing import Self
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.plots.plot_key import PlotKey
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.protocols import is_key_type
+from cl.runtime.views.view import View
 
 
 @dataclass(slots=True, kw_only=True)
 class PlotView(View):
-    """Plot key or object."""
+    """Plot record or key."""
 
-    plot: PlotKey = missing()
-    """Plot key or object."""
+    plot: PlotKey = required()
+    """Plot record or key."""
+
+    def materialize(self) -> Self:
+        """Return Self with loaded plot if self.plot is a key."""
+
+        if is_key_type(type(self.plot)):
+            plot = active(DataSource).load_one(self.plot)
+            self.plot = plot
+
+        return self

@@ -1,0 +1,95 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import pytest
+import datetime as dt
+from types import NoneType
+from uuid import UUID
+from cl.runtime.qa.regression_guard import RegressionGuard
+from cl.runtime.records.typename import typename
+from cl.runtime.schema.primitive_spec import PrimitiveSpec
+from cl.runtime.serializers.bootstrap_serializers import BootstrapSerializers
+from stubs.cl.runtime import StubDataclass
+from stubs.cl.runtime import StubIntEnum
+
+_FROM_CLASS_VALID_CASES = [
+    str,
+    (str, "timestamp"),
+    float,
+    bool,
+    int,
+    (int, "long"),
+    dt.date,
+    dt.time,
+    dt.datetime,
+    UUID,
+    bytes,
+    type,
+]
+
+_FROM_CLASS_EXCEPTION_CASES = [
+    NoneType,
+    StubDataclass,
+    StubIntEnum,
+    (int, "int64"),
+    (float, "long"),
+]
+
+
+def test_init():
+    """Test PrimitiveSpec construction."""
+    for test_case in _FROM_CLASS_VALID_CASES:
+
+        # Get sample type and subtype (if specified)
+        if isinstance(test_case, tuple):
+            sample_type, subtype = test_case
+        elif isinstance(test_case, type):
+            sample_type = test_case
+            subtype = None
+        else:
+            raise RuntimeError("Invalid test case format.")
+
+        # Get enum spec and serialize as YAML
+        type_spec = PrimitiveSpec(type_=sample_type, subtype=subtype).build()
+        type_spec_str = BootstrapSerializers.YAML.serialize(type_spec)
+
+        # Include channel in subtype if specified
+        channel = f"{typename(type_spec.type_)}.{subtype}" if subtype else typename(type_spec.type_)
+
+        # Record in RegressionGuard
+        guard = RegressionGuard(channel=channel)
+        guard.write(type_spec_str)
+    RegressionGuard().verify_all()
+
+
+def test_init_exceptions():
+    """Test PrimitiveSpec construction exceptions."""
+    for test_case in _FROM_CLASS_EXCEPTION_CASES:
+
+        # Get sample type and subtype (if specified)
+        if isinstance(test_case, tuple):
+            sample_type, subtype = test_case
+        elif isinstance(test_case, type):
+            sample_type = test_case
+            subtype = None
+        else:
+            raise RuntimeError("Invalid test case format.")
+
+        # Check that exception is thrown as expected
+        with pytest.raises(Exception):
+            PrimitiveSpec(type_=sample_type, subtype=subtype).build()
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

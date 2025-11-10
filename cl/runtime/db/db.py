@@ -12,191 +12,208 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar
-from typing import Iterable
-from typing import Type
+from typing import Sequence
+from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.db.db_key import DbKey
-from cl.runtime.records.class_info import ClassInfo
-from cl.runtime.records.protocols import KeyProtocol
-from cl.runtime.records.protocols import RecordProtocol
-from cl.runtime.records.protocols import TKey
-from cl.runtime.records.protocols import TQuery
-from cl.runtime.records.protocols import TRecord
+from cl.runtime.db.query_mixin import QueryMixin
+from cl.runtime.db.save_policy import SavePolicy
+from cl.runtime.db.sort_order import SortOrder
+from cl.runtime.qa.qa_util import QaUtil
+from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.record_mixin import RecordMixin
-from cl.runtime.settings.context_settings import ContextSettings
+from cl.runtime.records.record_mixin import TRecord
+from cl.runtime.schema.type_info import TypeInfo
+from cl.runtime.server.env import Env
+from cl.runtime.settings.db_settings import DbSettings
 
 
 @dataclass(slots=True, kw_only=True)
-class Db(DbKey, RecordMixin[DbKey], ABC):
+class Db(DbKey, RecordMixin, ABC):
     """Polymorphic data storage with dataset isolation."""
 
-    # TODO: Do not store here, instead get from settings once during the initial Context construction
-    __default: ClassVar[Db | None] = None
-
     def get_key(self) -> DbKey:
-        return DbKey(db_id=self.db_id)
-
-    @abstractmethod
-    def load_one(
-        self,
-        record_type: Type[TRecord],
-        record_or_key: TRecord | KeyProtocol | tuple | str | None,
-        *,
-        dataset: str | None = None,
-        identity: str | None = None,
-        is_key_optional: bool = False,
-        is_record_optional: bool = False,
-    ) -> TRecord | None:
-        """
-        Load a single record using a key (if a record is passed instead of a key, it is returned without DB lookup)
-
-        Args:
-            record_type: Record type to load, error if the result is not this type or its subclass
-            record_or_key: Record (returned without lookup) or key in object, tuple or string format
-            dataset: If specified, append to the root dataset of the database
-            identity: Identity token for database access and row-level security
-            is_key_optional: If True, return None when key is none found instead of an error
-            is_record_optional: If True, return None when record is not found instead of an error
-        """
+        return DbKey(db_id=self.db_id).build()
 
     @abstractmethod
     def load_many(
         self,
-        record_type: Type[TRecord],
-        records_or_keys: Iterable[TRecord | KeyProtocol | tuple | str | None] | None,
+        key_type: type[KeyMixin],
+        keys: Sequence[KeyMixin],
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> Iterable[TRecord | None] | None:
+        dataset: str,
+        tenant: str,
+        project_to: type[TRecord] | None = None,
+        sort_order: SortOrder,  # Default value not provided due to the lack of natural default for this method
+    ) -> tuple[RecordMixin, ...]:
         """
-        Load records using a list of keys (if a record is passed instead of a key, it is returned without DB lookup),
-        the result must have the same order as 'records_or_keys'.
+        Load records for the specified keys, skipping the records that are not found.
 
         Args:
-            record_type: Record type to load, error if the result is not this type or its subclass
-            records_or_keys: Records (returned without lookup) or keys in object, tuple or string format
-            dataset: If specified, append to the root dataset of the database
-            identity: Identity token for database access and row-level security
+            key_type: Key type determines the database table
+            keys: Sequence of keys, type(key) must match the key_type argument for each key
+            dataset: Backslash-delimited dataset argument is combined with self.base_dataset if specified
+            tenant: Unique tenant identifier, tenants are isolated when sharing the same DB
+            project_to: Use some or all fields from the stored record to create and return instances of this type
+            sort_order: Sort by key fields in the specified order, reversing for fields marked as DESC
         """
 
     @abstractmethod
     def load_all(
         self,
-        record_type: Type[TRecord],
+        key_type: type[KeyMixin],
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> Iterable[TRecord | None] | None:
+        dataset: str,
+        tenant: str,
+        cast_to: type[TRecord] | None = None,
+        restrict_to: type[TRecord] | None = None,
+        project_to: type[TRecord] | None = None,
+        sort_order: SortOrder = SortOrder.ASC,
+        limit: int | None = None,
+        skip: int | None = None,
+    ) -> tuple[TRecord, ...]:
         """
-        Load all records of the specified type and its subtypes (excludes other types in the same DB table).
+        Load all records for the specified key type, sorted by key in the specified sort order.
 
         Args:
-            record_type: Record type to load, error if the result is not this type or its subclass
-            dataset: If specified, append to the root dataset of the database
-            identity: Identity token for database access and row-level security
+            key_type: Key type determines the database table
+            dataset: Backslash-delimited dataset argument is combined with self.base_dataset if specified
+            tenant: Unique tenant identifier, tenants are isolated when sharing the same DB
+            cast_to: Cast the result to this type (error if not a subtype)
+            restrict_to: Include only this type and its subtypes, skip other types
+            project_to: Use some or all fields from the stored record to create and return instances of this type
+            sort_order: Sort by key fields in the specified order, reversing for fields marked as DESC
+            limit: Maximum number of records to return (for pagination)
+            skip: Number of records to skip (for pagination)
         """
 
     @abstractmethod
-    def load_filter(
+    def load_by_query(
         self,
-        record_type: Type[TRecord],
-        filter_obj: TRecord,
+        query: QueryMixin,
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> Iterable[TRecord]:
+        dataset: str,
+        tenant: str,
+        cast_to: type[TRecord] | None = None,
+        restrict_to: type[TRecord] | None = None,
+        project_to: type[TRecord] | None = None,
+        sort_order: SortOrder = SortOrder.ASC,
+        limit: int | None = None,
+        skip: int | None = None,
+    ) -> tuple[TRecord, ...]:
         """
-        Load records where values of those fields that are set in the filter match the filter.
+        Load records that match the specified query.
 
         Args:
-            record_type: Record type to load, error if the result is not this type or its subclass
-            filter_obj: Instance of 'record_type' whose fields are used for the query
-            dataset: If specified, append to the root dataset of the database
-            identity: Identity token for database access and row-level security
+            query: Contains predicates to match
+            dataset: Backslash-delimited dataset argument is combined with self.base_dataset if specified
+            tenant: Unique tenant identifier, tenants are isolated when sharing the same DB
+            cast_to: Cast the result to this type (error if not a subtype)
+            restrict_to: Include only this type and its subtypes, skip other types
+            project_to: Use some or all fields from the stored record to create and return instances of this type
+            sort_order: Sort by query fields in the specified order, reversing for fields marked as DESC
+            limit: Maximum number of records to return (for pagination)
+            skip: Number of records to skip (for pagination)
         """
 
     @abstractmethod
-    def save_one(
+    def count_by_query(
         self,
-        record: RecordProtocol | None,
+        query: QueryMixin,
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> None:
+        dataset: str,
+        tenant: str,
+        restrict_to: type | None = None,
+    ) -> int:
         """
-        Save records to storage.
+        Return the count of records that match the specified query.
 
         Args:
-            record: Record or None.
-            dataset: Target dataset as a delimited string, list of levels, or None
-            identity: Identity token for database access and row-level security
+            query: Contains predicates to match
+            dataset: Backslash-delimited dataset argument is combined with self.base_dataset if specified
+            tenant: Unique tenant identifier, tenants are isolated when sharing the same DB
+            restrict_to: Include only this type and its subtypes, skip other types
         """
 
     @abstractmethod
     def save_many(
         self,
-        records: Iterable[RecordProtocol],
+        key_type: type[KeyMixin],
+        records: Sequence[RecordMixin],
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
+        dataset: str,
+        tenant: str,
+        save_policy: SavePolicy,
     ) -> None:
         """
-        Save records to storage.
+        Save multiple records, all of which must have the specified key type.
 
         Args:
-            records: Iterable of records.
-            dataset: Target dataset as a delimited string, list of levels, or None
-            identity: Identity token for database access and row-level security
-        """
-
-    @abstractmethod
-    def delete_one(
-        self,
-        key_type: Type[TKey],
-        key: TKey | KeyProtocol | tuple | str | None,
-        *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> None:
-        """
-        Delete one record for the specified key type using its key in one of several possible formats.
-
-        Args:
-            key_type: Key type to delete, used to determine the database table
-            key: Key in object, tuple or string format
-            dataset: If specified, append to the root dataset of the database
-            identity: Identity token for database access and row-level security
+            key_type: Key type determines the database table
+            records: Sequence of records to save, record.get_key_type() must match the key_type argument for each record
+            dataset: Backslash-delimited dataset argument is combined with self.base_dataset if specified
+            tenant: Unique tenant identifier, tenants are isolated when sharing the same DB
+            save_policy: Insert vs. replace policy, partial update is not included due to design considerations
         """
 
     @abstractmethod
     def delete_many(
         self,
-        keys: Iterable[KeyProtocol] | None,
+        key_type: type[KeyMixin],
+        keys: Sequence[KeyMixin],
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
+        dataset: str,
+        tenant: str,
     ) -> None:
         """
-        Delete records using an iterable of keys.
+        Delete multiple records, all of which must have the specified key type.
 
         Args:
-            keys: Iterable of keys.
-            dataset: Target dataset as a delimited string, list of levels, or None
-            identity: Identity token for database access and row-level security
+            key_type: Key type determines the database table
+            keys: Sequence of keys to delete, type(key) must match the key_type argument for each key
+            dataset: Backslash-delimited dataset argument is combined with self.base_dataset if specified
+            tenant: Unique tenant identifier, tenants are isolated when sharing the same DB
         """
 
     @abstractmethod
-    def delete_all_and_drop_db(self) -> None:
+    def delete_by_query(
+        self,
+        query: QueryMixin,
+        *,
+        dataset: str,
+        tenant: str,
+        restrict_to: type | None = None,
+    ) -> None:
         """
-        IMPORTANT: !!! DESTRUCTIVE - THIS WILL PERMANENTLY DELETE ALL RECORDS WITHOUT THE POSSIBILITY OF RECOVERY
+        Delete records that match the specified query.
 
-        Notes:
-            This method will not run unless both db_id and database start with 'temp_db_prefix'
-            specified using Dynaconf and stored in 'DbSettings' class
+        Args:
+            query: Contains predicates to match
+            dataset: Backslash-delimited dataset argument is combined with self.base_dataset if specified
+            tenant: Unique tenant identifier, tenants are isolated when sharing the same DB
+            restrict_to: Include only this type and its subtypes, skip other types
+        """
+
+    @abstractmethod
+    def drop_test_db(self) -> None:
+        """
+        Drop a database as part of a unit test.
+
+        EVERY IMPLEMENTATION OF THIS METHOD MUST FAIL UNLESS THE FOLLOWING CONDITIONS ARE MET:
+        - The method is invoked from a unit test based on active_or_default(Env).testing
+        - db_id starts with db_test_prefix specified in settings.yaml (the default prefix is 'test_')
+        """
+
+    @abstractmethod
+    def drop_temp_db(self, *, user_approval: bool) -> None:
+        """
+        Drop a temporary database with explicit user approval.
+
+        EVERY IMPLEMENTATION OF THIS METHOD MUST FAIL UNLESS THE FOLLOWING CONDITIONS ARE MET:
+        - user_approval is true
+        - db_id starts with db_temp_prefix specified in settings.yaml (the default prefix is 'temp_')
         """
 
     @abstractmethod
@@ -204,18 +221,78 @@ class Db(DbKey, RecordMixin[DbKey], ABC):
         """Close database connection to releasing resource locks."""
 
     @classmethod
-    def default(cls) -> Db:
-        """Default database is initialized from settings and cannot be modified in code."""
+    def _get_test_db_name(cls) -> str:  # TODO: Use fixture instead
+        """Get SQLite database with name based on test namespace."""
+        if active_or_default(Env).is_test():
+            result = f"temp;{QaUtil.get_test_name_from_call_stack().replace('.', ';')}"
+            return result
+        else:
+            raise RuntimeError("Attempting to get test DB name outside a test.")
 
-        if Db.__default is None:
-            # Load from configuration if not set
-            context_settings = ContextSettings.instance()  # TODO: Refactor to place this inside Context
-            db_type = ClassInfo.get_class_type(context_settings.db_class)
-            context_id = context_settings.context_id.replace(".", ";")
-            # TODO: Add code to obtain from preloads if only key is specified
-            if context_settings.db_uri:
-                Db.__default = db_type(db_id=context_id, client_uri=context_settings.db_uri)
+    @classmethod
+    def create(cls, *, db_type: type | None = None, db_id: str | None = None):
+        """Create DB of the specified type, or use DB type from context settings if not specified."""
+
+        # Get DB settings instance for the lookup of defaults
+        db_settings = DbSettings.instance()
+
+        # Get DB type from context settings if not specified
+        if db_type is None:
+            db_type = TypeInfo.from_type_name(db_settings.db_type)
+
+        # Get DB identifier if not specified
+        if db_id is None:
+            if not active_or_default(Env).is_test():
+                db_id = db_settings.db_id
             else:
-                Db.__default = db_type(db_id=context_id)
+                raise RuntimeError("Use pytest fixtures to create temporary DBs inside tests.")
 
-        return Db.__default
+        # Create and return a new DB instance
+        return db_type(db_id=db_id).build()
+
+    def check_drop_test_db_preconditions(self) -> None:
+        """Error if db_id does not start from db_test_prefix specified in settings.yaml (defaults to 'test_')."""
+        if not active_or_default(Env).is_test():
+            raise RuntimeError(f"Cannot drop a unit test DB when not invoked from a running unit test.")
+
+        db_settings = DbSettings.instance()
+        if not self.db_id.startswith(db_settings.db_test_prefix):
+            raise RuntimeError(
+                f"Cannot drop a unit test DB from code because its db_id={self.db_id}\n"
+                f"does not start from unit test DB prefix '{db_settings.db_test_prefix}'."
+            )
+
+    def check_drop_temp_db_preconditions(self, *, user_approval: bool) -> None:
+        """
+        Check user approval and raise an error if db_id does not start from db_temp_prefix
+        specified in settings.yaml (defaults to 'temp_').
+        """
+        if not user_approval:
+            raise RuntimeError(f"Cannot drop a temporary DB from code without explicit user approval.")
+
+        db_settings = DbSettings.instance()
+        if not self.db_id.startswith(db_settings.db_temp_prefix):
+            raise RuntimeError(
+                f"Cannot drop a DB from code even with user approval because its db_id={self.db_id}\n"
+                f"does not start from temporary DB prefix '{db_settings.db_temp_prefix}'."
+            )
+
+    @classmethod
+    def _check_dataset(cls, dataset: str) -> None:
+        """Error if dataset is None, an empty string, or has invalid format."""
+        if dataset is None:
+            raise RuntimeError(f"Dataset identifier cannot be None.")
+        elif dataset == "":
+            raise RuntimeError(f"Dataset identifier cannot be an empty string.")
+        elif not isinstance(dataset, str):
+            raise RuntimeError(f"Dataset identifier must be a string.")
+
+    @classmethod
+    def _check_tenant(cls, tenant: str) -> None:
+        """Error if tenant is None, an empty string, or has invalid format."""
+        if tenant is None:
+            raise RuntimeError(f"Tenant identifier cannot be None.")
+        elif tenant == "":
+            raise RuntimeError(f"Tenant identifier cannot be an empty string.")
+        elif not isinstance(tenant, str):
+            raise RuntimeError(f"Tenant identifier must be a string.")

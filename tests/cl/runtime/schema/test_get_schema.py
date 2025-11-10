@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import pytest
+from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.runtime.schema.for_dataclasses.dataclass_type_decl import DataclassTypeDecl
-from cl.runtime.testing.regression_guard import RegressionGuard
+from cl.runtime.serializers.bootstrap_serializers import BootstrapSerializers
+from stubs.cl.runtime import StubDataclass
+from stubs.cl.runtime import StubDataclassComposite
 from stubs.cl.runtime import StubDataclassListFields
 from stubs.cl.runtime import StubDataclassNestedFields
 from stubs.cl.runtime import StubDataclassPrimitiveFields
-from stubs.cl.runtime import StubDataclassRecord
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_optional_fields import StubDataclassOptionalFields
 
 
@@ -26,21 +28,22 @@ def test_method():
     """Test coroutine for /schema/typeV2 route."""
 
     sample_types = [
-        StubDataclassRecord,
+        StubDataclass,
         StubDataclassPrimitiveFields,
         StubDataclassListFields,
         StubDataclassNestedFields,
+        StubDataclassComposite,
         StubDataclassOptionalFields,
     ]
 
     for sample_type in sample_types:
         result_obj = DataclassTypeDecl.for_type(sample_type)
-        result_dict = result_obj.to_type_decl_dict()
+        result_dict = BootstrapSerializers.FOR_UI.serialize(result_obj)
 
-        guard = RegressionGuard(channel=sample_type.__module__.rsplit(".", maxsplit=1)[1])
+        guard = RegressionGuard(channel=sample_type.__module__.rsplit(".", 1)[1])
         guard.write(result_dict)
 
-    RegressionGuard.verify_all()
+    RegressionGuard().verify_all()
 
 
 if __name__ == "__main__":

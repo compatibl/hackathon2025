@@ -13,99 +13,76 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.db.mongo.basic_mongo_db import BasicMongoDb
-from cl.runtime.records.class_info import ClassInfo
-from stubs.cl.runtime import StubDataclassDerivedRecord
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record import StubDataclassRecord
+from cl.runtime.qa.regression_guard import RegressionGuard
+from cl.runtime.records.typename import typename
+from cl.runtime.stat.experiment_key_query import ExperimentKeyQuery
+from stubs.cl.runtime import StubDataclassPrimitiveFields
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_nested_fields_query import StubDataclassNestedFieldsQuery
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_primitive_fields_query import (
+    StubDataclassPrimitiveFieldsQuery,
+)
 
 
-@pytest.mark.skip("Requires MongoDB server.")  # TODO: Switch test to MongoMock
 def test_check_db_id():
-    """Test '_get_db_name' method."""
+    """Test that _get_db_name method correctly detects invalid names."""
+    # Check for length
+    BasicMongoDb(db_id="a" * 63)._get_db_name()
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="a" * 64)._get_db_name()
 
-    with TestingContext() as context:
-        # Check for length
-        BasicMongoDb.check_db_id("a" * 63)
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("a" * 64)
+    # Letters, numbers and underscore are allowed
+    BasicMongoDb(db_id="abc")._get_db_name()
+    BasicMongoDb(db_id="123")._get_db_name()
+    BasicMongoDb(db_id="abc_xyz")._get_db_name()
 
-        # Letters, numbers and underscore are allowed
-        BasicMongoDb.check_db_id("abc")
-        BasicMongoDb.check_db_id("123")
-        BasicMongoDb.check_db_id("abc_xyz")
+    # Semicolon is allowed even though it is not in the suggested list
+    BasicMongoDb(db_id="abc;xyz")._get_db_name()
 
-        # Semicolon is allowed even though it is not in the suggested list
-        BasicMongoDb.check_db_id("abc;xyz")
+    # Check for space
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="abc xyz")._get_db_name()
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="abc ")._get_db_name()
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id=" xyz")._get_db_name()
 
-        # Check for space
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("abc xyz")
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("abc ")
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id(" xyz")
+    # Check for period
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="abc.xyz")._get_db_name()
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="abc.")._get_db_name()
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id=".xyz")._get_db_name()
 
-        # Check for period
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("abc.xyz")
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("abc.")
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id(".xyz")
-
-        # Check for other symbols
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("abc:xyz")
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("abc|xyz")
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("abc\\xyz")
-        with pytest.raises(RuntimeError):
-            BasicMongoDb.check_db_id("abc/xyz")
+    # Check for other symbols
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="abc:xyz")._get_db_name()
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="abc|xyz")._get_db_name()
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="abc\\xyz")._get_db_name()
+    with pytest.raises(RuntimeError):
+        BasicMongoDb(db_id="abc/xyz")._get_db_name()
 
 
-@pytest.mark.skip("Requires MongoDB server.")  # TODO: Switch test to MongoMock
-def test_load_filter():
-    """Test 'load_filter' method."""
-
-    db_class = ClassInfo.get_class_path(BasicMongoDb)
-    with TestingContext(db_class=db_class) as context:
-        # Create test record and populate with sample data
-        offset = 0
-        matching_records = [StubDataclassDerivedRecord(id=str(offset + i), derived_field="a") for i in range(2)]
-        offset = len(matching_records)
-        non_matching_records = [StubDataclassDerivedRecord(id=str(offset + i), derived_field="b") for i in range(2)]
-        context.save_many(matching_records + non_matching_records)
-
-        filter_obj = StubDataclassDerivedRecord(id=None, derived_field="a")
-        loaded_records = context.load_filter(StubDataclassDerivedRecord, filter_obj)
-        assert len(loaded_records) == len(matching_records)
-        assert all(x.derived_field == filter_obj.derived_field for x in loaded_records)
-
-
-@pytest.mark.skip("Requires MongoDB server.")  # TODO: Switch test to MongoMock
-def test_smoke():
-    """Smoke test."""
-
-    # TODO: Do not hardcode DB name
-    db_class = ClassInfo.get_class_path(BasicMongoDb)
-    with TestingContext(db_class=db_class) as context:
-        # Create test record and populate with sample data
-        record = StubDataclassRecord()
-        key = record.get_key()
-
-        # Save a single record
-        context.save_many([record])
-
-        # Load using record or key
-        loaded_records = context.load_many(StubDataclassRecord, [record, key, None])
-        assert loaded_records[0] is record  # Same object is returned without lookup
-        assert loaded_records[1] == record  # Not the same object but equal
-        assert loaded_records[2] is None
-
-        assert context.load_one(StubDataclassRecord, record) is record  # Same object is returned without lookup
-        assert context.load_one(StubDataclassRecord, key) == record  # Not the same object but equal
+def test_populate_index_dict():
+    """Test BasicMongoDB._populate_index_dict method."""
+    sample_types = (
+        StubDataclassPrimitiveFields,
+        StubDataclassPrimitiveFieldsQuery,
+        StubDataclassNestedFieldsQuery,
+        ExperimentKeyQuery,
+    )
+    for sample_type in sample_types:
+        index_list = []
+        BasicMongoDb(db_id=typename(sample_type)).build()._populate_index(
+            type_=sample_type,
+            result=index_list,
+        )
+        index_dict = dict(index_list)
+        RegressionGuard(channel=typename(sample_type)).write(index_dict)
+    RegressionGuard().verify_all()
 
 
 if __name__ == "__main__":

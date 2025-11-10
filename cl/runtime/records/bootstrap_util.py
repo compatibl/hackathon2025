@@ -1,0 +1,95 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from typing import Any
+from frozendict import frozendict
+from more_itertools import consume
+from cl.runtime.records.protocols import PRIMITIVE_TYPE_NAMES
+from cl.runtime.records.protocols import is_data_key_or_record_type
+from cl.runtime.records.protocols import is_empty
+from cl.runtime.records.protocols import is_enum_type
+from cl.runtime.records.protocols import is_mapping_type
+from cl.runtime.records.protocols import is_primitive_type
+from cl.runtime.records.protocols import is_sequence_type
+from cl.runtime.records.typename import typename
+
+
+class BootstrapUtil:
+    """Helper methods for build functionality in BootstrapMixin."""
+
+    @classmethod
+    def bootstrap_build(cls, data: Any) -> Any:
+        """
+        The simplified implementation of the build method in BootstrapUtil performs the following steps:
+        (1) Invokes 'build' recursively for all non-primitive public fields and container elements
+        (2) Invokes '__init' method of this class and its ancestors in the order from base to derived
+        (3) Calls its 'mark_frozen' method without performing validation against the schema
+        """
+        if is_empty(data):
+            # Pass through None and empty primitive types
+            return None
+        elif is_primitive_type(type(data)):
+            # Pass through primitive types
+            return data
+        elif is_enum_type(type(data)):
+            # Pass through enums
+            return data
+        elif is_sequence_type(type(data)):
+            # Convert a sequence types to tuple after applying build to each item
+            return tuple(cls.bootstrap_build(v) if not is_empty(v) else None for v in data)
+        elif is_mapping_type(type(data)):
+            # Convert a mapping type to frozendict after applying build to each item
+            return frozendict((k, cls.bootstrap_build(v)) for k, v in data.items() if not is_empty(v))
+        elif is_data_key_or_record_type(type(data)):
+            if data.is_frozen():
+                # Stop further processing and return if the object has already been frozen to
+                # prevent repeat initialization of shared instances
+                return data
+
+            # Invoke '__init' in the order from base to derived
+            # Keep track of which init methods in class hierarchy were already called
+            invoked = set()
+            # Reverse the MRO to start from base to derived
+            for type_ in reversed(type(data).__mro__):
+                # Remove leading underscores from the class name when generating mangling for __init
+                # to support classes that start from _ to mark them as protected
+                type_init = getattr(type_, f"_{type_.__name__.lstrip('_')}__init", None)
+                if type_init is not None and (qualname := type_init.__qualname__) not in invoked:
+                    # Add qualname to invoked to prevent executing the same method twice
+                    invoked.add(qualname)
+                    # Invoke '__init' method if it exists, otherwise do nothing
+                    type_init(data)
+
+            # Build and freeze public fields
+            consume(
+                setattr(data, k, cls.bootstrap_build(getattr(data, k)))
+                for k in data.get_field_names()
+                if not k.startswith("_")
+            )
+
+            # Mark as frozen and return
+            return data.mark_frozen()
+        else:
+            raise cls._unsupported_object_error(data)
+
+    @classmethod
+    def _unsupported_object_error(cls, obj: Any) -> Exception:
+        obj_type_name = typename(type(obj))
+        return RuntimeError(
+            f"Class {obj_type_name} cannot be a record or its field. Supported types include:\n"
+            f"  1. Classes that implement 'build' method;\n"
+            f"  2. Sequence types (list, tuple, etc.) where all values are supported types;\n"
+            f"  3. Mapping types (dict, frozendict, etc.) with string keys where all values are supported types;\n"
+            f"  4. Enums; and\n5. Primitive types from the following list:\n{', '.join(PRIMITIVE_TYPE_NAMES)}"
+        )

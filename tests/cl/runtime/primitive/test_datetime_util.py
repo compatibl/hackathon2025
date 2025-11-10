@@ -14,19 +14,17 @@
 
 import pytest
 import datetime as dt
-from typing import List
-from typing import Tuple
 from zoneinfo import ZoneInfo
 from cl.runtime.primitive.datetime_util import DatetimeUtil
-from cl.runtime.primitive.ordered_uuid import OrderedUuid
+from cl.runtime.primitive.timestamp import Timestamp
 
 
-def get_valid_samples() -> List[Tuple[int, str]]:
+def get_valid_samples() -> list[tuple[int, str]]:
     """Return a list of valid sample date strings in (iso_int, str) format."""
     return [(20030501101530000, "2003-05-01T10:15:30.000Z"), (20030501101530500, "2003-05-01T10:15:30.500Z")]
 
 
-def get_invalid_datetime_samples() -> List[dt.datetime]:
+def get_invalid_datetime_samples() -> list[dt.datetime]:
     """Return a list of invalid sample datetime strings."""
 
     non_utc_timezone = ZoneInfo("America/New_York")
@@ -38,7 +36,7 @@ def get_invalid_datetime_samples() -> List[dt.datetime]:
     ]
 
 
-def get_invalid_string_samples() -> List[str]:
+def get_invalid_string_samples() -> list[str]:
     """Return a list of invalid sample datetime strings."""
     return [
         "2003-05-01",  # Date only with no timezone
@@ -50,7 +48,7 @@ def get_invalid_string_samples() -> List[str]:
     ]
 
 
-def get_invalid_iso_int_samples() -> List[int]:
+def get_invalid_iso_int_samples() -> list[int]:
     """Return a list of invalid sample datetime ISO ints."""
     return [
         20030501,  # Date only
@@ -62,7 +60,7 @@ def get_invalid_iso_int_samples() -> List[int]:
     ]
 
 
-def get_invalid_fields_samples() -> List[Tuple[int, int, int, int, int, int, int]]:
+def get_invalid_fields_samples() -> list[tuple[int, int, int, int, int, int, int]]:
     """Return a list of invalid sample datetimes in fields format."""
     return [
         (1800, 5, 1, 10, 15, 30, 500),
@@ -82,7 +80,7 @@ def get_invalid_fields_samples() -> List[Tuple[int, int, int, int, int, int, int
     ]
 
 
-def get_rounding_samples() -> List[Tuple[dt.datetime, dt.datetime]]:
+def get_rounding_samples() -> list[tuple[dt.datetime, dt.datetime]]:
     """Return a list of datetime objects for testing rounding."""
 
     return [
@@ -106,6 +104,14 @@ def get_rounding_samples() -> List[Tuple[dt.datetime, dt.datetime]]:
             dt.datetime(2003, 5, 1, 10, 15, 30, microsecond=999501, tzinfo=dt.timezone.utc),
             dt.datetime(2003, 5, 1, 10, 15, 31, microsecond=0, tzinfo=dt.timezone.utc),
         ),
+        (
+            dt.datetime(2000, 10, 17, 3, 12, 59, microsecond=999001, tzinfo=dt.timezone.utc),
+            dt.datetime(2000, 10, 17, 3, 12, 59, microsecond=999000, tzinfo=dt.timezone.utc),
+        ),
+        (
+            dt.datetime(2000, 10, 17, 23, 59, 59, microsecond=999501, tzinfo=dt.timezone.utc),
+            dt.datetime(2000, 10, 18, 0, 0, 0, microsecond=0, tzinfo=dt.timezone.utc),
+        ),
     ]
 
 
@@ -117,11 +123,11 @@ def test_now():
         datetime_before = DatetimeUtil.floor(dt.datetime.now(dt.timezone.utc))
 
         # Datetime from ordered UUID before rounded down to 1ms per UUIDv7 RFC-9562 standard
-        from_ordered_uuid_before = OrderedUuid.datetime_of(OrderedUuid.create_one())
+        from_ordered_uuid_before = Timestamp.to_datetime(Timestamp.create())
         now = DatetimeUtil.now()
 
         # Datetime from ordered UUID after rounded down to 1ms per UUIDv7 RFC-9562 standard
-        from_ordered_uuid_after = OrderedUuid.datetime_of(OrderedUuid.create_one())
+        from_ordered_uuid_after = Timestamp.to_datetime(Timestamp.create())
 
         # Datetime after rounded up to 1ms per UUIDv7 RFC-9562 standard
         datetime_after = DatetimeUtil.ceil(dt.datetime.now(dt.timezone.utc))

@@ -14,19 +14,19 @@
 
 import datetime as dt
 from dataclasses import dataclass
-from typing import Type
 from uuid import UUID
 from cl.runtime.primitive.date_util import DateUtil
 from cl.runtime.primitive.datetime_util import DatetimeUtil
 from cl.runtime.primitive.time_util import TimeUtil
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
+from stubs.cl.runtime import StubDataclassKey
 from stubs.cl.runtime.records.enum.stub_int_enum import StubIntEnum
 
 
-@dataclass(slots=True, kw_only=True)
-class StubDataclassPrimitiveFieldsKey(KeyMixin):
+@dataclass(slots=True)
+class StubDataclassPrimitiveFieldsKey(DataclassMixin, KeyMixin):
     """Stub record whose elements are primitive types."""
 
     key_str_field: str = "abc"
@@ -41,9 +41,9 @@ class StubDataclassPrimitiveFieldsKey(KeyMixin):
     key_int_field: int = 123
     """Stub field."""
 
-    key_long_field: int = field(default=9007199254740991, subtype="long")  # TODO: Rename subtype?
-    """The default is maximum safe signed int for JSON: 2^53 - 1."""
     # TODO: Define maximum safe long in Util class
+    key_long_field: int = required(default=9007199254740991, subtype="long")
+    """The default is maximum safe signed int for JSON: 2^53 - 1."""
 
     key_date_field: dt.date = DateUtil.from_fields(2003, 5, 1)
     """Stub field."""
@@ -60,9 +60,12 @@ class StubDataclassPrimitiveFieldsKey(KeyMixin):
     key_bytes_field: bytes = bytes([100, 110, 120])
     """Stub field."""
 
-    key_enum_field: StubIntEnum = StubIntEnum.ENUM_VALUE_2
+    key_type_field: type | None = StubDataclassKey
+    """Stub field."""
+
+    key_int_enum_field: StubIntEnum = StubIntEnum.ENUM_VALUE_2
     """Stub field."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return StubDataclassPrimitiveFieldsKey

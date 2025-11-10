@@ -13,35 +13,48 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.schema.handler_param_decl import HandlerParamDecl
-from cl.runtime.schema.handler_type import HandlerType
 from cl.runtime.schema.handler_variable_decl import HandlerVariableDecl
 
 
 @dataclass(slots=True, kw_only=True)
-class HandlerDeclareDecl:
+class HandlerDeclareDecl(DataclassMixin):
     """Handler declaration data."""
 
-    name: str = missing()
+    name: str = required()
     """Handler name."""
 
-    label: str | None = missing()
+    label: str | None = None
     """Handler label."""
 
-    comment: str | None = missing()
+    comment: str | None = None
     """Handler comment."""
 
-    type_: HandlerType = field(name="Type")
+    type_: str = required()  # TODO: Rename to handler_type for clarity
     """Handler type."""
 
-    params: List[HandlerParamDecl] | None = missing()
+    params: list[HandlerParamDecl] | None = None
     """Handler parameters."""
 
-    return_: HandlerVariableDecl | None = field(name="Return")  # TODO: Remove trailing _ automatically
+    return_: HandlerVariableDecl | None = None
     """Handler return value."""
 
-    static: bool | None = missing()
+    static: bool | None = None
     """If set as true, handler will be static, otherwise non-static."""
+
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        if self.type_ not in (
+            handler_types := [
+                "job",  # Job handler is shown as a button, return type must be None, params are allowed
+                "process",  # Process handler, return type is not allowed, params are allowed
+                "viewer",  # Viewer, return type is allowed, params are allowed
+                "content",  # # Viewer, return type is allowed, params not allowed
+            ]
+        ):
+            raise RuntimeError(
+                f"Field TypeDecl.type_ has the value of {self.type_}\n"
+                f"Permitted values are {', '.join(handler_types)}"
+            )

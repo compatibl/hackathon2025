@@ -12,8 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Literal
+from enum import IntEnum
+from enum import auto
 
-# TODO: Refactor and split
-TypeKind = Literal["final", "abstract", "element", "abstract_element"]
-"""Specifies type attributes."""
+
+class TypeKind(IntEnum):
+    """Type kind (primitive, enum, data, key, record)."""
+
+    PRIMITIVE = auto()
+    """Primitive type."""
+
+    ENUM = auto()
+    """Enum type (must be derived from IntEnum), is_enum returns True."""
+
+    DATA = auto()
+    """Data type (excludes keys and records), is_data returns True."""
+
+    KEY = auto()
+    """Key type (excludes records even if they are derived from key), is_key returns True."""
+
+    RECORD = auto()
+    """Record type, is_record returns True."""

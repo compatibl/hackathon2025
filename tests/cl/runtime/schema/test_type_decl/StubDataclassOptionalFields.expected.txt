@@ -1,0 +1,127 @@
+module:
+  module_name: cl
+name: StubDataclassOptionalFields
+label: Stub Dataclass Optional Fields
+comment: Stub derived class.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclassOptionalFieldsKey
+elements:
+- value:
+    type_: String
+  name: Id
+  comment: Unique identifier.
+- value:
+    type_: String
+  name: OptionalStr
+  comment: Optional string.
+  optional: true
+- value:
+    type_: String
+  name: RequiredListOfOptionalStr
+  comment: Required list of optional strings.
+  vector: true
+  optional_vector_element: true
+- value:
+    type_: String
+  name: OptionalListOfOptionalStr
+  comment: Optional list of optional strings.
+  vector: true
+  optional: true
+  optional_vector_element: true
+- value:
+    type_: Double
+  name: OptionalFloat
+  comment: Optional float.
+  optional: true
+- value:
+    type_: Double
+  name: RequiredListOfOptionalFloat
+  comment: Required list of optional floats.
+  vector: true
+  optional_vector_element: true
+- value:
+    type_: Double
+  name: OptionalListOfOptionalFloat
+  comment: Optional list of optional floats.
+  vector: true
+  optional: true
+  optional_vector_element: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassData
+  name: OptionalData
+  comment: Optional data.
+  optional: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassData
+  name: RequiredListOfOptionalData
+  comment: Required list of optional data.
+  vector: true
+  optional_vector_element: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassData
+  name: OptionalListOfOptionalData
+  comment: Optional list of optional data.
+  vector: true
+  optional: true
+  optional_vector_element: true
+- key_:
+    module:
+      module_name: cl
+    name: StubDataclassKey
+  name: OptionalKey
+  comment: Optional key.
+  optional: true
+- key_:
+    module:
+      module_name: cl
+    name: StubDataclassKey
+  name: RequiredListOfOptionalKey
+  comment: Required list of optional key.
+  vector: true
+  optional_vector_element: true
+- key_:
+    module:
+      module_name: cl
+    name: StubDataclassKey
+  name: OptionalListOfOptionalKey
+  comment: Optional list of optional key.
+  vector: true
+  optional: true
+  optional_vector_element: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclass
+  name: OptionalRecord
+  comment: Optional record.
+  optional: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclass
+  name: RequiredListOfOptionalRecord
+  comment: Required list of optional record.
+  vector: true
+  optional_vector_element: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclass
+  name: OptionalListOfOptionalRecord
+  comment: Optional list of optional record.
+  vector: true
+  optional: true
+  optional_vector_element: true
+keys:
+- Id
+

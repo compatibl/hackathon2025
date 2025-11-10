@@ -13,43 +13,62 @@
 # limitations under the License.
 
 import datetime as dt
+import os
 from dataclasses import dataclass
+from typing_extensions import final
+from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.primitive.datetime_util import DatetimeUtil
+from cl.runtime.records.typename import typename
+from cl.runtime.settings.project_settings import ProjectSettings
 from cl.runtime.settings.settings import Settings
 
 
 @dataclass(slots=True, kw_only=True)
+@final
 class LogSettings(Settings):
     """REST API settings."""
 
-    filename_format: str = "prefix-timestamp"
+    log_type: str = "FileLog"
+    """Log type name in ClassName format."""
+
+    log_level: str = "INFO"
+    """Log level in UPPERCASE format."""
+
+    log_filename_format: str = "prefix-timestamp"
     """
     Log filename format, the choices are:
     - prefix: Prefix only
     - prefix-timestamp: Prefix followed by UTC timestamp to millisecond precision in dash-delimited format
     """
 
-    filename_prefix: str = "default"
+    log_filename_prefix: str = "default"
     """Log filename prefix."""
 
-    filename_timestamp: dt.datetime = DatetimeUtil.now()
+    log_filename_timestamp: dt.datetime = DatetimeUtil.now()
     """Timestamp to use for log file, set to the time of program launch if not specified in settings."""
 
-    level: str = "info"
-    """Log level using logging module conventions (lower, upper or mixed case can be used)."""
+    log_dir: str | None = None
+    """Directory for log files (optional, defaults to '{project_root}/logs')."""
 
-    def init(self) -> None:
-        """Same as __init__ but can be used when field values are set both during and after construction."""
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+
+        if not isinstance(self.log_type, str) or not CaseUtil.is_pascal_case(self.log_type):
+            raise RuntimeError(f"{typename(type(self))} field 'log_type' must be a string in ClassName format.")
 
         # Convert logging level to uppercase and validate its values
-        self.level = self.level.upper()
+        self.log_level = self.log_level.upper()
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-        if self.level not in valid_levels:
+        if self.log_level not in valid_levels:
             raise RuntimeError(
-                f"Invalid log level: {self.level}, permitted values are: {', '.join(valid_levels)}. "
+                f"Invalid log level: {self.log_level}, permitted values are: {', '.join(valid_levels)}. "
                 f"Lower, upper or mixed case can be used."
             )
 
     @classmethod
-    def get_prefix(cls) -> str:
-        return "runtime_log"
+    def get_log_dir(cls) -> str:
+        """Get database directory (optional, defaults to '{project_root}/logs')."""
+        if (result := LogSettings.instance().log_dir) is None:
+            project_root = ProjectSettings.get_project_root()
+            result = os.path.join(project_root, "logs")
+        return result

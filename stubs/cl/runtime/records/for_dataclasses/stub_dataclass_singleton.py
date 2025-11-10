@@ -13,18 +13,16 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
 from cl.runtime.records.record_mixin import RecordMixin
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_singleton_key import StubDataclassSingletonKey
 
 
 @dataclass(slots=True, kw_only=True)
-class StubDataclassSingleton(StubDataclassSingletonKey, RecordMixin[StubDataclassSingletonKey]):
+class StubDataclassSingleton(StubDataclassSingletonKey, RecordMixin):
     """Singleton record has no key fields."""
 
     str_field: str = "abc"
     """Stub field."""
 
     def get_key(self) -> StubDataclassSingletonKey:
-        return StubDataclassSingletonKey()
+        return StubDataclassSingletonKey().build()

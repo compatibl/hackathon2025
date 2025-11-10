@@ -20,12 +20,12 @@ from cl.runtime.records.record_mixin import RecordMixin
 
 
 @dataclass(slots=True, kw_only=True)
-class Reader(ReaderKey, RecordMixin[ReaderKey], ABC):
+class Reader(ReaderKey, RecordMixin, ABC):
     """Read records from the specified files or directories and save them to the current context."""
 
     def get_key(self) -> ReaderKey:
-        return ReaderKey(loader_id=self.loader_id)
+        return ReaderKey(loader_id=self.loader_id).build().build()
 
     @abstractmethod
-    def read(self) -> None:
+    def csv_to_db(self) -> None:
         """Read records from the specified files or directories and save them to the current context."""

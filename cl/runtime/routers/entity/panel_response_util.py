@@ -12,160 +12,157 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
-import base64
-import dataclasses
-import io
-from typing import Any
-from typing import Dict
-from typing import List
-from pydantic import BaseModel
-from cl.runtime.context.context import Context
-from cl.runtime.plots.plot_key import PlotKey
+import logging
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.records.key_mixin import KeyMixin
+from cl.runtime.records.protocols import is_data_key_or_record_type
+from cl.runtime.records.protocols import is_key_type
+from cl.runtime.records.protocols import is_record_type
+from cl.runtime.records.typename import typename
 from cl.runtime.routers.entity.panel_request import PanelRequest
-from cl.runtime.routers.response_util import to_legacy_dict
-from cl.runtime.routers.response_util import to_record_dict
-from cl.runtime.schema.handler_declare_block_decl import HandlerDeclareBlockDecl
-from cl.runtime.schema.schema import Schema
-from cl.runtime.serialization.string_serializer import StringSerializer
-from cl.runtime.serialization.ui_dict_serializer import UiDictSerializer
-from cl.runtime.view.dag.dag import Dag
-from cl.runtime.views.binary_content import BinaryContent
-from cl.runtime.views.html_view import HtmlView
+from cl.runtime.schema.type_decl import TypeDecl
+from cl.runtime.schema.type_hint import TypeHint
+from cl.runtime.schema.type_info import TypeInfo
+from cl.runtime.serializers.data_serializers import DataSerializers
+from cl.runtime.serializers.key_serializers import KeySerializers
+from cl.runtime.views.empty_view import EmptyView
+from cl.runtime.views.key_list_view import KeyListView
 from cl.runtime.views.key_view import KeyView
-from cl.runtime.views.pdf_view import PdfView
-from cl.runtime.views.plot_view import PlotView
-from cl.runtime.views.png_view import PngView
+from cl.runtime.views.record_list_view import RecordListView
+from cl.runtime.views.record_view import RecordView
 from cl.runtime.views.script import Script
+from cl.runtime.views.script_language import ScriptLanguage
+from cl.runtime.views.view import View
+from cl.runtime.views.view_persistence_util import ViewPersistenceUtil
 
-PanelResponseData = Dict[str, Any] | List[Dict[str, Any]] | None
+_LOGGER = logging.getLogger(__name__)
+
+# Create serializers
+_KEY_SERIALIZER = KeySerializers.DELIMITED
+_UI_SERIALIZER = DataSerializers.FOR_UI
 
 
-ui_serializer = UiDictSerializer()
-"""Ui serializer."""
-
-
-class PanelResponseUtil(BaseModel):
+class PanelResponseUtil:
     """Response util for the /entity/panel route."""
 
-    view_of: PanelResponseData
-    """Response data type for the /entity/panel route."""
-
     @classmethod
-    def get_content(cls, request: PanelRequest) -> Dict[str, PanelResponseData]:
+    def _get_content(cls, request: PanelRequest):
         """Implements /entity/panel route."""
 
-        # Get type of the record
-        type_ = Schema.get_type_by_short_name(request.type)
+        # Get the key type
+        record_type = TypeInfo.from_type_name(request.type_name)
+        key_type = record_type.get_key_type()
 
-        # Check if the selected type has the needed viewer and get its name (only viewer's label is provided)
-        handlers = HandlerDeclareBlockDecl.get_type_methods(type_, inherit=True).handlers
-        if (
-            handlers is not None
-            and handlers
-            and (found_viewers := [h.name for h in handlers if h.label == request.panel_id and h.type_ == "Viewer"])
-        ):
-            viewer_name: str = found_viewers[0]
-        else:
-            raise Exception(f"Type {request.type} has no view with the name {request.panel_id}.")
+        # Deserialize key from string to object.
+        key_obj = _KEY_SERIALIZER.deserialize(request.key, TypeHint.for_type(key_type))
 
-        # Deserialize key from string to object
-        serializer = StringSerializer()
-        key_obj = serializer.deserialize_key(data=request.key, type_=type_.get_key_type())
-
-        # Get database from the current context
-        db = Context.current().db
-
-        # Load record from the database
-        record = db.load_one(type_, key_obj, dataset=request.dataset)
+        # Load record from the database.
+        record = active(DataSource).load_one(key_obj)
         if record is None:
             raise RuntimeError(
-                f"Record with type {request.type} and key {request.key} is not found in dataset {request.dataset}."
+                f"Record with type {request.type_name} and key {request.key} is not found in dataset {request.dataset}."
             )
 
-        # Call the viewer and get the result
-        viewer = getattr(record, viewer_name)
-        result_view = viewer()
+        # Check if the selected type has the needed viewer and get its name (only viewer's label is provided).
+        # Get handlers from TypeDecl.
+        handlers = declare.handlers if (declare := TypeDecl.for_type(type(record)).declare) is not None else None
+        # Try to get persisted view for this record and panel_id
+        persisted_view = ViewPersistenceUtil.load_view_or_none(view_for=key_obj, view_name=request.panel_id)
+        # Try to get dynamic viewer name
+        viewer_name = next(
+            (h.name for h in handlers if h.label == request.panel_id and h.type_ == "Viewer"),
+            None,
+        )
 
-        # Apply legacy dict conventions
-        # TODO (Ina): Optimize speed using dacite or similar library
-        if isinstance(result_view, list):
-            view_dict = [PanelResponseUtil._get_view_dict(item) for item in result_view]
+        if viewer_name is not None:
+            # Use dynamic viewer method
+            viewer = getattr(record, f"view_{viewer_name}")
+            viewer_result = viewer()
+            view = cls._process_viewer_result(viewer_result, view_for=record.get_key(), view_name=viewer_name)
+        elif persisted_view is not None:
+            # Use persisted view
+            view = persisted_view
         else:
-            view_dict = PanelResponseUtil._get_view_dict(result_view)
+            raise RuntimeError(f"Type {typename(type(record))} has no view named '{request.panel_id}'.")
 
-        return {"ViewOf": view_dict}
+        # Load nested keys and perform custom View object transformations.
+        view = view.materialize()
+
+        return _UI_SERIALIZER.serialize(view)
 
     @classmethod
-    def _get_view_dict(cls, view: Any) -> Dict[str, Any] | None:
-        """Convert value to dict format."""
+    def get_response(cls, request: PanelRequest):
 
-        # Return None if view is None
-        if view is None:
-            return None
+        try:
+            return cls._get_content(request)
+        except Exception as e:
+            # Log exception manually because the FastAPI logger will not be triggered.
+            _LOGGER.error(str(e), exc_info=True)
 
-        if isinstance(view, PlotView):
-            # Load plot for view if it is key
-            plot = Context.current().load_one(PlotKey, view.plot)
-            if plot is None:
-                raise RuntimeError(f"Not found plot for key {view.plot}.")
+            # Get the key type
+            record_type = TypeInfo.from_type_name(request.type_name)
+            key_type = record_type.get_key_type()
 
-            # Get view for plot and transform to ui format dict
-            return cls._get_view_dict(plot.get_view())
+            # Deserialize key from string to object.
+            key_obj = _KEY_SERIALIZER.deserialize(request.key, TypeHint.for_type(key_type))
 
-        elif isinstance(view, KeyView):
-            # Load record for view
-            record = Context.current().load_one(type(view.key), view.key)
-            if record is None:
-                raise RuntimeError(f"Not found record for key {view.key}.")
+            error_view = Script(
+                view_for=key_obj,
+                view_name="Error message",
+                language=ScriptLanguage.MARKDOWN,
+                body=["## The following error occurred during the rendering of this view:\n", f"{str(e)}"],
+                word_wrap=True,
+            )
+            # Return custom error response.
+            return _UI_SERIALIZER.serialize(error_view)
 
-            # Return ui format dict dict of record
-            return cls._get_view_dict(record)
+    @classmethod
+    def _process_viewer_result(cls, viewer_result, view_for: KeyMixin, view_name: str) -> View:
+        """
+        Convert supported viewer result to the corresponding View object.
 
-        elif isinstance(view, PngView):
-            # Return ui format dict of binary data
-            return {
-                "Content": base64.b64encode(view.png_bytes).decode(),
-                "ContentType": "Png",
-                "_t": "BinaryContent",
-            }
-        elif isinstance(view, HtmlView):
-            # Return ui format dict of binary data
-            return {
-                "Content": base64.b64encode(view.html_bytes).decode(),
-                "ContentType": "Html",
-                "_t": "BinaryContent",
-            }
-        elif isinstance(view, PdfView):
-            # Return ui format dict of binary PDF view data
-            return {
-                "Content": base64.b64encode(view.pdf_bytes).decode(),
-                "ContentType": "Pdf",
-                "_t": "BinaryContent",
-            }
-        elif isinstance(view, Dag):
-            # Serialize Dag using ui serialization
-            view_dict = ui_serializer.serialize_data(view)
+        The following viewer results are supported:
+            - Record or list of records;
+            - Key or list of keys;
+            - Any View object;
+            - None value.
+        """
 
-            # Set _t with legacy Dag type name
-            view_dict["_t"] = "DAG"
+        # Handle empty result.
+        if not viewer_result:
+            return EmptyView(view_for=view_for, view_name=view_name)
 
-            # Return Dag view
-            return view_dict
-        elif isinstance(view, Script):
-            # Return script
-            view_dict: dict = to_legacy_dict(to_record_dict(view))
-            view_dict["Language"] = view_dict.pop("Language").capitalize()
-            return view_dict
-        elif isinstance(view, Dict):
-            # Return if is already dict
-            return view
-        else:
-            # TODO (Ina): Do not use a method from dataclasses
-            result_type = type(view)
-            if result_type.__name__.endswith("Key"):
-                view_dict = to_legacy_dict(dataclasses.asdict(view))
-                view_dict["_t"] = result_type.__name__
-                return view_dict
+        # If the result is a View object, fill in the missing key fields.
+        elif isinstance(viewer_result, View):
+            if viewer_result.view_for is None:
+                viewer_result.view_for = view_for
+
+            if viewer_result.view_name is None:
+                viewer_result.view_name = view_name
+
+            return viewer_result
+
+        # If the result is a Key, convert it to a KeyView.
+        elif is_key_type(type(viewer_result)):
+            return KeyView(view_for=view_for, view_name=view_name, key=viewer_result)
+
+        # If the result is a Record, convert it to a RecordView.
+        elif is_data_key_or_record_type(type(viewer_result)):
+            return RecordView(view_for=view_for, view_name=view_name, record=viewer_result)
+
+        # If the result is a list of keys or list of records, convert it to an appropriate View.
+        elif isinstance(viewer_result, (list, tuple)):
+
+            # Check iterable value type by first item.
+            if is_key_type(type(viewer_result[0])):
+                return KeyListView(view_for=view_for, view_name=view_name, keys=viewer_result)
+            elif is_record_type(type(viewer_result[0])):
+                return RecordListView(view_for=view_for, view_name=view_name, records=viewer_result)
             else:
-                return to_legacy_dict(to_record_dict(view))
+                raise RuntimeError(
+                    f"If the viewer result is iterable it must be a list of keys or a list of records. "
+                    f"Other is not supported. Received: {viewer_result}."
+                )
+        else:
+            raise RuntimeError(f"Unsupported viewer result of type '{type(viewer_result)}': {viewer_result}.")

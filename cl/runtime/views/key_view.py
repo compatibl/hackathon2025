@@ -13,13 +13,23 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime import View
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.key_mixin import KeyMixin
+from cl.runtime.views.record_view import RecordView
+from cl.runtime.views.view import View
 
 
 @dataclass(slots=True, kw_only=True)
 class KeyView(View):
-    """Generic key in ClassName;key_field_1;key_field_2 format, record is loaded and displayed."""
+    """Generic key, record is loaded and displayed."""
 
-    key: str = missing()
-    """Generic key in ClassName;key_field_1;key_field_2 format, record is loaded and displayed."""
+    key: KeyMixin = required()
+    """Generic key, record is loaded and displayed."""
+
+    def materialize(self) -> RecordView:
+        """Load record and return RecordView object. KeyView is used only for storage in the DB."""
+        # TODO: Fix cast
+        record = active(DataSource).load_one_or_none(self.key) if self.key else None
+        return RecordView(view_for=self.view_for, view_name=self.view_name, record=record)

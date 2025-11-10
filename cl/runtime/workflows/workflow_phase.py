@@ -13,15 +13,14 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-from typing import final
+from typing_extensions import final
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.workflows.workflow_phase_key import WorkflowPhaseKey
 
 
 @final
 @dataclass(slots=True, kw_only=True)
-class WorkflowPhase(WorkflowPhaseKey, RecordMixin[WorkflowPhaseKey]):
+class WorkflowPhase(WorkflowPhaseKey, RecordMixin):
     """
     Determines the order of task execution within the workflow.
 
@@ -32,8 +31,8 @@ class WorkflowPhase(WorkflowPhaseKey, RecordMixin[WorkflowPhaseKey]):
         - Workflow will wait until all prerequisite phases are completed before running tasks in this phase
     """
 
-    prerequisites: List[WorkflowPhaseKey] | None = None
+    prerequisites: list[WorkflowPhaseKey] | None = None
     """Workflow will wait until all prerequisite phases are completed before running tasks in this phase."""
 
     def get_key(self) -> WorkflowPhaseKey:
-        return WorkflowPhaseKey(phase_id=self.phase_id)
+        return WorkflowPhaseKey(phase_id=self.phase_id).build()

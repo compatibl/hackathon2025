@@ -12,130 +12,90 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging.config
 import multiprocessing
 import os
 from dataclasses import dataclass
+from typing import ClassVar
+from typing import Dict
 from typing import Final
-from uuid import UUID
+from urllib.parse import urlparse
+import pika
+import redis
 from celery import Celery
-from cl.runtime import Context
-from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.log.log_entry import LogEntry
-from cl.runtime.log.log_entry_level_enum import LogEntryLevelEnum
-from cl.runtime.log.user_log_entry import UserLogEntry
-from cl.runtime.primitive.datetime_util import DatetimeUtil
-from cl.runtime.primitive.ordered_uuid import OrderedUuid
-from cl.runtime.records.protocols import TDataDict
-from cl.runtime.records.protocols import is_key
-from cl.runtime.records.protocols import is_record
-from cl.runtime.serialization.dict_serializer import DictSerializer
-from cl.runtime.settings.context_settings import ContextSettings
-from cl.runtime.settings.project_settings import ProjectSettings
+from celery.exceptions import Reject
+from celery.signals import setup_logging
+from pika.exceptions import ChannelClosedByBroker
+from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.contexts.context_snapshot import ContextSnapshot
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.log.log_config import celery_empty_logging_config
+from cl.runtime.log.log_config import logging_config
+from cl.runtime.server.env import Env
+from cl.runtime.settings.celery_settings import CelerySettings
 from cl.runtime.tasks.task import Task
 from cl.runtime.tasks.task_key import TaskKey
+from cl.runtime.tasks.task_query import TaskQuery
 from cl.runtime.tasks.task_queue import TaskQueue
-from cl.runtime.tasks.task_queue_key import TaskQueueKey
-from cl.runtime.tasks.task_run import TaskRun
-from cl.runtime.tasks.task_run_key import TaskRunKey
-from cl.runtime.tasks.task_status_enum import TaskStatusEnum
-
-CELERY_MAX_WORKERS = 4
+from cl.runtime.tasks.task_status import TaskStatus
 
 CELERY_RUN_COMMAND_QUEUE: Final[str] = "run_command"
-CELERY_MAX_RETRIES: Final[int] = 3
-CELERY_TIME_LIMIT: Final[int] = 3600 * 2  # TODO: 2 hours (configure)
 
-databases_dir = ProjectSettings.get_databases_dir()
-context_id = ContextSettings.instance().context_id
-
-# Get sqlite file name of celery broker based on database id in settings
-celery_file = os.path.join(databases_dir, f"{context_id}.celery.sqlite")
-
-celery_sqlite_uri = f"sqlalchemy+sqlite:///{celery_file}"
+celery_settings = CelerySettings.instance()
 
 celery_app = Celery(
     "worker",
-    broker=celery_sqlite_uri,
+    broker=celery_settings.celery_broker_uri,
     broker_connection_retry_on_startup=True,
 )
 
 celery_app.conf.task_track_started = True
+celery_app.conf.task_default_queue = celery_settings.celery_broker_queue
+celery_app.conf.task_time_limit = celery_settings.celery_time_limit
 
-context_serializer = DictSerializer()
-"""Serializer for the context parameter of 'execute_task' method."""
+
+@setup_logging.connect()
+def config_loggers(*args, **kwargs):
+    """Setup logging config for celery worker."""
+    from logging.config import dictConfig
+
+    # Use empty config to suppress celery logger and propagate to root.
+    dictConfig(celery_empty_logging_config)
 
 
-@celery_app.task(max_retries=0)  # Do not retry failed tasks
+@celery_app.task(max_retries=celery_settings.celery_max_retries, acks_late=True)  # Do not retry failed tasks
 def execute_task(
-    task_run_id: str,
-    context_data: TDataDict,
+    task_id: str,
+    context_snapshot_json: str,
 ) -> None:
-    """Invoke execute method of the specified task."""
-
-    # Set is_deserialized flag in context data, will be used to skip some of the initialization code
-    context_data["is_deserialized"] = True
+    """Invoke 'run_task' method of the specified task."""
 
     # Deserialize context from 'context_data' parameter to run with the same settings as the caller context
-    with context_serializer.deserialize_data(context_data) as context:
+    with ContextSnapshot.from_json(context_snapshot_json):
+        # The task is running.
+        running_query = TaskQuery(status=TaskStatus.RUNNING).build()
+        running_tasks = active(DataSource).load_by_query(running_query, cast_to=Task)
 
-        try:
-            task_run_key = TaskRunKey(task_run_id=task_run_id)
-            task_run = context.load_one(TaskRun, task_run_key)
+        if len(running_tasks) >= celery_settings.celery_max_tenant_tasks:
+            raise Reject("Tenant exceeded task limit", requeue=True)
 
-            # Load and execute the task object
-            task_key = task_run.task
-            task = context.load_one(Task, task_key)
-            task.execute()
-        except Exception as e:  # noqa
-
-            # Get log entry type and level
-            if isinstance(e, UserError):
-                log_type = UserLogEntry
-                level = LogEntryLevelEnum.USER_ERROR
-            else:
-                log_type = LogEntry
-                level = LogEntryLevelEnum.ERROR
-
-            # Create log entry
-            log_entry = log_type(  # noqa
-                message=str(e),
-                level=level,
-            )
-            log_entry.init()
-
-            # Save log entry to the database
-            Context.current().save_one(log_entry)
-
-            # Update task run record to report task failure
-            task_run.update_time = DatetimeUtil.now()
-            task_run.status = TaskStatusEnum.FAILED
-            task_run.message = str(e)
-
-            # Add log entry key
-            task_run.log_entry = log_entry.get_key()
-
-            context.save_one(task_run)
-        else:
-            # Update task run record to report task completion
-            task_run.update_time = DatetimeUtil.now()
-            task_run.status = TaskStatusEnum.COMPLETED
-            context.save_one(task_run)
+        # Load and run the task
+        task_key = TaskKey(task_id=task_id).build()
+        task = active(DataSource).load_one(task_key, cast_to=Task)
+        task.run_task()
 
 
-def celery_start_queue_callable(*, log_dir: str) -> None:
+def celery_start_queue_callable(*, log_config: Dict) -> None:
     """
     Callable for starting the celery queue process.
 
     Args:
-        log_dir: Directory where Celery console log file will be written
+        log_config: logging dict config from the main process.
     """
 
-    # Redirect console output from celery to a log file
-    # TODO: Use an additional Logger handler instead
-    log_file_path = os.path.join(log_dir, "celery_queue.log")
-    # with open(log_file_path, "w") as log_file:
-    #    os.dup2(log_file.fileno(), 1)  # Redirect stdout (file descriptor 1)
-    #    os.dup2(log_file.fileno(), 2)  # Redirect stderr (file descriptor 2)
+    # Setup logging config from the main process.
+    logging.config.dictConfig(log_config)
 
     celery_app.worker_main(
         argv=[
@@ -143,9 +103,8 @@ def celery_start_queue_callable(*, log_dir: str) -> None:
             "cl.runtime.tasks.celery.celery_queue",
             "worker",
             "--loglevel=info",
-            f"--autoscale={CELERY_MAX_WORKERS},1",
-            f"--pool=solo",  # One concurrent task per worker, do not switch to prefork (not supported on Windows)
-            f"--concurrency=1",  # Use only for prefork, one concurrent task per worker (similar to solo)
+            f"--pool={celery_settings.celery_pool_type}",
+            f"--concurrency={celery_settings.celery_workers}",
         ],
     )
 
@@ -154,87 +113,101 @@ def celery_delete_existing_tasks() -> None:
     """Delete the existing Celery tasks (will exit when the current process exits)."""
 
     # Remove sqlite file of celery broker if exists
-    if os.path.exists(celery_file):
-        os.remove(celery_file)
+    if celery_settings.celery_broker == "sqlite":
+        celery_file = celery_settings.celery_broker_uri.split("sqlite:///")[1]
 
+        # Remove sqlite file of celery broker if exists
+        if os.path.exists(celery_file):
+            os.remove(celery_file)
 
-def celery_start_queue(*, log_dir: str) -> None:
-    """
-    Start Celery workers (will exit when the current process exits).
+    if celery_settings.celery_broker == "redis":
+        # Parse the URI
+        parsed_uri = urlparse(celery_settings.celery_broker_uri)
+        host = parsed_uri.hostname
+        port = parsed_uri.port
+        db = parsed_uri.path.lstrip("/")
 
-    Args:
-        log_dir: Directory where Celery console log file will be written
-    """
-    worker_process = multiprocessing.Process(
-        target=celery_start_queue_callable, daemon=True, kwargs={"log_dir": log_dir}
-    )
-    worker_process.start()
+        # Connect to Redis
+        redis_client = redis.StrictRedis(host=host, port=port, db=db)
+
+        # Clear the Celery queue and result backend
+        redis_client.delete(celery_settings.celery_broker_queue)
+        redis_client.flushdb()
+
+    if celery_settings.celery_broker == "rabbitmq":
+        # Parse the URI
+        parsed_uri = urlparse(celery_settings.celery_broker_uri)
+        user, password = parsed_uri.netloc.split("@")[0].split(":")
+
+        # Connect to RabbitMQ
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host=parsed_uri.hostname, port=parsed_uri.port, credentials=pika.PlainCredentials(user, password)
+            )
+        )
+        channel = connection.channel()
+
+        try:
+            # Check if the queue exists (passive=True) if not raise ChannelClosedByBroker
+            channel.queue_declare(queue=celery_settings.celery_broker_queue, passive=True)
+
+            # Purge all messages in the queue
+            channel.queue_purge(queue=celery_settings.celery_broker_queue)
+
+        except ChannelClosedByBroker:
+            pass
+
+        finally:
+            connection.close()
 
 
 @dataclass(slots=True, kw_only=True)
 class CeleryQueue(TaskQueue):
-    """Submits tasks to Celery workers."""
+    """Execute tasks using Celery."""
 
-    # max_workers: int = missing()  # TODO: Implement support for max_workers
+    __celery_worker_process: ClassVar[multiprocessing.Process | None] = None
+
+    # max_workers: int = required()  # TODO: Implement support for max_workers
     """The maximum number of processes running concurrently."""
 
-    # TODO: @abstractmethod
-    def start_workers(self) -> None:
+    @classmethod
+    def run_start_queue(cls) -> None:
         """Start queue workers."""
+        worker_process = multiprocessing.Process(
+            target=celery_start_queue_callable,
+            daemon=True,
+            kwargs={"log_config": logging_config},
+        )
+        worker_process.start()
 
-    # TODO: @abstractmethod
-    def stop_workers(self) -> None:
+        cls.__celery_worker_process = worker_process
+
+    @classmethod
+    def run_stop_queue(cls) -> None:
         """Cancel all active runs and stop queue workers."""
+        if cls.__celery_worker_process is not None:
+            # TODO: graceful shutdown of the celery_app
+            cls.__celery_worker_process.terminate()
+            cls.__celery_worker_process.join()
+            cls.__celery_worker_process = None
+            celery_delete_existing_tasks()
 
-    # TODO: @abstractmethod
-    def cancel_all(self) -> None:
-        """Cancel all active runs but do not stop queue workers."""
+    def submit_task(self, task: TaskKey):
 
-    # TODO: @abstractmethod
-    def pause_all(self) -> None:
-        """Do not start new runs and send pause command to the existing runs."""
+        # Wrap into Env
+        with activate(Env().build()):
 
-    # TODO: @abstractmethod
-    def resume_all(self) -> None:
-        """Resume starting new runs and send resume command to existing runs."""
+            # Get and serialize current context
+            context_snapshot_json = ContextSnapshot.capture_active().to_json()
 
-    def submit_task(self, task: TaskKey) -> TaskRunKey:
-        # Get current context
-        context = Context.current()
+            # Pass parameters to the Celery task signature
+            execute_task_signature = execute_task.s(
+                task.task_id,
+                context_snapshot_json,
+            )
 
-        # Save task if provided as record rather than key
-        if is_record(task):
-            context.save_one(task)
-
-        # Create task run identifier and convert to string
-        task_run_uuid = OrderedUuid.create_one()
-        task_run_id = str(task_run_uuid)
-
-        # Get timestamp from task_run_id
-        task_run_uuid = UUID(task_run_id)
-        submit_time = OrderedUuid.datetime_of(task_run_uuid)
-
-        # Create a task run record in Pending state
-        task_run = TaskRun()
-        task_run.task_run_id = task_run_id
-        task_run.queue = TaskQueueKey(queue_id=self.queue_id)
-        task_run.task = task if is_key(task) else task.get_key()
-        task_run.submit_time = submit_time
-        task_run.update_time = submit_time
-        task_run.status = TaskStatusEnum.PENDING
-        context.save_one(task_run)
-
-        # Pass parameters to the Celery task signature
-        context_data = context_serializer.serialize_data(context)
-        execute_task_signature = execute_task.s(
-            task_run_id,
-            context_data,
-        )
-
-        # Submit task to Celery with completed and error links
-        execute_task_signature.apply_async(
-            retry=False,  # Do not retry in case the task fails
-            ignore_result=True,  # TODO: Do not publish to the Celery result backend
-        )
-
-        return task_run.get_key()
+            # Submit task to Celery with completed and error links
+            execute_task_signature.apply_async(
+                retry=False,  # Do not retry in case the task fails
+                ignore_result=True,  # TODO: Do not publish to the Celery result backend
+            )

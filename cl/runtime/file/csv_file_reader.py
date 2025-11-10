@@ -13,39 +13,31 @@
 # limitations under the License.
 
 import csv
+import os
 from dataclasses import dataclass
 from typing import Any
-from typing import Dict
-from typing import Type
-from cl.runtime import Context
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.file.reader import Reader
-from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.case_util import CaseUtil
 from cl.runtime.primitive.char_util import CharUtil
-from cl.runtime.records.protocols import RecordProtocol
-from cl.runtime.schema.element_decl import ElementDecl
-from cl.runtime.schema.type_decl import TypeDecl
-from cl.runtime.serialization.dict_serializer import get_type_dict
-from cl.runtime.serialization.flat_dict_serializer import FlatDictSerializer
-from cl.runtime.serialization.string_serializer import StringSerializer
-from cl.runtime.serialization.string_value_parser_enum import StringValueParser
+from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.records.typename import typename
+from cl.runtime.schema.type_info import TypeInfo
+from cl.runtime.serializers.data_serializers import DataSerializers
 
-serializer = FlatDictSerializer()
+_SERIALIZER = DataSerializers.FOR_CSV
 
 
 @dataclass(slots=True, kw_only=True)
 class CsvFileReader(Reader):
     """Load records from a single CSV file into the context database."""
 
-    record_type: Type
-    """Absolute path to the CSV file including extension."""
-
     file_path: str
     """Absolute path to the CSV file including extension."""
 
-    def read(self) -> None:
+    def csv_to_db(self) -> None:
         # Get current context
-        context = Context.current()
 
         with open(self.file_path, mode="r", encoding="utf-8") as file:
             # The reader is an iterable of row dicts
@@ -71,68 +63,28 @@ class CsvFileReader(Reader):
 
             # Save records to the specified database
             if records:
-                context.save_many(records)
+                active(DataSource).replace_many(records, commit=True)
 
-    @classmethod
-    def _prepare_csv_value(cls, csv_value: str, element_decl: ElementDecl):
-        """Prepare csv value before deserialization."""
-
-        # TODO (Roman): add ability to see difference between an empty string and None.
-        # Replace empty string to None
-        if csv_value is None or csv_value == "":
-            return None
-
-        if element_decl is None:
-            raise NotImplementedError()
-
-        if not element_decl.vector and (value_decl := element_decl.value) is not None:
-            # Convert primitive types
-            if value_decl.type_ == "Int":
-                return int(csv_value)
-            elif value_decl.type_ == "Double":
-                return float(csv_value)
-        elif (key := element_decl.key_) is not None and StringValueParser.parse(csv_value)[1] is None:
-            # Get key type from element decl
-            key_type_name = key.name
-            type_dict = get_type_dict()
-            key_type = type_dict.get(key_type_name)  # noqa
-
-            # Deserialize key from string
-            key_serializer = StringSerializer()
-            return key_serializer.deserialize_key(csv_value, key_type)
-
-        return csv_value
-
-    def _deserialize_row(self, row_dict: Dict[str, Any]) -> RecordProtocol:
+    def _deserialize_row(self, row_dict: dict[str, Any]) -> RecordMixin:
         """Deserialize row into a record."""
 
-        # Get TypeDecl object for record type
-        type_decl = TypeDecl.for_type(self.record_type)
+        # Record type is ClassName without extension in PascalCase
+        filename = os.path.basename(self.file_path)
+        filename_without_extension, _ = os.path.splitext(filename)
 
-        # Construct name to element decl map
-        type_decl_elements = (
-            {element.name: element for element in type_decl.elements} if type_decl.elements is not None else {}
-        )
+        if not CaseUtil.is_pascal_case(filename_without_extension):
+            dirname = os.path.dirname(filename)
+            raise RuntimeError(
+                f"Filename of a CSV preload file {filename} in directory {dirname} must be "
+                f"ClassName or its alias in PascalCase without module."
+            )
 
-        prepared_row = {}
-        for k, v in row_dict.items():
+        # Get record type
+        record_type = TypeInfo.from_type_name(filename_without_extension)
 
-            # Normalize characters in both key and value
-            k = CharUtil.normalize_chars(k)
-            v = CharUtil.normalize_chars(v)
+        # Normalize chars and set None for empty strings
+        row_dict = {CharUtil.normalize(k): CharUtil.normalize_or_none(v) for k, v in row_dict.items()}
+        row_dict["_type"] = typename(record_type)
 
-            # Get element_decl for field
-            pascal_case_field_name = CaseUtil.snake_to_pascal_case(k)
-            element_decl = type_decl_elements.get(pascal_case_field_name)
-
-            if element_decl is None:
-                raise UserError(
-                    f"Field '{k}' is not defined in record '{self.record_type.__name__}' "
-                    f"while its value '{v}' is present in CSV input."
-                )
-
-            # Prepare csv value using element decl
-            prepared_row[k] = self._prepare_csv_value(v, element_decl)
-
-        prepared_row["_type"] = self.record_type.__name__
-        return serializer.deserialize_data(prepared_row)
+        result = _SERIALIZER.deserialize(row_dict).build()
+        return result

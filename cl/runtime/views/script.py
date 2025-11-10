@@ -13,24 +13,20 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
-from cl.runtime.views.script_language_enum import ScriptLanguageEnum
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.views.script_language import ScriptLanguage
+from cl.runtime.views.view import View
 
 
 @dataclass(slots=True, kw_only=True)
-class Script:
+class Script(View):
     """Script body element."""
 
-    name: str = missing()
-    """Script name."""
-
-    language: ScriptLanguageEnum | None = missing()
+    language: ScriptLanguage | None = None
     """Script Language."""
 
-    body: List[str] = missing()
+    body: list[str] = required()
     """Body"""
 
-    word_wrap: bool | None = missing()
+    word_wrap: bool | None = None
     """Automatically wrap text to the next line when it reaches the end of a line or a specified margin."""

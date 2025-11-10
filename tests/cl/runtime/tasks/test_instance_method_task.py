@@ -13,45 +13,53 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.context.testing_context import TestingContext
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.tasks.instance_method_task import InstanceMethodTask
+from cl.runtime.tasks.task_queue_key import TaskQueueKey
 from stubs.cl.runtime import StubHandlers
 
+TASK_COUNT = 3
 
-def test_smoke():
-    """Test 'test_create' method."""
 
-    with TestingContext() as context:
-        records = [
+def test_smoke(default_db_fixture, event_broker_fixture):
+    """Smoke test."""
+    records = [
+        sample.build()
+        for sample in [
             StubHandlers(stub_id="abc"),
         ]
-        context.save_many(records)
+    ]
+    active(DataSource).insert_many(records, commit=True)
 
-        object_and_instance_handler_on_object = [(x, x.run_instance_method_1a) for x in records]
-        key_and_instance_handler_on_object = [(x.get_key(), x.run_instance_method_1a) for x in records]
-        object_and_instance_handler_on_class = [(x, StubHandlers.run_instance_method_1a) for x in records]
-        key_and_instance_handler_on_class = [(x.get_key(), StubHandlers.run_instance_method_1a) for x in records]
-        object_and_class_handler_on_class = [(x, StubHandlers.run_class_method_1a) for x in records]
-        key_and_class_handler_on_class = [(x.get_key(), StubHandlers.run_class_method_1a) for x in records]
+    instance_handlers_on_object = [(x.get_key(), x.run_instance_method_1a) for x in records]
+    instance_handlers_on_class = [(x.get_key(), StubHandlers.run_instance_method_1a) for x in records]
+    class_handlers_on_class = [(x.get_key(), StubHandlers.run_class_method_1a) for x in records]
 
-        sample_inputs = (
-            object_and_instance_handler_on_object
-            + key_and_instance_handler_on_object
-            + object_and_instance_handler_on_class
-            + key_and_instance_handler_on_class
-            + object_and_class_handler_on_class
-            + key_and_class_handler_on_class
-        )
+    sample_inputs = instance_handlers_on_object + instance_handlers_on_class + class_handlers_on_class
 
-        for sample_input in sample_inputs:
-            record_or_key = sample_input[0]
-            method_callable = sample_input[1]
-            task = InstanceMethodTask.create(
-                task_id="abc",
-                record_or_key=record_or_key,
-                method_callable=method_callable,
-            )
-            task.execute()
+    for sample_input in sample_inputs:
+        key = sample_input[0]
+        method_callable = sample_input[1]
+        task = InstanceMethodTask.create(
+            queue=TaskQueueKey(queue_id="Sample Queue"),
+            key=key,
+            method_callable=method_callable,
+        ).build()
+        task.run_task()
+
+
+def _run_task(task_index: int):
+    instance = StubHandlers(stub_id=f"abc{task_index}").build()
+    active(DataSource).replace_one(instance, commit=True)
+
+    task = InstanceMethodTask.create(
+        queue=TaskQueueKey(queue_id="Sample Queue"),
+        key=instance.get_key(),
+        method_callable=instance.run_instance_method_1a,
+    ).build()
+
+    task.run_task()
 
 
 if __name__ == "__main__":

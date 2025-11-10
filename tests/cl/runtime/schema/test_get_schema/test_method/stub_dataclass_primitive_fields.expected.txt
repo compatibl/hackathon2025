@@ -1,10 +1,14 @@
-_t: StubDataclassPrimitiveFields
 Module:
-  ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_primitive_fields
+  ModuleName: cl
 Name: StubDataclassPrimitiveFields
 Label: Stub Dataclass Primitive Fields
 Comment: Stub record whose elements are primitive types.
+TypeKind: Record
 DisplayKind: Basic
+Inherit:
+  Module:
+    ModuleName: cl
+  Name: StubDataclassPrimitiveFieldsKey
 Elements:
 - Value:
     Type: String
@@ -46,24 +50,47 @@ Elements:
     Type: Binary
   Name: KeyBytesField
   Comment: Stub field.
+- Value:
+    Type: type
+  Name: KeyTypeField
+  Comment: Stub field.
+  Optional: true
 - Enum:
     Module:
-      ModuleName: stubs.cl.runtime.records.enum.stub_int_enum
+      ModuleName: cl
     Name: StubIntEnum
-  Name: KeyEnumField
+  Name: KeyIntEnumField
   Comment: Stub field.
 - Value:
     Type: String
   Name: ObjStrField
   Comment: Stub field.
+  Optional: true
+- Value:
+    Type: String
+  Name: ObjStrWithEolField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: String
+  Name: ObjStrWithTrailingEolField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: String
+  Name: ObjStrTimestampField
+  Comment: Stub field.
+  Optional: true
 - Value:
     Type: Double
   Name: ObjFloatField
   Comment: Stub field.
+  Optional: true
 - Value:
     Type: Bool
   Name: ObjBoolField
   Comment: Stub field.
+  Optional: true
 - Value:
     Type: Int
   Name: ObjIntField
@@ -76,28 +103,44 @@ Elements:
     Type: Date
   Name: ObjDateField
   Comment: Stub field.
+  Optional: true
 - Value:
     Type: Time
   Name: ObjTimeField
   Comment: Stub field.
+  Optional: true
 - Value:
     Type: DateTime
   Name: ObjDateTimeField
   Comment: Stub field.
+  Optional: true
 - Value:
     Type: UUID
   Name: ObjUuidField
   Comment: Stub field.
+  Optional: true
 - Value:
     Type: Binary
   Name: ObjBytesField
   Comment: Stub field.
+  Optional: true
+- Value:
+    Type: Binary
+  Name: ObjBytesLargeField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: type
+  Name: ObjTypeField
+  Comment: Stub field.
+  Optional: true
 - Enum:
     Module:
-      ModuleName: stubs.cl.runtime.records.enum.stub_int_enum
+      ModuleName: cl
     Name: StubIntEnum
-  Name: ObjEnumField
+  Name: ObjIntEnumField
   Comment: Stub field.
+  Optional: true
 Keys:
 - KeyStrField
 - KeyFloatField
@@ -109,5 +152,6 @@ Keys:
 - KeyDateTimeField
 - KeyUuidField
 - KeyBytesField
-- KeyEnumField
+- KeyTypeField
+- KeyIntEnumField
 

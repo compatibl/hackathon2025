@@ -1,0 +1,157 @@
+module:
+  module_name: cl
+name: StubDataclassPrimitiveFields
+label: Stub Dataclass Primitive Fields
+comment: Stub record whose elements are primitive types.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclassPrimitiveFieldsKey
+elements:
+- value:
+    type_: String
+  name: KeyStrField
+  comment: Stub field.
+- value:
+    type_: Double
+  name: KeyFloatField
+  comment: Stub field.
+- value:
+    type_: Bool
+  name: KeyBoolField
+  comment: Stub field.
+- value:
+    type_: Int
+  name: KeyIntField
+  comment: Stub field.
+- value:
+    type_: Int
+  name: KeyLongField
+  comment: 'The default is maximum safe signed int for JSON: 2^53 - 1.'
+- value:
+    type_: Date
+  name: KeyDateField
+  comment: Stub field.
+- value:
+    type_: Time
+  name: KeyTimeField
+  comment: Stub field.
+- value:
+    type_: DateTime
+  name: KeyDateTimeField
+  comment: Stub field.
+- value:
+    type_: UUID
+  name: KeyUuidField
+  comment: Stub field.
+- value:
+    type_: Binary
+  name: KeyBytesField
+  comment: Stub field.
+- value:
+    type_: type
+  name: KeyTypeField
+  comment: Stub field.
+  optional: true
+- enum:
+    module:
+      module_name: cl
+    name: StubIntEnum
+  name: KeyIntEnumField
+  comment: Stub field.
+- value:
+    type_: String
+  name: ObjStrField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: String
+  name: ObjStrWithEolField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: String
+  name: ObjStrWithTrailingEolField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: String
+  name: ObjStrTimestampField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: Double
+  name: ObjFloatField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: Bool
+  name: ObjBoolField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: Int
+  name: ObjIntField
+  comment: Stub field.
+- value:
+    type_: Int
+  name: ObjLongField
+  comment: 'The default is maximum safe signed int for JSON: 2^53 - 1.'
+- value:
+    type_: Date
+  name: ObjDateField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: Time
+  name: ObjTimeField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: DateTime
+  name: ObjDateTimeField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: UUID
+  name: ObjUuidField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: Binary
+  name: ObjBytesField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: Binary
+  name: ObjBytesLargeField
+  comment: Stub field.
+  optional: true
+- value:
+    type_: type
+  name: ObjTypeField
+  comment: Stub field.
+  optional: true
+- enum:
+    module:
+      module_name: cl
+    name: StubIntEnum
+  name: ObjIntEnumField
+  comment: Stub field.
+  optional: true
+keys:
+- KeyStrField
+- KeyFloatField
+- KeyBoolField
+- KeyIntField
+- KeyLongField
+- KeyDateField
+- KeyTimeField
+- KeyDateTimeField
+- KeyUuidField
+- KeyBytesField
+- KeyTypeField
+- KeyIntEnumField
+

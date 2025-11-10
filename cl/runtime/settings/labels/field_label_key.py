@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class FieldLabelKey(KeyMixin):
+@dataclass(slots=True)
+class FieldLabelKey(DataclassMixin, KeyMixin):
     """
     Custom field label overrides the standard 'field_name' -> 'Field Name' transformation.
 
@@ -28,9 +28,9 @@ class FieldLabelKey(KeyMixin):
         - This UI setting does not affect the REST API
     """
 
-    field_name: str = missing()
+    field_name: str = required()
     """Field name without reference to a class (the setting will apply to this field name in every class)."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return FieldLabelKey

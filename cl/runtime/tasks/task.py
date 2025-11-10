@@ -12,47 +12,162 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime as dt
+import logging
+import time
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from cl.runtime.context.context import Context
+from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.events.event_broker import EventBroker
+from cl.runtime.events.event_kind import EventKind
+from cl.runtime.events.task_event import TaskEvent
+from cl.runtime.events.task_finished_event import TaskFinishedEvent
+from cl.runtime.log.task_log import TaskLog
+from cl.runtime.primitive.datetime_util import DatetimeUtil
+from cl.runtime.primitive.timestamp import Timestamp
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.tasks.task_key import TaskKey
-from cl.runtime.tasks.task_queue import TaskQueue
 from cl.runtime.tasks.task_queue_key import TaskQueueKey
-from cl.runtime.tasks.task_run_key import TaskRunKey
+from cl.runtime.tasks.task_status import TaskStatus
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True, kw_only=True)
-class Task(TaskKey, RecordMixin[TaskKey], ABC):
+class Task(TaskKey, RecordMixin, ABC):
     """
-    The task 'execute' method is invoked by the queue to which the task is submitted.
+    The task 'run_task' method is invoked by the queue to which the task is submitted.
 
     Notes:
-        - The task may be invoked sequentially or in parallel with other tasks
-        - The task may be invoked in a different process, thread or machine than the submitting code
-          and must be able to acquire the resources required by its 'execute' method in all of these cases
-        - The queue creates a new TaskRun record every time the task is submitted
-        - The TaskRun record is periodically updated by the queue with the run status
-        - The TaskRun record must never be created or modified by the task itself
+        - The task may run sequentially or in parallel with other tasks
+        - The task may run in a different process, thread or machine than the submitting code
+          and must be able to acquire the resources required by its 'run_task' method in all of these cases
+        - The queue updates 'status' field of the task as it progresses from its initial Pending state through
+          the Running and optionally Paused state and ending in one of Completed, Failed, or Cancelled states
     """
 
-    parent: TaskKey | None = None
-    """Parent task (most actions on the parent or further ancestors will also apply to this task)."""
+    label: str | None = None  # TODO: Make required
+    """Label for information purposes only (should not be used in processing)."""
+
+    queue: TaskQueueKey = required()
+    """The queue that will run the task once it is saved."""
+
+    status: TaskStatus = required()
+    """Begins from Pending, continues to Running or Paused, and ends with Completed, Failed, or Cancelled."""
+
+    progress_pct: float = required()
+    """Task progress in percent from 0 to 100."""
+
+    elapsed_sec: float | None = None
+    """Elapsed time in seconds if available."""
+
+    remaining_sec: float | None = None
+    """Remaining time in seconds if available."""
+
+    error_message: str | None = None
+    """Error message for Failed status if available."""
 
     def get_key(self) -> TaskKey:
-        return TaskKey(task_id=self.task_id)
+        return TaskKey(task_id=self.task_id).build()
+
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        # Set or validate task_id
+        if self.task_id is None:
+            # Automatically generate time-ordered unique task run identifier in UUIDv7 format if not specified
+            self.task_id = Timestamp.create()
+        else:
+            # Otherwise validate
+            Timestamp.validate(self.task_id, value_name="task_id", data_type="TaskKey")
+
+        # Set status and progress_pct if not yet set
+        if self.status is None:
+            self.status = TaskStatus.PENDING
+        if self.progress_pct is None:
+            self.progress_pct = 0.0
 
     @abstractmethod
-    def execute(self) -> None:
-        """Invoked by the queue to which the task is submitted."""
+    def _execute(self):
+        """Run payload without updating status or handling exceptions (protected, callers should invoke 'run_task')."""
 
-    def run_submit(self, queue: TaskQueueKey) -> TaskRunKey:
-        """Submit task to the specified queue."""
+    def _create_log_context(self) -> TaskLog:
+        """Create TaskLog with task specific info."""
+        return TaskLog(task_run_id=self.task_id).build()
 
-        # Get current context
-        context = Context.current()
+    def run_task(self) -> None:
+        """Invoke execute with task status updates and exception handling."""
+        event_broker = active(EventBroker)
+        events_topic = "events"
 
-        queue_obj = context.load_one(TaskQueue, queue)  # TODO: Optimize for multiple calls
-        task_run_key = queue_obj.submit_task(self)
-        return task_run_key
+        # Activate logging context for the task
+        with activate(self._create_log_context()):
+            try:
+                _logger.info("Start task execution.")
+                event_broker.sync_publish(events_topic, TaskEvent(event_kind=EventKind.TASK_STARTED).build())
+
+                # Save with Running status
+                update = self.clone()
+                update.status = TaskStatus.RUNNING
+                active(DataSource).replace_one(update.build(), commit=True)
+
+                # Invoke out-of-process execution of payload
+                self._execute()
+
+            except Exception as e:  # noqa
+
+                _logger.error("Task failed with exception.", exc_info=True)
+                event_broker.sync_publish(
+                    events_topic,
+                    TaskFinishedEvent(event_kind=EventKind.TASK_FINISHED, status=TaskStatus.FAILED).build(),
+                )
+
+                # Save with Failed status and execution info
+                update = self.clone()
+                update.status = TaskStatus.FAILED
+                update.progress_pct = 100.0
+                update.elapsed_sec = 0.0  # TODO: Implement
+                update.remaining_sec = 0.0
+                update.error_message = str(e)
+                active(DataSource).replace_one(update.build(), commit=True)
+            else:
+
+                _logger.info("Task completed successfully.")
+                event_broker.sync_publish(
+                    events_topic,
+                    TaskFinishedEvent(event_kind=EventKind.TASK_FINISHED, status=TaskStatus.COMPLETED).build(),
+                )
+
+                # Record the end time
+                end_time = DatetimeUtil.now()
+
+                # Save with Completed status and execution info
+                # Save with Failed status and execution info
+                update = self.clone()
+                update.status = TaskStatus.COMPLETED
+                update.progress_pct = 100.0
+                update.elapsed_sec = 0.0  # TODO: Implement
+                update.remaining_sec = 0.0
+                active(DataSource).replace_one(update.build(), commit=True)
+
+    def run_task_in_process(self):
+        return self._execute()
+
+    @classmethod
+    def wait_for_completion(cls, task_key: TaskKey, timeout_sec: int = 10) -> None:  # TODO: Rename or move
+        """Wait for completion of the specified task run before exiting from this method (not async/await)."""
+
+        start_datetime = DatetimeUtil.now()
+        while DatetimeUtil.now() < start_datetime + dt.timedelta(seconds=timeout_sec):
+            task = active(DataSource).load_one(task_key, cast_to=Task)
+            if task.status == TaskStatus.COMPLETED:
+                # Test success, task has been completed
+                return
+            # TODO: Refactor to use queue-specific push communication rather than heartbeat
+            time.sleep(1)  # Sleep for 1 second to reduce CPU load
+
+        # Test failure
+        raise RuntimeError(f"Task has not been completed after {timeout_sec} sec.")

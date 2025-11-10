@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
 from fastapi import APIRouter
 from fastapi import Header
 from cl.runtime.routers.auth.auth_types_response import AuthTypesResponseItem
 from cl.runtime.routers.auth.me_response import MeResponse
 from cl.runtime.routers.user_request import UserRequest
 
-AuthTypesResponse = List[AuthTypesResponseItem]
 router = APIRouter()
 
 
@@ -29,7 +27,7 @@ async def get_me(user: str = Header(None, description="User identifier or identi
     return MeResponse.get_me(UserRequest(user=user))
 
 
-@router.get("/types", response_model=AuthTypesResponse)
-async def get_types(user: str = Header(None, description="Get available authentication types.")) -> AuthTypesResponse:
+@router.get("/providers", response_model=list[AuthTypesResponseItem])
+async def get_types() -> list[AuthTypesResponseItem]:
     """Get available authentication types."""
-    return AuthTypesResponseItem.get_types(UserRequest(user=user))
+    return AuthTypesResponseItem.get_types()

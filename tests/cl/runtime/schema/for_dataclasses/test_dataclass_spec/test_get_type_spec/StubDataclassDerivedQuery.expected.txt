@@ -1,0 +1,14 @@
+type_: StubDataclassDerivedQuery
+type_kind: Data
+fields:
+- field_name: id
+  field_type_hint:
+    schema_type: str
+    optional: true
+    predicate: true
+- field_name: derived_str_field
+  field_type_hint:
+    schema_type: str
+    optional: true
+    predicate: true
+

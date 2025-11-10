@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import re
-from typing import Dict
 from typing import Pattern
 
 # Regexp for docstring parsing
@@ -36,7 +35,7 @@ class MethodDocstringParameter:  # TODO: Move to a separate directory with other
     comment: str = None
     """ Argument comment. """
 
-    meta: Dict[str, str] = None
+    meta: dict[str, str] = None
     """ Argument meta information. """
 
 
@@ -46,7 +45,7 @@ class MethodDocstring:
     comment: str = None
     """ Method comment. """
 
-    parameters: Dict[str, MethodDocstringParameter] = None
+    parameters: dict[str, MethodDocstringParameter] = None
     """ Method parameters. """
 
     returns: MethodDocstringParameter = None
@@ -67,7 +66,7 @@ class EnumItemDocstring:
     """ Item label. """
 
 
-def _parse_param_metadata(line: str) -> Dict[str, str] | None:
+def _parse_param_metadata(line: str) -> dict[str, str] | None:
     """Parse param line in format 'param_name : param_type[, ..]'."""
 
     param_options = line.split(",")

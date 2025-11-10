@@ -13,13 +13,14 @@
 # limitations under the License.
 
 from enum import IntEnum
+from enum import auto
 
 
 class StubIntEnum(IntEnum):  # Enum is derived from IntEnum
     """Sample enum."""
 
-    ENUM_VALUE_1 = 1
+    ENUM_VALUE_1 = auto()
     """Enum value 1."""
 
-    ENUM_VALUE_2 = 2
+    ENUM_VALUE_2 = auto()
     """Enum value 2."""

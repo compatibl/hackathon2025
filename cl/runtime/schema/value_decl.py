@@ -13,28 +13,51 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Literal
-from typing import Type
-from typing_extensions import Self
-from cl.runtime.primitive.primitive_util import PrimitiveUtil
-from cl.runtime.records.dataclasses_extensions import missing
+from typing import Self
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.protocols import FloatArray
+from cl.runtime.records.protocols import FloatCube
+from cl.runtime.records.protocols import FloatMatrix
+from cl.runtime.records.protocols import FloatVector
 
-PrimitiveTypeLiteral = Literal[
-    "String", "Double", "Bool", "Int", "Long", "Date", "Time", "DateTime", "UUID", "Binary", "Dict"
-]
+_VALUE_DECL_NAME_MAP: dict[str, str] = {
+    "str": "String",
+    "float": "Double",
+    "bool": "Bool",
+    "int": "Int",
+    "long": "Long",
+    "date": "Date",
+    "time": "Time",
+    "datetime": "DateTime",
+    "UUID": "UUID",  # TODO: Check for support in ElementDecl
+    "bytes": "Binary",
+    "type": "type",
+    str(FloatArray): "NdFloatArray",
+    str(FloatVector): "NdFloatVector",
+    str(FloatMatrix): "NdFloatMatrix",
+    str(FloatCube): "NdFloatCube",
+}
+"""Map from Python class name to ValueDecl name."""
 
 
 @dataclass(slots=True, kw_only=True)
-class ValueDecl:
+class ValueDecl(DataclassMixin):
     """Value or atomic element declaration."""
 
-    type_: PrimitiveTypeLiteral = missing()
+    type_: str = required()
     """Primitive type name."""
 
     @classmethod
-    def create(cls, record_type: Type | str) -> Self:
-        """Create an instance based on specified type."""
+    def for_type(cls, type_: type | str) -> Self:
+        """Create an instance from the specified type."""
+        return cls.for_type_name(type_.__name__)
 
-        if not PrimitiveUtil.is_primitive(record_type):
-            raise RuntimeError(f"Primitive field type {record_type} is not supported.")
-        return ValueDecl(type_=PrimitiveUtil.get_runtime_name(record_type))  # noqa
+    @classmethod
+    def for_type_name(cls, type_name: str) -> Self:
+        """Create an instance from the specified type name."""
+
+        runtime_name = _VALUE_DECL_NAME_MAP.get(type_name, None)
+        if not runtime_name:
+            raise RuntimeError(f"Primitive field type {type_name} is not supported.")
+        return ValueDecl(type_=runtime_name)

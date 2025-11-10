@@ -14,7 +14,6 @@
 
 import datetime as dt
 import re
-from typing import Tuple
 
 # Compile the regex pattern for time in ISO-8601 format hh:mm:ss.fff without timezone
 time_pattern = re.compile(r"^\d{2}:\d{2}:\d{2}\.\d{3}$")
@@ -86,7 +85,7 @@ class TimeUtil:
         return result
 
     @classmethod
-    def to_fields(cls, value: dt.time) -> Tuple[int, int, int, int]:
+    def to_fields(cls, value: dt.time) -> tuple[int, int, int, int]:
         """Convert dt.time in UTC timezone with millisecond precision to fields."""
 
         # Validate the time first, this will also confirm rounding to milliseconds

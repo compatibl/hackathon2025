@@ -1,0 +1,33 @@
+module:
+  module_name: cl
+name: StubDataclassComposite
+label: Stub Dataclass Composite
+comment: Stub for a composite key that contains other key fields.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclassCompositeKey
+elements:
+- value:
+    type_: String
+  name: Primitive
+  comment: String key element.
+- key_:
+    module:
+      module_name: cl
+    name: StubDataclassKey
+  name: Embedded1
+  comment: Embedded key 1.
+- key_:
+    module:
+      module_name: cl
+    name: StubDataclassKey
+  name: Embedded2
+  comment: Embedded key 2.
+keys:
+- Primitive
+- Embedded1
+- Embedded2
+

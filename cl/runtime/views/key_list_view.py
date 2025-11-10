@@ -13,14 +13,23 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-from cl.runtime import View
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.key_mixin import KeyMixin
+from cl.runtime.views.record_list_view import RecordListView
+from cl.runtime.views.view import View
 
 
 @dataclass(slots=True, kw_only=True)
 class KeyListView(View):
-    """List of generic keys in ClassName;key_field_1;key_field_2 format, records are loaded and displayed."""
+    """List of generic keys, records are loaded and displayed."""
 
-    key_list: List[str] = missing()
-    """List of generic keys in ClassName;key_field_1;key_field_2 format, records are loaded and displayed."""
+    keys: list[KeyMixin] = required()
+    """List of generic keys, records are loaded and displayed."""
+
+    def materialize(self) -> RecordListView:
+        """Load records and return RecordListView object. KeyListView is used only for storage in the DB."""
+
+        records = active(DataSource).load_many(self.keys) if self.keys else []
+        return RecordListView(view_for=self.view_for, view_name=self.view_name, records=records)

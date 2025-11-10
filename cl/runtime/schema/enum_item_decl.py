@@ -13,20 +13,19 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 
 
 @dataclass(slots=True, kw_only=True)
-class EnumItemDecl:
+class EnumItemDecl(DataclassMixin):
     """Enum item declaration."""
 
-    name: str = missing()
+    name: str = required()
     """Item name."""
 
-    label: str | None = missing()
+    label: str | None = None
     """Item label (if not specified, titleized name is used instead)."""
 
-    comment: str | None = missing()
+    comment: str | None = None
     """Item additional information."""

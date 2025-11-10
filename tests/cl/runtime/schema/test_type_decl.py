@@ -13,43 +13,66 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.backend.core.ui_app_state import UiAppState
-from cl.runtime.primitive.case_util import CaseUtil
+from cl.runtime.qa.regression_guard import RegressionGuard
+from cl.runtime.records.typename import typename
 from cl.runtime.schema.type_decl import TypeDecl
-from stubs.cl.runtime import StubDataclassRecord
+from cl.runtime.serializers.bootstrap_serializers import BootstrapSerializers
+from cl.runtime.ui.ui_app_state import UiAppState
+from stubs.cl.runtime import StubDataclass
+from stubs.cl.runtime import StubDataclassComposite
+from stubs.cl.runtime import StubDataclassDerived
+from stubs.cl.runtime import StubDataclassDoubleDerived
+from stubs.cl.runtime import StubDataclassListDictFields
+from stubs.cl.runtime import StubDataclassListFields
+from stubs.cl.runtime import StubDataclassNestedFields
+from stubs.cl.runtime import StubDataclassOptionalFields
+from stubs.cl.runtime import StubDataclassOtherDerived
+from stubs.cl.runtime import StubDataclassPrimitiveFields
+from stubs.cl.runtime import StubDataclassSingleton
+from stubs.cl.runtime import StubHandlers
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_aliased import StubDataclassAliased
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_tuple_fields import StubDataclassTupleFields
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_versioned import StubDataclassVersioned
 
-type_decl_dict = {
-    "Module": {"ModuleName": "Cl.Runtime.Backend.Core"},
-    "Name": "UiAppState",
-    "DisplayKind": "Basic",
-    "Elements": [
-        {"Value": {"Type": "String"}, "Name": "User", "Optional": True},
-    ],
-    "Keys": ["User"],
-}
+_SAMPLE_TYPES = [
+    UiAppState,
+    StubDataclass,
+    StubDataclassNestedFields,
+    StubDataclassComposite,
+    StubDataclassDerived,
+    StubDataclassDoubleDerived,
+    StubDataclassOtherDerived,
+    StubDataclassListFields,
+    StubDataclassTupleFields,
+    StubDataclassOptionalFields,
+    # TODO: StubDataclassDictFields,
+    # TODO: StubDataclassDictListFields,
+    StubDataclassListDictFields,
+    StubDataclassPrimitiveFields,
+    StubDataclassSingleton,
+    StubDataclassAliased,
+    StubHandlers,
+    StubDataclass,
+    StubDataclassVersioned,
+]
 
 
-def to_snake_case(data):
-    if isinstance(data, dict):
-        return {
-            CaseUtil.pascal_to_snake_case(key) if isinstance(key, str) else key: to_snake_case(value)
-            for key, value in data.items()
-        }
-    elif isinstance(data, list):
-        return [to_snake_case(item) for item in data]
-    else:
-        return data
+def test_type_decl():
+    """Test type decls generated for stub records."""
+    for record_type in _SAMPLE_TYPES:
 
+        # Get type declaration
+        type_name = typename(record_type)
+        type_decl: TypeDecl = TypeDecl.for_type(record_type)
+        assert type_decl is not None
 
-def test_to_type_decl_dict():
-    """Test TypeDecl.to_type_decl_dict method."""
+        # Create YAML string for the declaration
+        type_decl_str = BootstrapSerializers.YAML.serialize(type_decl)
 
-    record_types = [UiAppState, StubDataclassRecord]
-
-    for record_type in record_types:
-        type_decl = TypeDecl.for_type(UiAppState)
-        type_decl_dict = type_decl.to_type_decl_dict()
-        pass
+        # Record in regression guard
+        guard = RegressionGuard(channel=type_name)
+        guard.write(type_decl_str)
+    RegressionGuard().verify_all()
 
 
 if __name__ == "__main__":

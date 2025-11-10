@@ -1,10 +1,14 @@
-_t: StubDataclassOptionalFields
 Module:
-  ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_optional_fields
+  ModuleName: cl
 Name: StubDataclassOptionalFields
 Label: Stub Dataclass Optional Fields
 Comment: Stub derived class.
+TypeKind: Record
 DisplayKind: Basic
+Inherit:
+  Module:
+    ModuleName: cl
+  Name: StubDataclassOptionalFieldsKey
 Elements:
 - Value:
     Type: String
@@ -46,82 +50,73 @@ Elements:
   Vector: true
   Optional: true
   OptionalVectorElement: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data.StubDataclassData
-  Data:
+- Data:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data
+      ModuleName: cl
     Name: StubDataclassData
   Name: OptionalData
   Comment: Optional data.
   Optional: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data.StubDataclassData
-  Data:
+- Data:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data
+      ModuleName: cl
     Name: StubDataclassData
   Name: RequiredListOfOptionalData
   Comment: Required list of optional data.
   Vector: true
   OptionalVectorElement: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data.StubDataclassData
-  Data:
+- Data:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data
+      ModuleName: cl
     Name: StubDataclassData
   Name: OptionalListOfOptionalData
   Comment: Optional list of optional data.
   Vector: true
   Optional: true
   OptionalVectorElement: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record_key.StubDataclassRecordKey
-  Key:
+- Key:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record_key
-    Name: StubDataclassRecordKey
+      ModuleName: cl
+    Name: StubDataclassKey
   Name: OptionalKey
   Comment: Optional key.
   Optional: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record_key.StubDataclassRecordKey
-  Key:
+- Key:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record_key
-    Name: StubDataclassRecordKey
+      ModuleName: cl
+    Name: StubDataclassKey
   Name: RequiredListOfOptionalKey
   Comment: Required list of optional key.
   Vector: true
   OptionalVectorElement: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record_key.StubDataclassRecordKey
-  Key:
+- Key:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record_key
-    Name: StubDataclassRecordKey
+      ModuleName: cl
+    Name: StubDataclassKey
   Name: OptionalListOfOptionalKey
   Comment: Optional list of optional key.
   Vector: true
   Optional: true
   OptionalVectorElement: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record.StubDataclassRecord
-  Data:
+- Data:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record
-    Name: StubDataclassRecord
+      ModuleName: cl
+    Name: StubDataclass
   Name: OptionalRecord
   Comment: Optional record.
   Optional: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record.StubDataclassRecord
-  Data:
+- Data:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record
-    Name: StubDataclassRecord
+      ModuleName: cl
+    Name: StubDataclass
   Name: RequiredListOfOptionalRecord
   Comment: Required list of optional record.
   Vector: true
   OptionalVectorElement: true
-- _t: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record.StubDataclassRecord
-  Data:
+- Data:
     Module:
-      ModuleName: stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record
-    Name: StubDataclassRecord
+      ModuleName: cl
+    Name: StubDataclass
   Name: OptionalListOfOptionalRecord
   Comment: Optional list of optional record.
   Vector: true

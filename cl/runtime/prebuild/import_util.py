@@ -14,8 +14,7 @@
 
 import importlib
 import pkgutil
-from typing import List
-from cl.runtime.settings.context_settings import ContextSettings
+from cl.runtime.settings.env_settings import EnvSettings
 
 
 class ImportUtil:
@@ -25,9 +24,9 @@ class ImportUtil:
     def check_imports(cls) -> None:
         """Check that all imports succeed, output a detailed error message otherwise."""
         # Get the list of packages
-        context_packages = ContextSettings.instance().packages
+        env_packages = EnvSettings.instance().env_packages
         all_packages = []
-        for package in context_packages:
+        for package in env_packages:
             if package.startswith("stubs.") or package.startswith("tests."):
                 all_packages.append(package)
             else:
@@ -44,9 +43,9 @@ class ImportUtil:
             raise RuntimeError(f"Import errors occurred on launch:\n{import_errors_str}\n")
 
     @classmethod
-    def _check_package(cls, package_root: str) -> List[str]:
+    def _check_package(cls, package_root: str) -> list[str]:
         """Check package for import errors."""
-        errors: List[str] = []
+        errors: list[str] = []
         try:
             package_import = __import__(package_root)
         except ImportError as error:

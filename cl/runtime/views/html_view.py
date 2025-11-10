@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime import View
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.views.view import View
 
 
 @dataclass(slots=True, kw_only=True)
 class HtmlView(View):
     """Bytes for an HTML view."""
 
-    html_bytes: bytes = missing()
+    html_bytes: bytes = required()
     """Bytes for an HTML view."""

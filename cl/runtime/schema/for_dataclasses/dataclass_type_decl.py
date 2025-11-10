@@ -14,11 +14,11 @@
 
 import dataclasses
 from dataclasses import dataclass
+from typing import Self
 from typing import Set
-from typing import Type
-from typing import get_type_hints
+from typing import get_type_hints  # TODO: Use TypeHint class instead
 from memoization import cached
-from typing_extensions import Self
+from cl.runtime.records.typename import typename
 from cl.runtime.schema.element_decl import ElementDecl
 from cl.runtime.schema.for_dataclasses.dataclass_field_decl import DataclassFieldDecl
 from cl.runtime.schema.type_decl import TypeDecl
@@ -33,9 +33,9 @@ class DataclassTypeDecl(TypeDecl):
     @cached(custom_key_maker=for_type_key_maker)
     def for_type(
         cls,
-        record_type: Type,
+        record_type: type,
         *,
-        dependencies: Set[Type] | None = None,
+        dependencies: Set[type] | None = None,
         skip_fields: bool = False,
         skip_handlers: bool = False,
     ) -> Self:
@@ -50,27 +50,36 @@ class DataclassTypeDecl(TypeDecl):
         """
 
         if not dataclasses.is_dataclass(record_type):
-            raise RuntimeError(f"DataclassTypeDecl used for {record_type.__name__} which is not a dataclass.")
+            raise RuntimeError(f"DataclassTypeDecl used for {typename(record_type)} which is not a dataclass.")
 
         # Populate using TypeDecl base
         result = TypeDecl.for_type(record_type, dependencies=dependencies, skip_fields=True)
 
         # Use this flag to skip fields generation when the method is invoked from a derived class
         if not skip_fields:
+
             # Information about dataclass fields including the metadata (does not resolve ForwardRefs)
             fields = dataclasses.fields(record_type)
 
-            # Get type hints to resolve ForwardRefs
-            type_hints = get_type_hints(record_type)
+            # Get type aliases with resolved ForwardRefs
+            type_aliases = get_type_hints(record_type)
 
             # Dictionary of member comments (docstrings), currently requires source parsing due Python limitations
             member_comments = cls.get_member_comments(record_type)
 
             # Add elements
-            result.elements = []
             for field in fields:
+
+                # Create only if there is at least one field
+                if result.elements is None:
+                    result.elements = []
+
+                # Skip protected fields
+                if field.name.startswith("_"):
+                    continue
+
                 # Get type from type hints because they resolve forward references
-                field_type = type_hints[field.name]
+                field_type = type_aliases[field.name]
 
                 # Field comment (docstring)
                 field_comment = member_comments.get(field.name, None)

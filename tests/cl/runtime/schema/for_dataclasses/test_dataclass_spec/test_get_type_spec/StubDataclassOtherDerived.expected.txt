@@ -1,0 +1,10 @@
+type_: StubDataclassOtherDerived
+type_kind: Record
+fields:
+- field_name: id
+  field_type_hint:
+    schema_type: str
+- field_name: other_derived
+  field_type_hint:
+    schema_type: str
+

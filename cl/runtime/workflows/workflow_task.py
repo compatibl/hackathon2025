@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-from cl.runtime.context.context import Context
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.tasks.task import Task
 from cl.runtime.workflows.workflow_phase import WorkflowPhase
 from cl.runtime.workflows.workflow_phase_key import WorkflowPhaseKey
@@ -25,15 +25,12 @@ from cl.runtime.workflows.workflow_phase_key import WorkflowPhaseKey
 class WorkflowTask(Task):
     """Parent of workflow phase tasks who are in turn parents of tasks assigned to each phase."""
 
-    phases: List[WorkflowPhaseKey] = missing()
+    phases: list[WorkflowPhaseKey] = required()
     """Tasks run in parallel in the order of phases, however each phase waits until its prerequisites are completed."""
 
-    def execute(self) -> None:
-        # Get current context
-        context = Context.current()
-
+    def _execute(self) -> None:
         # Check that phases do not specify prerequisites
-        phases = context.load_many(WorkflowPhase, self.phases)  # TODO: Error message if not found
+        phases = active(DataSource).load_many(self.phases, cast_to=WorkflowPhase)  # TODO: Error message if not found
         if any(phase.prerequisites is not None for phase in phases):
             # TODO: Support checking for prerequisites
             raise RuntimeError("Checking for prerequisites is not yet supported.")

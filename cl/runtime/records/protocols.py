@@ -14,101 +14,303 @@
 
 import datetime as dt
 from enum import Enum
+from types import GenericAlias
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import Literal
-from typing import Protocol
-from typing import Tuple
-from typing import Type
+from typing import Mapping
+from typing import MutableMapping
+from typing import MutableSequence
+from typing import Sequence
 from typing import TypeGuard
 from typing import TypeVar
-from typing import runtime_checkable
 from uuid import UUID
+import numpy as np
+from bson import Int64
+from frozendict import frozendict
+from cl.runtime.records.typename import typename
 
-TPrimitive = str | float | bool | int | dt.date | dt.time | dt.datetime | UUID | bytes | None
-"""Supported primitive value types for serialized data in dictionary format."""
+PRIMITIVE_TYPES = (
+    str,
+    float,
+    np.float64,
+    bool,
+    int,
+    Int64,
+    dt.date,
+    dt.time,
+    dt.datetime,
+    UUID,
+    bytes,
+    type,
+)
+"""The list of Python classes used to store primitive types, not the same as type names."""
 
-TDataField = Dict[str, "TDataField"] | List["TDataField"] | TPrimitive | Enum | None
-"""Supported field types for serialized data in dictionary format."""
+PRIMITIVE_TYPE_NAMES = frozenset(type_.__name__ for type_ in PRIMITIVE_TYPES)
+"""The list of Python class names used to store primitive types, not the same as type names."""
 
-TDataDict = Dict[str, TDataField]
-"""Serialized data in dictionary format."""
+PREDICATE_TYPE_NAMES = (
+    "Predicate",  # Abstract base
+    "And",
+    "Exists",
+    "Gt",
+    "Gte",
+    "In",
+    "Lt",
+    "Lte",
+    "Not",
+    "NotIn",
+    "Or",
+    "Range",
+)
+"""Names of types that may be used to represent predicates, including abstract base classes."""
 
-TKeyField = Dict[str, "TKeyField"] | TPrimitive | Enum
-"""Supported field types for serialized key in dictionary format."""
+SEQUENCE_TYPES = (list, tuple)
+"""Types that may be used to represent sequences, excluding abstract base classes."""
 
-TKeyDict = Dict[str, TKeyField]
-"""Serialized key in dictionary format."""
+SEQUENCE_TYPE_NAMES = ("MutableSequence", "Sequence", "list", "tuple")
+"""Names of types that may be used to represent sequences, including abstract base classes."""
 
-TStamp = dt.datetime | UUID | None
-"""Timestamp or time-ordered globally unique identifier in UUID7 format."""  # TODO: Confirm UUID format to use
+MAPPING_TYPES = (dict, frozendict)
+"""Types that may be used to represent mappings, excluding abstract base classes."""
 
-TQuery = Tuple[
-    Type,  # Query type and its descendents will be returned by the query. It must include all query and order fields.
-    Dict[str, Any],  # NoSQL query conditions in MongoDB format.
-    Dict[str, Literal[1, -1]],  # NoSQL query order in MongoDB format.
-]
-"""NoSQL query data in MongoDB format."""
+MAPPING_TYPE_NAMES = ("MutableMapping", "Mapping", "dict", "frozendict")
+"""Names of types that may be used to represent mappings, including abstract base classes."""
 
-TRecord = TypeVar("TRecord")
-"""Generic type parameter for the record."""
+NDARRAY_TYPE_NAMES = ("ndarray", "NDArray")
+"""Names of types or generic aliases used for ndarray variables or generic aliases."""
 
-TKey = TypeVar("TKey")
-"""Generic type parameter for the key."""
+PrimitiveTypes = (
+    str | float | np.float64 | bool | int | Int64 | dt.date | dt.time | dt.datetime | UUID | bytes | type
+)  # TODO: Rename to PrimitiveType?
+"""Type alias for Python classes used to store primitive values."""
+
+SequenceTypes = list | tuple | Sequence | MutableSequence  # TODO: Replace by Sequence or MutableSequence?
+"""Type alias for a supported sequence type."""
+
+MappingTypes = dict | frozendict | Mapping | MutableMapping  # TODO: Replace by Mapping or MutableMapping?
+"""Type alias for a supported mapping type."""
+
+FloatArray = np.ndarray[Any, np.dtype[np.float64]]
+"""NumPy array with dtype=np.float64 and any number of dimensions."""
+
+FloatVector = np.ndarray[tuple[int], np.dtype[np.float64]]
+"""One-dimensional NumPy array with dtype=np.float64."""
+
+FloatMatrix = np.ndarray[tuple[int, int], np.dtype[np.float64]]
+"""Two-dimensional numpy array with dtype=np.float64."""
+
+FloatCube = np.ndarray[tuple[int, int, int], np.dtype[np.float64]]
+"""Three-dimensional numpy array with dtype=np.float64, sizes are not necessarily the same (not a literal cube)."""
+
+TObj = TypeVar("TObj")
+"""Generic type parameter for any object."""
 
 TEnum = TypeVar("TEnum", bound=Enum)
 """Generic type parameter for an enum."""
 
 
-@runtime_checkable
-class KeyProtocol(Protocol):
-    """Protocol implemented by keys and also required for records which are derived from keys."""
-
-    @classmethod
-    def get_key_type(cls) -> Type:
-        """Return key type even when called from a record."""
-
-
-class RecordProtocol(KeyProtocol):
-    """Protocol implemented by records but not keys."""
-
-    def get_key(self) -> KeyProtocol:
-        """Return a new key object whose fields populated from self, do not return self."""
+def is_empty(
+    data: Any,
+) -> bool:
+    """True if the argument is None or an empty primitive type, False for an empty sequence or mapping."""
+    # Do not use 'in' because data may be a sequence or mapping
+    return data is None or (isinstance(data, (str, bytes)) and len(data) == 0)
 
 
-class InitProtocol:
-    """Protocol implemented by objects that require initialization."""
-
-    def init(self) -> None:
-        """Same as __init__ but can be used when field values are set both during and after construction."""
-
-
-class ValidateProtocol:
-    """Protocol implemented by objects that support validation."""
-
-    def validate(self) -> None:
-        """Confirm that previously set fields correspond to a valid object state."""
+def is_type(type_: type) -> TypeGuard[type | GenericAlias]:
+    """Returns true if the argument is a genuine type or a generic alias, including third party aliases."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    return isinstance(type_, GenericAlias) or isinstance(type_, type)
 
 
-def is_record(type_or_obj: Any) -> TypeGuard[RecordProtocol]:
-    """Check if type or object is a key (supports RecordProtocol) based on the presence of 'get_key' attribute."""
-    return hasattr(type_or_obj, "get_key")
+def is_primitive_type(type_: type) -> TypeGuard[type[PrimitiveTypes]]:
+    """Returns true if the argument is one of the supported primitive types."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        # Use class names to avoid import discrepancies for UUID
+        # Use type_name == "dtype" to include numpy dtype generics
+        # Use isinstance(type_, type) to guard issubclass() against unsupported GenericAlias classes.
+        # Use issubclass(type_, type) to include ABCMeta and other metaclasses of type.
+        return (
+            type_name in PRIMITIVE_TYPE_NAMES
+            or type_name == "dtype"
+            or (isinstance(type_, type) and issubclass(type_, type))
+        )
+    else:
+        raise RuntimeError(
+            f"The argument of is_primitive_type is an instance of type {type(type_).__name__}\n"
+            f"rather than type variable for this type, use type(arg) instead of arg."
+        )
 
 
-def is_key(type_or_obj: Any) -> TypeGuard[KeyProtocol]:
+def is_enum_type(type_: type) -> TypeGuard[type[Enum]]:
+    """Derived from Enum but not one of the base enum classes and the name does not start from underscore."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    # Use isinstance(type_, type) to guard issubclass() against GenericAlias classes.
+    # Use issubclass(type_, Enum) to check if derived from Enum.
+    # Use type_.__module__ != "enum" to exclude base enum classes.
+    # Use not type_name.startswith("_") to exclude private enum classes.
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return (
+            isinstance(type_, type)
+            and issubclass(type_, Enum)
+            and type_.__module__ != "enum"
+            and not type_name.startswith("_")
+        )
+    else:
+        raise RuntimeError(
+            f"The argument of is_enum_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_sequence_type(type_: type) -> TypeGuard[type[SequenceTypes]]:
+    """Returns true if the argument is one of the supported sequence types."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return type_name in SEQUENCE_TYPE_NAMES
+    else:
+        raise RuntimeError(
+            f"The argument of is_sequence_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_mapping_type(type_: type) -> TypeGuard[type[MappingTypes]]:
+    """Returns true if the argument is one of the supported mapping types."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return type_name in MAPPING_TYPE_NAMES
+    else:
+        raise RuntimeError(
+            f"The argument of is_mapping_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_ndarray_type(type_: type) -> TypeGuard[type[np.ndarray]]:
+    """Returns true if the argument is ndarray or one of its supported generic aliases."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        # Will match np.ndarray or generic alias for ndarray (including, currently, for NDArray)
+        return type_name in NDARRAY_TYPE_NAMES
+    else:
+        raise RuntimeError(
+            f"The argument of is_ndarray_type is an instance of type {type(type_).__name__}\nrather than type variable for this type or a generic alias,\nuse type(arg) instead of arg."
+        )
+
+
+def is_abstract_type(type_: type) -> bool:
+    """True if the argument is an abstract class."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return bool(getattr(type_, "__abstractmethods__", None))
+    else:
+        raise RuntimeError(
+            f"The argument of is_abstract_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_mixin_type(type_: type) -> bool:
+    """True if the argument is a mixin class (class without instance fields), detected by classname suffix."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return typename(type_).endswith("Mixin")
+    else:
+        raise RuntimeError(
+            f"The argument of is_mixin_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_builder_type(type_: type) -> bool:
     """
-    Check if type or object is a key (supports KeyProtocol) but not a record (does not support RecordProtocol)
-    based on the presence of 'get_key_type' attribute and the absence of 'get_key' attribute.
+    True if the argument has 'build' method (includes data, keys and records), may be abstract or a mixin.
+    Excludes classes whose name starts from underscore.
     """
-    return hasattr(type_or_obj, "get_key_type") and not hasattr(type_or_obj, "get_key")
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return hasattr(type_, "build") and not type_name.startswith("_")
+    else:
+        raise RuntimeError(
+            f"The argument of is_builder_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
 
 
-def has_init(type_or_obj: Any) -> TypeGuard[InitProtocol]:
-    """Check if type or object requires initialization (InitProtocol) based on the presence of 'init' attribute."""
-    return hasattr(type_or_obj, "init")
+def is_data_key_or_record_type(type_: type) -> bool:
+    """
+    True if the argument has 'get_field_names' method (includes data, keys and records), may be abstract or a mixin.
+    Excludes classes whose name starts from underscore.
+    """
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return hasattr(type_, "get_field_names") and not type_name.startswith("_")
+    else:
+        raise RuntimeError(
+            f"The argument of is_data_key_or_record_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
 
 
-def has_validate(type_or_obj: Any) -> TypeGuard[ValidateProtocol]:
-    """Check if type or object supports validation (ValidateProtocol) based on the presence of 'validate' attribute."""
-    return hasattr(type_or_obj, "validate")
+def is_key_or_record_type(type_: type) -> bool:
+    """
+    True if the argument has 'get_key_type' method, may be abstract or a mixin.
+    Excludes classes whose name starts from underscore.
+    """
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return hasattr(type_, "get_key_type") and not type_name.startswith("_")
+    else:
+        raise RuntimeError(
+            f"The argument of is_key_or_record_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_data_type(type_: type) -> bool:
+    """
+    True if the argument has 'get_field_names' method but not 'get_key_type' method, may be abstract or a mixin.
+    Excludes classes whose name starts from underscore.
+    """
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return (
+            hasattr(type_, "get_field_names") and not hasattr(type_, "get_key_type") and not type_name.startswith("_")
+        )
+    else:
+        raise RuntimeError(
+            f"The argument of is_data_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_key_type(type_: type) -> bool:
+    """
+    True if the argument has 'get_key_type' method but not 'get_key' method, may be abstract or a mixin.
+    Excludes classes whose name starts from underscore.
+    """
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return hasattr(type_, "get_key_type") and not hasattr(type_, "get_key") and not type_name.startswith("_")
+    else:
+        raise RuntimeError(
+            f"The argument of is_key_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_record_type(type_: type) -> bool:
+    """
+    Return True if the argument has 'get_key' method, may be abstract or a mixin.
+    Excludes classes whose name starts from underscore.
+    """
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        return hasattr(type_, "get_key") and not type_name.startswith("_")
+    else:
+        raise RuntimeError(
+            f"The argument of is_record_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )
+
+
+def is_predicate_type(type_: type) -> bool:
+    """Returns true if the argument is one of the supported query predicate types."""
+    # Do not use isinstance(type_, type) to accept GenericAlias classes, including from packages (e.g., numpy)
+    if (type_name := getattr(type_, "__name__", None)) is not None:
+        # Use class names to avoid a cyclic reference
+        return type_name in PREDICATE_TYPE_NAMES
+    else:
+        raise RuntimeError(
+            f"The argument of is_predicate_type is an instance of type {type(type_).__name__}\nrather than type variable for this type, use type(arg) instead of arg."
+        )

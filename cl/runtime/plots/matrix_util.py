@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-from typing import Optional
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 
@@ -34,16 +32,16 @@ class MatrixUtil:
     @staticmethod
     def convert_confusion_matrix_to_percent(data: pd.DataFrame) -> pd.DataFrame:
         # convert to percents row-wise
-        result = data / data.values.sum(axis=1) * 100
+        result = data / data.values.sum(axis=1, keepdims=True) * 100
 
         return result
 
     @staticmethod
-    def create_confusion_matrix_labels(data: pd.DataFrame, in_percent: Optional[bool] = False) -> List[List[str]]:
+    def create_confusion_matrix_labels(data: pd.DataFrame, in_percent: bool | None = False) -> list[list[str]]:
         # str of each non-zero element of data for annotations
 
         if in_percent:
-            data_percent = data.values / data.values.sum(axis=1) * 100
+            data_percent = data.values / data.values.sum(axis=1, keepdims=True) * 100
             annotation_text = [[f"{y:.2f}%" if y != 0 else "" for y in x] for x in data_percent]
         else:
             annotation_text = [[str(y) if y != 0 else "" for y in x] for x in data.values]

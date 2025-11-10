@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.settings.labels.field_label_key import FieldLabelKey
 
 
 @dataclass(slots=True, kw_only=True)
-class FieldLabel(FieldLabelKey, RecordMixin[FieldLabelKey]):
+class FieldLabel(FieldLabelKey, RecordMixin):
     """
     Custom field label overrides the standard 'field_name' -> 'Field Name' transformation.
 
@@ -28,8 +28,8 @@ class FieldLabel(FieldLabelKey, RecordMixin[FieldLabelKey]):
         - This UI setting does not affect the REST API
     """
 
-    field_label: str = missing()
+    field_label: str = required()
     """Custom field label overrides the standard 'field_name' -> 'Field Name' transformation."""
 
     def get_key(self) -> FieldLabelKey:
-        return FieldLabelKey(field_name=self.field_name)
+        return FieldLabelKey(field_name=self.field_name).build()

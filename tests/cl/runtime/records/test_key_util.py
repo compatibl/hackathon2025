@@ -14,15 +14,23 @@
 
 import pytest
 from cl.runtime.records.key_util import KeyUtil
-from cl.runtime.schema.module_decl import ModuleDecl
-from cl.runtime.schema.type_decl import TypeDecl
+from stubs.cl.runtime import StubDataclassKey
 
 
-def test_get_key_fields():
-    """Test KeyUtil.get_key_fields method."""
+def test_get_hash():
+    """Test KeyMixin.get_hash method."""
 
-    assert KeyUtil.get_key_fields(TypeDecl) == ["module", "name"]
-    assert KeyUtil.get_key_fields(ModuleDecl) == ["module_name"]
+    sample_a = StubDataclassKey(id="a").build()
+    sample_b = StubDataclassKey(id="b").build()
+    sample_set_a = {KeyUtil.get_hash(sample_a), KeyUtil.get_hash(sample_a)}
+    assert len(sample_set_a) == 1
+
+    sample_set_b = {KeyUtil.get_hash(sample_a), KeyUtil.get_hash(sample_b)}
+    assert len(sample_set_b) == 2
+
+    with pytest.raises(Exception, match="not frozen"):
+        # Not frozen
+        KeyUtil.get_hash(StubDataclassKey(id="a"))
 
 
 if __name__ == "__main__":

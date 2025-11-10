@@ -13,21 +13,20 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Dict
-from cl.runtime.records.dataclasses_extensions import missing
-from cl.runtime.records.protocols import KeyProtocol
-from cl.runtime.records.protocols import TPrimitive
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True, kw_only=True)
-class DagNodeData:
+class DagNodeData(DataclassMixin):
     """Directed acyclic graph (DAG) node data."""
 
-    label: str = missing()
+    label: str = required()
     """Node label."""
 
-    node_data: Dict[str, TPrimitive] | None = missing()
+    node_data: dict[str, str] | None = None
     """Optional node data."""
 
-    node_data_reference: KeyProtocol | None = missing()
+    node_data_reference: KeyMixin | None = None
     """Optional node data reference."""

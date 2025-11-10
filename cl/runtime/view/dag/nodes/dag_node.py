@@ -14,27 +14,26 @@
 
 from dataclasses import dataclass
 from typing import Any
-from typing import Dict
-from typing import Optional
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.view.dag.dag_node_data import DagNodeData
 from cl.runtime.view.dag.dag_node_position import DagNodePosition
 
 
 @dataclass(slots=True, kw_only=True)
-class DagNode:
+class DagNode(DataclassMixin):
     """Directed acyclic graph (DAG) node."""
 
-    id_: str = missing()
+    id_: str = required()
     """Node unique identifier."""
 
-    position: DagNodePosition | None = missing()
+    position: DagNodePosition | None = None
     """Node UI position."""
 
-    data: DagNodeData = missing()
+    data: DagNodeData = required()
     """Node internal data."""
 
-    def to_networkx(self) -> Dict[str, Any]:
+    def to_networkx(self) -> dict[str, Any]:
         """Transform node to networkx representation."""
         result = {
             "node_for_adding": self.id_,

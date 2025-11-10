@@ -14,29 +14,24 @@
 
 import datetime as dt
 from dataclasses import dataclass
-from typing import Dict
-from typing import List
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.extensions import required
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclass
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclassKey
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data import StubDataclassData
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_derived_record import StubDataclassDerivedRecord
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_derived import StubDataclassDerived
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_data_dict_factory
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_date_dict_factory
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import (
-    stub_dataclass_derived_record_dict_factory,
-)
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_derived_dict_factory
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_key_dict_factory
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_record_dict_factory
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record import StubDataclassRecord
-from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_record import StubDataclassRecordKey
 
 
-def stub_dataclass_str_dict_list_factory() -> List[str]:
+def stub_dataclass_str_dict_list_factory() -> list[str]:
     """Create stub values."""
     return ["abc", "def"]
 
 
-def stub_dataclass_float_dict_list_factory() -> List[Dict[str, float]]:
+def stub_dataclass_float_dict_list_factory() -> list[dict[str, float]]:
     """Create stub values."""
     return [
         {"a": 1.0},
@@ -44,7 +39,7 @@ def stub_dataclass_float_dict_list_factory() -> List[Dict[str, float]]:
     ]
 
 
-def stub_dataclass_date_dict_list_factory() -> List[Dict[str, dt.date]]:
+def stub_dataclass_date_dict_list_factory() -> list[dict[str, dt.date]]:
     """Create stub values."""
     return [
         stub_dataclass_date_dict_factory(),
@@ -52,7 +47,7 @@ def stub_dataclass_date_dict_list_factory() -> List[Dict[str, dt.date]]:
     ]
 
 
-def stub_dataclass_data_dict_list_factory() -> List[Dict[str, StubDataclassData]]:
+def stub_dataclass_data_dict_list_factory() -> list[dict[str, StubDataclassData]]:
     """Create stub values."""
     return [
         stub_dataclass_data_dict_factory(),
@@ -60,7 +55,7 @@ def stub_dataclass_data_dict_list_factory() -> List[Dict[str, StubDataclassData]
     ]
 
 
-def stub_dataclass_key_dict_list_factory() -> List[Dict[str, StubDataclassRecordKey]]:
+def stub_dataclass_key_dict_list_factory() -> list[dict[str, StubDataclassKey]]:
     """Create stub values."""
     return [
         stub_dataclass_key_dict_factory(),
@@ -68,7 +63,7 @@ def stub_dataclass_key_dict_list_factory() -> List[Dict[str, StubDataclassRecord
     ]
 
 
-def stub_dataclass_record_dict_list_factory() -> List[Dict[str, StubDataclassRecord]]:
+def stub_dataclass_record_dict_list_factory() -> list[dict[str, StubDataclass]]:
     """Create stub values."""
     return [
         stub_dataclass_record_dict_factory(),
@@ -76,30 +71,28 @@ def stub_dataclass_record_dict_list_factory() -> List[Dict[str, StubDataclassRec
     ]
 
 
-def stub_dataclass_derived_record_dict_list_factory() -> List[Dict[str, StubDataclassDerivedRecord]]:
+def stub_dataclass_derived_dict_list_factory() -> list[dict[str, StubDataclassDerived]]:
     """Create stub values."""
     return [
-        stub_dataclass_derived_record_dict_factory(),
-        stub_dataclass_derived_record_dict_factory(),
+        stub_dataclass_derived_dict_factory(),
+        stub_dataclass_derived_dict_factory(),
     ]
 
 
 @dataclass(slots=True, kw_only=True)
-class StubDataclassDictListFields(StubDataclassRecord):
+class StubDataclassDictListFields(StubDataclass):
     """Stub record whose elements are dictionaries."""
 
-    float_dict_list: List[Dict[str, float]] = field(default_factory=stub_dataclass_float_dict_list_factory)
+    float_dict_list: list[dict[str, float]] = required(default_factory=stub_dataclass_float_dict_list_factory)
     """Stub field."""
 
-    date_dict_list: List[Dict[str, dt.date]] = field(default_factory=stub_dataclass_date_dict_list_factory)
+    date_dict_list: list[dict[str, dt.date]] = required(default_factory=stub_dataclass_date_dict_list_factory)
     """Stub field."""
 
-    record_dict_list: List[Dict[str, StubDataclassRecord]] = field(
-        default_factory=stub_dataclass_record_dict_list_factory
-    )
+    record_dict_list: list[dict[str, StubDataclass]] = required(default_factory=stub_dataclass_record_dict_list_factory)
     """Stub field."""
 
-    derived_record_dict_list: List[Dict[str, StubDataclassDerivedRecord]] = field(
-        default_factory=stub_dataclass_derived_record_dict_list_factory
+    derived_dict_list: list[dict[str, StubDataclassDerived]] = required(
+        default_factory=stub_dataclass_derived_dict_list_factory
     )
     """Stub field."""

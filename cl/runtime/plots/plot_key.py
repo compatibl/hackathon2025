@@ -13,18 +13,18 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class PlotKey(KeyMixin):
+@dataclass(slots=True)
+class PlotKey(DataclassMixin, KeyMixin):
     """Base class for plot objects."""
 
-    plot_id: str = missing()
+    plot_id: str = required()
     """Unique plot identifier."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return PlotKey

@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.settings.labels.method_label_key import MethodLabelKey
 
 
 @dataclass(slots=True, kw_only=True)
-class MethodLabel(MethodLabelKey, RecordMixin[MethodLabelKey]):
+class MethodLabel(MethodLabelKey, RecordMixin):
     """
     Custom method label overrides the standard 'method_name' -> 'Method Name' transformation.
 
@@ -28,8 +28,8 @@ class MethodLabel(MethodLabelKey, RecordMixin[MethodLabelKey]):
         - This UI setting does not affect the REST API
     """
 
-    method_label: str = missing()
+    method_label: str = required()
     """Custom method label overrides the standard 'method_name' -> 'Method Name' transformation."""
 
     def get_key(self) -> MethodLabelKey:
-        return MethodLabelKey(method_name=self.method_name)
+        return MethodLabelKey(method_name=self.method_name).build()

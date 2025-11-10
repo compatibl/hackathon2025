@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.qa.regression_guard import RegressionGuard
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 
 
 @dataclass(slots=True, kw_only=True)
-class StubDataclassData:
+class StubDataclassData(DataclassMixin):
     """Stub base data type."""
 
     str_field: str = "abc"
@@ -26,3 +26,11 @@ class StubDataclassData:
 
     int_field: int = 123
     """Stub field."""
+
+    _regression_guard: RegressionGuard | None = None
+    """Optional regression guard for testing."""
+
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        if self._regression_guard:
+            self._regression_guard.write("StubDataclassData.__init")

@@ -13,19 +13,17 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class StubDataclassOptionalFieldsKey(KeyMixin):
+@dataclass(slots=True)
+class StubDataclassOptionalFieldsKey(DataclassMixin, KeyMixin):
     """Stub derived class."""
 
     id: str = "abc"
     """Unique identifier."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return StubDataclassOptionalFieldsKey

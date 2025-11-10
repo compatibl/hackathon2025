@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from typing import Self
+from memoization import cached
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.schema.handler_variable_decl import HandlerVariableDecl
 
 
@@ -22,5 +23,12 @@ from cl.runtime.schema.handler_variable_decl import HandlerVariableDecl
 class HandlerParamDecl(HandlerVariableDecl):
     """Handler parameter declaration."""
 
-    name: str = missing()
+    name: str = required()
     """Parameter name."""
+
+    @classmethod
+    @cached
+    def create(cls, name: str, variable_decl: HandlerVariableDecl) -> Self:
+        result = variable_decl.clone_as(HandlerParamDecl)
+        result.name = name
+        return result

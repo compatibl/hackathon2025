@@ -1,0 +1,1 @@
+{"_type":"StubDataclassOtherDerived","id":"abc","other_derived":"other_derived"}

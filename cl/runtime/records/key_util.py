@@ -12,59 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
-import inspect
-import textwrap
-from typing import List
-from typing import Type
+from typing import cast
+from cl.runtime.records.key_mixin import KeyMixin
+from cl.runtime.records.protocols import is_key_type, is_record_type
+from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.records.typename import typenameof
+from cl.runtime.records.typename import typeof
 
 
 class KeyUtil:
-    """Utilities for working with keys."""
+    """Helper methods for key types."""
 
-    # TODO: Extract from key class instead
     @classmethod
-    def get_key_fields(cls, record_type: Type) -> List[str] | None:
-        """
-        Get primary key fields by parsing the source of 'get_key' method of 'record_type'.
+    def is_equal(cls, obj: KeyMixin, other: KeyMixin) -> bool:
+        """Compare keys when arguments are keys or records."""
+        obj_key = cast(RecordMixin, obj).get_key() if is_record_type(type(obj)) else obj
+        other_key = cast(RecordMixin, other).get_key() if is_record_type(type(other)) else other
+        return obj_key == other_key
 
-        Notes:
-            This method parses the source code of 'get_key' method of 'record_type' and returns all
-            instance fields it accesses in the order of access, for example if 'get_key' source is:
-
-            def get_key(self) -> MyKey:
-                return MyKey(key_field_1=self.key_field_1, key_field_2=self.key_field_2)
-
-            this method will return:
-
-            ["key_field_1", "key_field_2"]
-
-        Args:
-            record_type: Class where 'get_key' method is implemented
-        """
-
-        # Get source code for the 'get_key' method
-        if hasattr(record_type, "get_key"):
-            get_key_source = inspect.getsource(record_type.get_key)
+    @classmethod
+    def get_hash(cls, key: KeyMixin) -> int:
+        """Get hash for key types only, error if not a key type or not frozen."""
+        if is_key_type(typeof(key)):
+            if key.is_frozen():
+                # Invoke hash for each field to call hash recursively for the inner key fields of composite keys
+                return hash(tuple(hash(getattr(key, field_name)) for field_name in key.get_field_names()))
+            else:
+                raise RuntimeError(f"Cannot hash an instance of {typenameof(key)} because it is not frozen.")
         else:
-            # TODO: Determine if a flag is needed for element types to prevent keys lookup
-            return None
-            # raise RuntimeError(
-            #    f"Cannot get key fields because record type {record_type.__name__} "
-            #    f"does not implement 'get_key' method."
-            # )
-
-        # Because 'ast' expects the code to be correct as though it is at top level,
-        # remove excess indent from the source to make it suitable for parsing
-        get_key_source = textwrap.dedent(get_key_source)
-
-        # Extract field names from the AST of 'get_key' method
-        get_key_ast = ast.parse(get_key_source)
-        key_fields = []
-        for node in ast.walk(get_key_ast):
-            # Find every instance field of accessed inside the source of 'get_key' method.
-            # Accumulate in list in the order they are accessed
-            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "self":
-                key_fields.append(node.attr)
-
-        return key_fields
+            raise RuntimeError(f"Cannot hash an instance of {typeof(key)} because it is not a key.")

@@ -13,19 +13,36 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
+from typing import Final
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
+# Temporary global module name, common to all types.
+GLOBAL_MODULE_NAME: Final[str] = "cl"
 
-@dataclass(slots=True, kw_only=True)
-class ModuleDeclKey(KeyMixin):
+
+@dataclass(slots=True)
+class ModuleDeclKey(DataclassMixin, KeyMixin):
     """Specifies module path in dot-delimited format."""
 
-    module_name: str = missing()
+    module_name: str = required()
     """Module name in dot-delimited format."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return ModuleDeclKey
+
+    def __init(self):
+        # TODO (Roman): Change the schema so that UI does not have to concatenate the module and type name to get the
+        #  key in the schema dict. Sensitive case: drill down polymorphic field when the field value is a derived class,
+        #  but in the declaration it is a base class.
+        if self.module_name is not None and self.module_name != GLOBAL_MODULE_NAME:
+            raise RuntimeError(
+                "Using a real module name leads to schema inconsistency for UI. "
+                "The module name is temporarily global and should not be specified manually. "
+                "Please create ModuleDeclKey without init parameters."
+            )
+
+        # Set global module name.
+        self.module_name = GLOBAL_MODULE_NAME

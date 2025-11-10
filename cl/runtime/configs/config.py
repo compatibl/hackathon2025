@@ -20,11 +20,11 @@ from cl.runtime.records.record_mixin import RecordMixin
 
 
 @dataclass(slots=True, kw_only=True)
-class Config(ConfigKey, RecordMixin[ConfigKey], ABC):
+class Config(ConfigKey, RecordMixin, ABC):
     """Performs configuration using parameters specified in this record."""
 
     def get_key(self) -> ConfigKey:
-        return ConfigKey(config_id=self.config_id)
+        return ConfigKey(config_id=self.config_id).build()
 
     @abstractmethod
     def run_configure(self) -> None:

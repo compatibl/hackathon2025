@@ -14,27 +14,27 @@
 
 from dataclasses import dataclass
 from typing import Any
-from typing import Dict
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 
 
 @dataclass(slots=True, kw_only=True)
-class DagEdge:
+class DagEdge(DataclassMixin):
     """Directed acyclic graph (DAG) node edge."""
 
-    id_: str = missing()
+    id_: str = required()
     """Unique edge identifier."""
 
-    label: str | None = missing()
+    label: str | None = None
     """Optional edge label."""
 
-    source: str = missing()
+    source: str = required()
     """Source node id."""
 
-    target: str = missing()
+    target: str = required()
     """Target node id."""
 
-    def to_networkx(self) -> Dict[str, Any]:
+    def to_networkx(self) -> dict[str, Any]:
         """Transform node to networkx representation."""
         result = {
             "u_of_edge": self.source,

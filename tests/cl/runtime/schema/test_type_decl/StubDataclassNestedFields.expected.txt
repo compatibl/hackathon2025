@@ -1,0 +1,62 @@
+module:
+  module_name: cl
+name: StubDataclassNestedFields
+label: Stub Dataclass Nested Fields
+comment: Stub derived class.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclass
+elements:
+- value:
+    type_: String
+  name: Id
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassData
+  name: BaseField
+  comment: Stub field.
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassDerivedData
+  name: DerivedField
+  comment: Stub field.
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassDoubleDerivedData
+  name: DoubleDerivedField
+  comment: Stub field.
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassData
+  name: PolymorphicField
+  comment: Declared StubDataclassData but provided an instance of 
+    StubDataclassDerivedData.
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassDerivedData
+  name: PolymorphicDerivedField
+  comment: Declared StubDataclassDerivedData but provided an instance of 
+    StubDataclassDoubleDerivedData.
+- key_:
+    module:
+      module_name: cl
+    name: StubDataclassKey
+  name: KeyField
+  comment: Stub field.
+- key_:
+    module:
+      module_name: cl
+    name: StubDataclassKey
+  name: RecordAsKeyField
+  comment: Stub field with key type initialized to record type instance.
+keys:
+- Id
+

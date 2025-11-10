@@ -1,4 +1,2 @@
-primitive,embedded_1,embedded_2
-nested_primitive_1,embedded_key_id_1a,embedded_key_id_1b
-nested_primitive_2,embedded_key_id_2a,embedded_key_id_2b
-nested_primitive_3,embedded_key_id_3a,embedded_key_id_3b
+﻿_type,id,base_field,derived_field,double_derived_field,polymorphic_field,polymorphic_derived_field,key_field,record_as_key_field
+StubDataclassNestedFields,abc,"{""str_field"":""abc"",""int_field"":123,""_type"":""StubDataclassData""}","{""str_field"":""abc"",""int_field"":123,""derived_str_field"":""derived"",""_type"":""StubDataclassDerivedData""}","{""str_field"":""abc"",""int_field"":123,""derived_str_field"":""derived"",""double_derived_str_field"":""double_derived"",""_type"":""StubDataclassDoubleDerivedData""}","{""str_field"":""abc"",""int_field"":123,""derived_str_field"":""derived"",""_type"":""StubDataclassDerivedData""}","{""str_field"":""abc"",""int_field"":123,""derived_str_field"":""derived"",""double_derived_str_field"":""double_derived"",""_type"":""StubDataclassDoubleDerivedData""}",uvw,"{""id"":""abc"",""_type"":""StubDataclass""}"

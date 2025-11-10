@@ -1,0 +1,10 @@
+type_: StubDataclassAliased
+type_kind: Record
+fields:
+- field_name: id
+  field_type_hint:
+    schema_type: str
+- field_name: a
+  field_type_hint:
+    schema_type: int
+

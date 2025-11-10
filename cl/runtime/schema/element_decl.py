@@ -13,14 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing_extensions import Self
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
-from cl.runtime.schema.enum_decl_key import EnumDeclKey
+from typing import Self
+from cl.runtime.primitive.case_util import CaseUtil
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.schema.container_kind import ContainerKind
 from cl.runtime.schema.field_decl import FieldDecl
 from cl.runtime.schema.member_decl import MemberDecl
-from cl.runtime.schema.module_decl_key import ModuleDeclKey
-from cl.runtime.schema.type_decl_key import TypeDeclKey
+from cl.runtime.schema.type_kind import TypeKind
 from cl.runtime.schema.value_decl import ValueDecl
 
 
@@ -28,31 +27,34 @@ from cl.runtime.schema.value_decl import ValueDecl
 class ElementDecl(MemberDecl):  # TODO: Consider renaming to TypeFieldDecl or FieldDecl
     """Type element declaration."""
 
-    name: str = missing()
+    name: str = required()
     """Element name."""
 
-    label: str | None = missing()
+    label: str | None = None
     """Element label. If not specified, name is used instead."""
 
-    comment: str | None = missing()
+    comment: str | None = None
     """Element comment. Contains addition information."""
 
-    vector: bool | None = missing()  # TODO: Replace by container field with enum values vector/array, dict, DF
+    vector: bool | None = None  # TODO: Replace by container field with enum values vector/array, dict, DF
     """Flag indicating variable size array (vector) container."""
 
-    optional: bool | None = missing()
+    optional: bool | None = None
     """Flag indicating optional element."""
 
-    optional_vector_element: bool | None = missing()  # TODO: Rename to optional_element or optional_field
+    optional_vector_element: bool | None = None  # TODO: Rename to optional_element or optional_field
     """Flag indicating optional vector item element."""
 
-    additive: bool | None = missing()
+    read_only: bool | None = None
+    """Flag indicating readonly element."""
+
+    additive: bool | None = None
     """Optional flag indicating if the element is additive and that the total column can be shown in the UI."""
 
-    format_: str | None = field(name="Format")  # TODO: Use Python interpolated string format
+    format_: str | None = None  # TODO: Use Python interpolated string format
     """Specifies UI Format for the element."""
 
-    alternate_of: str | None = missing()
+    alternate_of: str | None = None
     """Link current element to AlternateOf element. In the editor these elements will be treated as a choice."""
 
     @classmethod
@@ -60,42 +62,43 @@ class ElementDecl(MemberDecl):  # TODO: Consider renaming to TypeFieldDecl or Fi
         """Create ElementDecl from FieldDecl."""
 
         result = ElementDecl()
-        result.name = field_decl.name
+        result.name = CaseUtil.snake_to_pascal_case(field_decl.name.removesuffix("_"))
         result.label = field_decl.label
         result.comment = field_decl.comment
         result.optional = field_decl.optional_field
-        result.optional_vector_element = field_decl.optional_values
+        if field_decl.container is not None:
+            result.optional_vector_element = field_decl.container.optional_items
+        else:
+            result.optional_vector_element = None
         result.additive = None  # TODO: Support in metadata
         result.format_ = field_decl.formatter
         result.alternate_of = None  # TODO: Support in metadata
 
-        if field_decl.field_kind == "primitive":
-            # Primitive type
-            result.value = ValueDecl.create(field_decl.field_type)
-        else:
-            # Complex type
-            module_name, type_name = field_decl.field_type.rsplit(".", 1)
+        # Complex type
+        match field_decl.field_kind:
+            case TypeKind.PRIMITIVE:
+                # Primitive type, create declaration from name
+                result.value = ValueDecl.for_type_name(field_decl.field_type_decl.name)
+            case TypeKind.ENUM:
+                result.enum = field_decl.field_type_decl
+            case TypeKind.KEY:
+                result.key_ = field_decl.field_type_decl
+            case TypeKind.RECORD | TypeKind.DATA:
+                result.data = field_decl.field_type_decl
+            case _:
+                raise RuntimeError(f"Unsupported field kind {field_decl.field_kind.name} for field {field_decl.name}.")
 
-            if field_decl.field_kind == "enum":
-                module_key = ModuleDeclKey(module_name=module_name)
-                result.enum = EnumDeclKey(module=module_key, name=type_name)
-            elif field_decl.field_kind == "key":
-                module_key = ModuleDeclKey(module_name=module_name)
-                result.key_ = TypeDeclKey(module=module_key, name=type_name)
-            elif field_decl.field_kind == "data":
-                module_key = ModuleDeclKey(module_name=module_name)
-                result.data = TypeDeclKey(module=module_key, name=type_name)
-            else:
-                raise RuntimeError(f"Unsupported field kind {field_decl.field_kind} for field {field_decl.name}.")
-
-        if field_decl.container_type is None:
-            result.vector = False
-        elif field_decl.container_type == "list":
-            result.vector = True
-        elif field_decl.container_type == "dict":
-            # TODO (Roman): Use another way to define the dict field. This is currently legacy format.
-            result.value = ValueDecl(type_="Dict")
-        else:
-            raise RuntimeError(f"Unsupported container type {field_decl.container_type} for field {field_decl.name}.")
+        if field_decl.container is not None:
+            match field_decl.container.container_kind:
+                case ContainerKind.LIST:
+                    result.vector = True
+                case ContainerKind.DICT:
+                    # TODO (Roman): This is legacy format, use another way to define the dict field
+                    result.value = ValueDecl(type_="Dict")
+                case _:
+                    raise RuntimeError(
+                        f"Unsupported container kind {field_decl.container.container_kind.name} "
+                        f"for field {field_decl.name}."
+                    )
 
         return result

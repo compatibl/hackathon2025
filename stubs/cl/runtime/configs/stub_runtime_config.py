@@ -13,27 +13,33 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.backend.core.ui_app_state import UiAppState
-from cl.runtime.backend.core.user_key import UserKey
 from cl.runtime.configs.config import Config
-from cl.runtime.context.context import Context
-from cl.runtime.plots.group_bar_plot import GroupBarPlot
-from stubs.cl.runtime import StubDataclassDerivedFromDerivedRecord
-from stubs.cl.runtime import StubDataclassDerivedRecord
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from stubs.cl.runtime import StubDataclass
+from stubs.cl.runtime import StubDataclassComposite
+from stubs.cl.runtime import StubDataclassDerived
 from stubs.cl.runtime import StubDataclassDictFields
 from stubs.cl.runtime import StubDataclassDictListFields
+from stubs.cl.runtime import StubDataclassDoubleDerived
 from stubs.cl.runtime import StubDataclassListDictFields
 from stubs.cl.runtime import StubDataclassListFields
 from stubs.cl.runtime import StubDataclassNestedFields
 from stubs.cl.runtime import StubDataclassOptionalFields
-from stubs.cl.runtime import StubDataclassOtherDerivedRecord
+from stubs.cl.runtime import StubDataclassOtherDerived
 from stubs.cl.runtime import StubDataclassPrimitiveFields
-from stubs.cl.runtime import StubDataclassRecord
 from stubs.cl.runtime import StubDataclassSingleton
+from stubs.cl.runtime import StubDataViewers
 from stubs.cl.runtime import StubHandlers
-from stubs.cl.runtime import StubPlots
-from stubs.cl.runtime import StubViewers
-from stubs.cl.runtime import StubViewersDataTypes
+from stubs.cl.runtime import StubMediaViewers
+from stubs.cl.runtime import StubPlotViewers
+from stubs.cl.runtime.plots.stub_group_bar_plots import StubGroupBarPlots
+from stubs.cl.runtime.plots.stub_heat_map_plots import StubHeatMapPlots
+from stubs.cl.runtime.plots.stub_line_plots import StubLinePlots
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_derived_handlers import StubDataclassDerivedHandlers
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_numpy_fields import StubDataclassNumpyFields
+from stubs.cl.runtime.records.for_pydantic.stub_pydantic import StubPydantic
+from stubs.cl.runtime.records.for_pydantic.stub_pydantic_handlers import StubPydanticHandlers
 
 
 @dataclass(slots=True, kw_only=True)
@@ -41,16 +47,20 @@ class StubRuntimeConfig(Config):
     """Save stub records to storage."""
 
     def run_configure(self) -> None:
+        self.configure_records()
+        self.configure_plots()
+
+    @classmethod
+    def configure_records(cls) -> None:
         """Populate the current or default database with stub records."""
 
         # Create stub instances
-        stub_dataclass_records = [StubDataclassRecord(id=f"A{i}") for i in range(10)]
-        stub_dataclass_nested_fields = [StubDataclassNestedFields(primitive=f"B{i}") for i in range(10)]
-        stub_dataclass_derived_records = [StubDataclassDerivedRecord(id=f"C{i}") for i in range(10)]
-        stub_dataclass_derived_from_derived_records = [
-            StubDataclassDerivedFromDerivedRecord(id=f"D{i}") for i in range(10)
-        ]
-        stub_dataclass_other_derived_records = [StubDataclassOtherDerivedRecord(id=f"E{i}") for i in range(10)]
+        stub_dataclass_composite = [StubDataclassComposite(primitive=f"abc{i}") for i in range(10)]
+        stub_dataclass_records = [StubDataclass(id=f"A{i}") for i in range(10)]
+        stub_dataclass_nested_fields = [StubDataclassNestedFields(id=f"B{i}") for i in range(10)]
+        stub_dataclass_deriveds = [StubDataclassDerived(id=f"C{i}") for i in range(10)]
+        stub_dataclass_double_deriveds = [StubDataclassDoubleDerived(id=f"D{i}") for i in range(10)]
+        stub_dataclass_other_deriveds = [StubDataclassOtherDerived(id=f"E{i}") for i in range(10)]
         stub_dataclass_list_fields_records = [StubDataclassListFields(id=f"F{i}") for i in range(10)]
         stub_dataclass_optional_fields_records = [StubDataclassOptionalFields(id=f"G{i}") for i in range(10)]
         stub_dataclass_dict_fields_records = [StubDataclassDictFields(id=f"H{i}") for i in range(10)]
@@ -60,40 +70,71 @@ class StubRuntimeConfig(Config):
             StubDataclassPrimitiveFields(key_str_field=f"K{i}") for i in range(10)
         ]
 
-        stub_viewers_records = [StubViewers(stub_id=f"L{i}") for i in range(10)]
-        stub_handlers_records = [StubHandlers(stub_id=f"M{i}") for i in range(10)]
-        stub_viewers_data_records = [StubViewersDataTypes(stub_id=f"N{i}") for i in range(10)]
-        stub_plots = [StubPlots(stub_id=f"O{i}") for i in range(10)]
-
         stub_dataclass_singleton_record = [StubDataclassSingleton()]
+        stub_handlers_records = [StubHandlers(stub_id=f"M{i}") for i in range(10)]
+        stub_derived_handlers_records = [StubDataclassDerivedHandlers(stub_id=f"M_derived_{i}") for i in range(10)]
+
+        stub_numpy_fields_records = [StubDataclassNumpyFields(id=f"N{i}") for i in range(10)]
+
+        # Records with stub viewers
+        stub_viewers_records = [
+            StubDataViewers(stub_id=f"StubDataViewers"),
+            StubPlotViewers(stub_id=f"StubPlotViewers"),
+            StubMediaViewers(stub_id=f"StubMediaViewers"),
+        ]
+
+        stub_pydantic_records = [StubPydantic(id=f"O{i}") for i in range(10)]
+        stub_pydantic_handlers_records = [StubPydanticHandlers(id=f"P{i}") for i in range(10)]
 
         all_records = [
+            *stub_dataclass_composite,
             *stub_dataclass_records,
             *stub_dataclass_nested_fields,
-            *stub_dataclass_derived_records,
-            *stub_dataclass_derived_from_derived_records,
-            *stub_dataclass_other_derived_records,
+            *stub_dataclass_deriveds,
+            *stub_dataclass_double_deriveds,
+            *stub_dataclass_other_deriveds,
             *stub_dataclass_optional_fields_records,
             # TODO: Restore after supporting dt.date and dt.time for Mongo: *stub_dataclass_list_fields_records,
             # TODO: Restore after supporting dt.date and dt.time for Mongo: *stub_dataclass_dict_fields_records,
             # TODO: Restore after supporting dt.date and dt.time for Mongo: *stub_dataclass_dict_list_fields_records,
             # TODO: Restore after supporting dt.date and dt.time for Mongo: *stub_dataclass_list_dict_fields_records,
-            # TODO: Restore after supporting dt.date and dt.time for Mongo: *stub_dataclass_primitive_fields_records,
+            *stub_dataclass_primitive_fields_records,
             *stub_dataclass_singleton_record,
             *stub_viewers_records,
             *stub_handlers_records,
-            *stub_viewers_data_records,
-            *stub_plots,
+            *stub_derived_handlers_records,
+            *stub_numpy_fields_records,
+            *stub_pydantic_records,
+            *stub_pydantic_handlers_records,
         ]
 
-        # save stubs to db
-        Context.current().save_many(all_records)
+        # Build and save to DB
+        active(DataSource).replace_many([record.build() for record in all_records], commit=True)
 
-    def run_configure_plots(self) -> None:
+    def configure_plots(self) -> None:
         """Configure plots."""
 
-        bar_plot = GroupBarPlot()
-        bar_plot.group_labels = ["Single Group"] * 2
-        bar_plot.bar_labels = ["Bar 1", "Bar 2"]
-        bar_plot.values = [85.5, 92]
-        Context.current().save_one(bar_plot)
+        # GroupBarPlot
+        active(DataSource).replace_many(
+            (
+                StubGroupBarPlots.get_single_group_plot(self.config_id + "stub_group_bar_plots.single_group"),
+                StubGroupBarPlots.get_4_groups_2_bars_plot(self.config_id + "stub_group_bar_plots.4_groups_2_bars"),
+                StubGroupBarPlots.get_4_groups_5_bars(self.config_id + "stub_group_bar_plots.4_groups_5_bars"),
+            ),
+            commit=True,
+        )
+
+        # HeatMapPlot
+        active(DataSource).replace_many(
+            (StubHeatMapPlots.get_basic_plot(self.config_id + "stub_heat_map_plots.basic"),),
+            commit=True,
+        )
+
+        # LinePlot
+        active(DataSource).replace_many(
+            (
+                StubLinePlots.get_one_line_plot(self.config_id + "stub_line_plots.one_line"),
+                StubLinePlots.get_two_line_plot(self.config_id + "stub_line_plots.two_line"),
+            ),
+            commit=True,
+        )

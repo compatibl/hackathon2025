@@ -13,31 +13,29 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from cl.runtime.records.dataclasses_extensions import field
-from cl.runtime.records.dataclasses_extensions import missing
-from cl.runtime.schema.enum_decl_key import EnumDeclKey
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.schema.type_decl_key import TypeDeclKey
 from cl.runtime.schema.value_decl import ValueDecl
 
 
 @dataclass(slots=True, kw_only=True)
-class MemberDecl:
+class MemberDecl(DataclassMixin):
     """Type member declaration."""
 
-    value: ValueDecl | None = missing()  # TODO: Flatten value and other types to a single field
+    value: ValueDecl | None = None  # TODO: Flatten value and other types to a single field
     """Value or primitive element declaration."""
 
-    enum: EnumDeclKey | None = missing()
+    enum: TypeDeclKey | None = None
     """Enumeration element declaration."""
 
-    data: TypeDeclKey | None = missing()
+    data: TypeDeclKey | None = None
     """Data element declaration."""
 
-    key_: TypeDeclKey | None = field(name="Key")  # TODO: Remove trailing _ automatically instead
+    key_: TypeDeclKey | None = None  # TODO: It is no longer necessary to add _ to key field
     """Key element declaration."""
 
-    query: TypeDeclKey | None = missing()
+    query: TypeDeclKey | None = None
     """Query element declaration."""
 
-    condition: TypeDeclKey | None = missing()
-    """Condition element declaration."""
+    predicate: TypeDeclKey | None = None
+    """Predicate element declaration."""

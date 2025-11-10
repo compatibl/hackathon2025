@@ -13,16 +13,15 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-from typing import Optional
-from cl.runtime import Context
-from cl.runtime import RecordMixin
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.case_util import CaseUtil
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.view.dag.dag import Dag
 from cl.runtime.view.dag.dag_edge import DagEdge
-from cl.runtime.view.dag.dag_layout_enum import DagLayoutEnum
+from cl.runtime.view.dag.dag_layout import DagLayout
 from cl.runtime.view.dag.dag_node_data import DagNodeData
 from cl.runtime.view.dag.nodes.dag_node import DagNode
 from cl.runtime.views.dag.successor_dag_key import SuccessorDagKey
@@ -30,25 +29,27 @@ from cl.runtime.views.dag.successor_dag_node_key import SuccessorDagNodeKey
 
 
 @dataclass(slots=True, kw_only=True)
-class SuccessorDagNode(SuccessorDagNodeKey, RecordMixin[SuccessorDagNodeKey]):
+class SuccessorDagNode(SuccessorDagNodeKey, RecordMixin):
     """Single node of SuccessorDag, defines its successors."""
 
-    dag: SuccessorDagKey = missing()
+    dag: SuccessorDagKey = required()
     """The DAG this node belongs to (included in node_id)."""
 
-    dag_node_id: str = missing()
+    dag_node_id: str = required()
     """Unique node identifier within the dag (included in node_id)."""
 
-    node_yaml: str = missing()
+    node_yaml: str = required()
     """Node details in YAML format."""
 
-    successor_nodes: List[SuccessorDagNodeKey] | None = None
+    successor_nodes: list[SuccessorDagNodeKey] | None = None
     """List of successor nodes (must belong to the same DAG)."""
 
-    successor_edges: List[str] | None = None
+    successor_edges: list[str] | None = None
     """List of successor edge names in the same order as successor_nodes (must have the same size if not None)."""
 
-    def init(self) -> None:
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+
         # Generate from dag_id and node_name fields
         self.node_id = f"{self.dag.dag_id}: {self.dag_node_id}"
 
@@ -64,7 +65,7 @@ class SuccessorDagNode(SuccessorDagNodeKey, RecordMixin[SuccessorDagNodeKey]):
             if disallowed_list and any(disallowed_list):
                 disallowed_list_str = "  - ".join(f"  - Node: {x.node_id}\n" for x in disallowed_list)
                 raise UserError(
-                    f"One or more successors do not belong to DAG {self.dag.dag_id}:\n" f"{disallowed_list_str}"
+                    f"One or more successors do not belong to DAG {self.dag.dag_id}:\n{disallowed_list_str}"
                 )
         # Verify that edges is None or has the same size
         edge_count = len(self.successor_edges) if self.successor_edges is not None else 0
@@ -76,7 +77,7 @@ class SuccessorDagNode(SuccessorDagNodeKey, RecordMixin[SuccessorDagNodeKey]):
             )
 
     def get_key(self) -> SuccessorDagNodeKey:
-        return SuccessorDagNodeKey(node_id=self.node_id)
+        return SuccessorDagNodeKey(node_id=self.node_id).build()
 
     def view_dag(self) -> Dag:
         """DAG view for the node."""
@@ -85,15 +86,15 @@ class SuccessorDagNode(SuccessorDagNodeKey, RecordMixin[SuccessorDagNodeKey]):
     @staticmethod
     def build_dag(
         node: "SuccessorDagNode",
-        layout_mode: DagLayoutEnum = DagLayoutEnum.PLANAR,
-        ignore_fields: Optional[list[str]] = None,
+        layout_mode: DagLayout = DagLayout.PLANAR,
+        ignore_fields: list[str] | None = None,
     ) -> Dag:
         """Build the DAG for the given node.
 
         Args:
-            node (SuccessorDagNode): The root node to start the DAG from.
-            layout_mode (DagLayoutEnum): Layout mode for arranging the DAG. Defaults to DagLayoutEnum.PLANAR.
-            ignore_fields (Optional[list[str]]): Fields to ignore during traversal. Defaults to an empty list.
+            node: The root node to start the DAG from.
+            layout_mode: Layout mode for arranging the DAG. Defaults to DagLayout.PLANAR.
+            ignore_fields: Fields to ignore during traversal. Defaults to an empty list.
 
         Returns:
             Dag: The constructed directed acyclic graph (DAG).
@@ -130,7 +131,7 @@ class SuccessorDagNode(SuccessorDagNodeKey, RecordMixin[SuccessorDagNodeKey]):
 
             for field_name, field_value in node_fields.items():
                 if isinstance(field_value, SuccessorDagNodeKey):
-                    loaded_node = Context.current().load_one(SuccessorDagNodeKey, field_value)
+                    loaded_node = active(DataSource).load_one(field_value, cast_to=SuccessorDagNodeKey)
                     if loaded_node is None:
                         SuccessorDagNode.__append_empty_node(
                             source_node=source_node,
@@ -165,7 +166,7 @@ class SuccessorDagNode(SuccessorDagNodeKey, RecordMixin[SuccessorDagNodeKey]):
                             if edges_names and len(edges_names) == len(field_value):
                                 edge_label = edges_names[index - 1]
 
-                        loaded_node = Context.current().load_one(SuccessorDagNodeKey, node_key)
+                        loaded_node = active(DataSource).load_one(node_key, cast_to=SuccessorDagNodeKey)
                         if loaded_node is None:
                             SuccessorDagNode.__append_empty_node(
                                 source_node=source_node,

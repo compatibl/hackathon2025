@@ -15,44 +15,30 @@
 from __future__ import annotations
 import os
 from abc import ABC
-from abc import abstractmethod
 from dataclasses import MISSING
 from dataclasses import dataclass
 from typing import ClassVar
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Type
+from typing import Self
 from dotenv import find_dotenv
 from dotenv import load_dotenv
 from dynaconf import Dynaconf
-from typing_extensions import Self
-from cl.runtime.context.env_util import EnvUtil
-from cl.runtime.primitive.ordered_uuid import OrderedUuid
-from cl.runtime.records.record_util import RecordUtil
+from cl.runtime.primitive.case_util import CaseUtil
+from cl.runtime.primitive.timestamp import Timestamp
+from cl.runtime.qa.qa_util import QaUtil
+from cl.runtime.records.bootstrap_mixin import BootstrapMixin
+from cl.runtime.records.typename import typename
 from cl.runtime.settings.project_settings import SETTINGS_FILES_ENVVAR
 from cl.runtime.settings.project_settings import ProjectSettings
 
 # Load dotenv first (the priority order is envvars first, then dotenv, then settings.yaml and .secrets.yaml)
 load_dotenv()
 
-process_id = (
-    OrderedUuid.to_readable_str(OrderedUuid.create_one())
-    .replace(":", "-")
-    .replace(".", "-")
-    .replace("T", "-")
-    .replace("Z", "")
-)
-"""Process timestamp is OrderedUuid in readable string format created during the Python process launch."""
+_process_timestamp = Timestamp.create()
+"""Unique UUIDv7-based timestamp set during the Python process launch."""
 
-# Determine if we are inside a test and store the result in a global variable for performance
-is_inside_test = EnvUtil.is_inside_test()
-
-# Select Dynaconf test environment when invoked from the pytest or UnitTest test runner.
-# Other runners not detected automatically, in which case the Dynaconf environment must be
-# configured in settings explicitly.
-if is_inside_test:
-    os.environ["CL_SETTINGS_ENV"] = "test"
+# Switch to testing Dynaconf environment if inside a root test process
+if QaUtil.is_test_root_process():
+    os.environ.setdefault("CL_SETTINGS_ENV", "testing")
 
 _all_settings = Dynaconf(
     environments=True,
@@ -89,34 +75,38 @@ if isinstance(_dynaconf_file_patterns, str):
 _dynaconf_loaded_files = _all_settings._loaded_files  # noqa
 """Loaded dynaconf settings files."""
 
-_dynaconf_dir_path = _all_settings._root_path  # noqa
-"""Absolute path the location of the first Dynaconf file if found, None otherwise."""
-
-_dotenv_file_path = find_dotenv_output if (find_dotenv_output := find_dotenv()) != "" else None
-"""Absolute path to .env file if found, None otherwise."""
-
-_dotenv_dir_path = os.path.dirname(_dotenv_file_path) if _dotenv_file_path is not None else None
-"""Absolute path to .env directory if found, None otherwise."""
-
 
 @dataclass(slots=True, kw_only=True)
-class Settings(ABC):
-    """Base class for a singleton settings object."""
+class Settings(BootstrapMixin, ABC):
+    """
+    Abstract base of settings classes.
 
-    __settings_dict: ClassVar[Dict[Type, Settings]] = {}
+    Notes:
+      - Environment variable prefix is the global prefix (CL_ by default) followed by UPPER_CASE settings field name,
+        for example 'CL_ENV_USER' for the field 'env_user' in EnvSettings
+      - Dynaconf (settings.yaml) field is snake_case settings field name,
+        for example 'env_user' for the field 'env_user' in EnvSettings
+    """
+
+    process_timestamp: ClassVar[str] = _process_timestamp
+    """Unique UUIDv7-based timestamp set during the Python process launch."""
+
+    __settings_dict: ClassVar[dict[type, Settings]] = {}
     """Dictionary of initialized settings objects indexed by the the settings class type."""
 
     @classmethod
-    @abstractmethod
     def get_prefix(cls) -> str:
         """
         Dynaconf fields will be filtered by 'prefix_' before being passed to the settings class constructor.
+        Defaults to the class name converted to snake_case with _settings suffix removed.
 
         Notes:
-            - The prefix must be lowercase
-            - The prefix must not start or end with underscore but may include underscore separator(s)
-            - The prefix is removed before the fields are provided to the constructor of this settings class
+            - If this method provides an override of the default prefix, the returned prefix must be lowercase
+            - and must not start or end with underscore (but may include underscore separators)
         """
+        result = CaseUtil.pascal_to_snake_case(typename(cls)).removesuffix("_settings")
+        result = result if result.endswith("_") else f"{result}_"
+        return result
 
     @classmethod
     def instance(cls) -> Self:
@@ -124,11 +114,10 @@ class Settings(ABC):
 
         # Check if cached value exists, load if not found
         if (result := cls.__settings_dict.get(cls, None)) is None:
-            # A settings class may specify an optional prefix used to filter dynaconf fields
-            prefix = cls.get_prefix()
 
-            # Validate prefix
-            prefix_description = f"Dynaconf settings prefix '{prefix}' returned by '{cls.__name__}.get_prefix()'"
+            # Get and validate the field prefix to filter Dynaconf fields for this settings class
+            prefix = cls.get_prefix()
+            prefix_description = f"Dynaconf settings prefix '{prefix}' for {typename(cls)}"
             if prefix is None:
                 raise RuntimeError(f"{prefix_description} is None.")
             if prefix == "":
@@ -137,8 +126,22 @@ class Settings(ABC):
                 raise RuntimeError(f"{prefix_description} must be lowercase.")
             if prefix.startswith("_"):
                 raise RuntimeError(f"{prefix_description} must not start with an underscore.")
-            if prefix.endswith("_"):
-                raise RuntimeError(f"{prefix_description} must not end with an underscore.")
+            if not prefix.endswith("_"):
+                raise RuntimeError(f"{prefix_description} must end with an underscore.")
+
+            # Create a new dictionary of fields that start with 'prefix_'
+            # This may include fields that are not specified in the settings class
+            settings_dict = {k: v for k, v in _user_settings.items() if k.startswith(prefix)}
+
+            slots = cls.get_field_names()
+            slots_without_prefix = [slot for slot in slots if not slot.startswith(prefix)]
+            if slots_without_prefix:
+                slots_without_prefix_str = "\n".join(slots_without_prefix)
+                message = (
+                    f"The following fields in {typename(cls)} do not start with the prefix '{prefix}'\n"
+                    f"returned by the '{typename(cls)}.get_prefix' method:\n{slots_without_prefix_str}"
+                )
+                raise RuntimeError(message)
 
             # List of required fields in cls (fields for which neither default nor default_factory is specified)
             required_fields = [
@@ -147,38 +150,30 @@ class Settings(ABC):
                 if field_info.default is MISSING and field_info.default_factory is MISSING
             ]
 
-            # Filter user settings by 'prefix_' and create a new dictionary where prefix is removed from keys
-            # This will include fields that are not specified in the settings class
-            p = prefix + "_"
-            settings_dict = {k[len(p) :]: v for k, v in _user_settings.items() if k.startswith(p)}
-
             # Check for missing required fields
             missing_fields = [k for k in required_fields if k not in settings_dict]
             if missing_fields:
-                # Combine the global Dynaconf envvar prefix with settings prefix in uppercase
+                # Combine the global Dynaconf envvar prefix with settings prefix
                 envvar_prefix = f"{_dynaconf_envvar_prefix}_{prefix.upper()}"
-                dynaconf_msg = f"(in lowercase with prefix '{prefix}_')"
-                envvar_msg = f"(in uppercase with prefix '{envvar_prefix}_')"
+                # Environment variables source
+                sources_list = [f"Environment variables in uppercase with prefix '{envvar_prefix}'"]
 
-                # Environment variables
-                sources_list = [f"Environment variables {envvar_msg}"]
-
-                # Dotenv file or message that it is not found
+                # Dotenv file source or message that it is not found
                 if (env_file := find_dotenv()) != "":
                     env_file_name = env_file
                 else:
                     env_file_name = "No .env file in default search path"
-                sources_list.append(f"Dotenv file {envvar_msg}: {env_file_name}")
+                sources_list.append(f"Dotenv file: {env_file_name}")
 
-                # Dynaconf file(s) or message that they are not found
+                # Dynaconf file source(s) or message that they are not found
                 if _dynaconf_loaded_files:
                     dynaconf_file_list = _dynaconf_loaded_files
                 else:
                     _dynaconf_file_patterns_str = ", ".join(_dynaconf_file_patterns)
-                    dynaconf_file_list = [f"No {_dynaconf_file_patterns_str} file(s) in default search path"]
-                sources_list.extend(f"Dynaconf file {dynaconf_msg}: {x}" for x in dynaconf_file_list)
+                    dynaconf_file_list = [f"No {_dynaconf_file_patterns_str} file(s) in default search path."]
+                sources_list.extend(f"Dynaconf file: {x}" for x in dynaconf_file_list)
 
-                # Convert to string
+                # Convert sources to string
                 settings_sources_str = "\n".join(f"    - {x}" for x in sources_list)
 
                 # List of missing required fields
@@ -190,83 +185,15 @@ class Settings(ABC):
 
                 # Raise exception with detailed information
                 raise ValueError(
-                    f"Required settings field(s) for {cls.__name__} not found:\n{fields_error_msg_str}\n"
+                    f"Required settings field(s) for {typename(cls)} not found:\n{fields_error_msg_str}\n"
                     f"Settings sources searched in the order of priority:\n{settings_sources_str}"
                 )
 
             # TODO: Add a check for nested complex types in settings, if these are present deserialization will fail
             # TODO: Can custom deserializer that removes trailing and leading _ can be used without cyclic reference?
-            result = cls(**settings_dict)
-
-            # Invoke init method for each class hierarchy member from base to derived
-            RecordUtil.init_all(result)
+            result = cls(**settings_dict).build()  # noqa
 
             # Cache the result
             cls.__settings_dict[cls] = result
 
         return result
-
-    @classmethod
-    def get_project_root(cls) -> str:  # TODO: Merge with the version from ProjectSettings
-        """
-        Returns absolute path of the directory containing .env file, and if not present the directory
-        containing the first Dynaconf settings file found. Error message if neither is found.
-        """
-        if _dotenv_dir_path is not None:
-            # Use .env file location if found
-            return _dotenv_dir_path
-        elif _dynaconf_dir_path is not None:
-            # Otherwise use the location of the first Dynaconf file found
-            # TODO: Add a test to confirm the logic when several Dynaconf files are in different locations
-            return _dynaconf_dir_path
-        else:
-            raise RuntimeError(
-                "Cannot get project root because neither .env file nor dynaconf settings file are found. "
-                "Project root is defined based on the location of these two files (with .env having a priority)."
-            )
-
-    @classmethod
-    def normalize_paths(cls, field_name: str, field_value: Iterable[str] | str | None) -> List[str]:
-        """
-        Convert to absolute path if path relative to the location of .env or Dynaconf file is specified
-        and convert to list if single value is specified.
-        """
-
-        # Check that the argument is either None, a string or, an iterable
-        if field_value is None:
-            # Accept None and treat it as an empty list
-            return []
-        elif isinstance(field_value, str):
-            paths = [field_value]
-        elif hasattr(field_value, "__iter__"):
-            paths = list(field_value)
-        else:
-            raise RuntimeError(
-                f"Field '{field_name}' with value '{field_value}' in class '{cls.__name__}' "
-                f"must be a string or an iterable of strings."
-            )
-
-        result = [cls.normalize_path(field_name, path) for path in paths]
-        return result
-
-    @classmethod
-    def normalize_path(cls, field_name: str, field_value: str | None) -> str:
-        """Convert to absolute path if path relative to the location of .env or Dynaconf file is specified."""
-
-        if field_value is None or field_value == "":
-            raise RuntimeError(f"Field '{field_name}' in class '{cls.__name__}' has an empty element.")
-        elif isinstance(field_value, str):
-            # Check that 'field_value' is a string
-            path = field_value
-        else:
-            raise RuntimeError(
-                f"Field '{field_name}' in class '{cls.__name__}' has an element "
-                f"with type {type(field_value)} which is not a string."
-            )
-
-        if not os.path.isabs(path):
-            project_root = cls.get_project_root()
-            path = os.path.join(project_root, path)
-
-        # Return as absolute path string
-        return str(path)

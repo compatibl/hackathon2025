@@ -14,336 +14,721 @@
 
 import re
 from dataclasses import dataclass
-from itertools import groupby
-from typing import Dict
+from typing import Any
 from typing import Iterable
-from typing import Type
+from typing import Sequence
 from typing import cast
+import pymongo
 from pymongo import MongoClient
 from pymongo.database import Database
-from cl.runtime.context.context import Context
+from pymongo.synchronous.collection import Collection
+from pymongo.synchronous.cursor import Cursor
 from cl.runtime.db.db import Db
-from cl.runtime.db.mongo.mongo_filter_serializer import MongoFilterSerializer
-from cl.runtime.db.protocols import TKey
-from cl.runtime.db.protocols import TRecord
-from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.records.protocols import KeyProtocol
-from cl.runtime.records.protocols import RecordProtocol
-from cl.runtime.schema.schema import Schema
-from cl.runtime.serialization.dict_serializer import DictSerializer
-from cl.runtime.serialization.string_serializer import StringSerializer
+from cl.runtime.db.query_mixin import QueryMixin
+from cl.runtime.db.save_policy import SavePolicy
+from cl.runtime.db.sort_order import SortOrder
+from cl.runtime.exceptions.error_util import ErrorUtil
+from cl.runtime.records.cast_util import CastUtil
+from cl.runtime.records.key_mixin import KeyMixin
+from cl.runtime.records.protocols import is_data_key_or_record_type
+from cl.runtime.records.protocols import is_enum_type
+from cl.runtime.records.protocols import is_key_type
+from cl.runtime.records.protocols import is_primitive_type
+from cl.runtime.records.protocols import is_record_type
+from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.records.record_mixin import TRecord
+from cl.runtime.records.type_check import TypeCheck
+from cl.runtime.records.typename import typename
+from cl.runtime.records.typename import typeof
+from cl.runtime.schema.data_spec import DataSpec
+from cl.runtime.schema.type_info import TypeInfo
+from cl.runtime.schema.type_kind import TypeKind
+from cl.runtime.schema.type_schema import TypeSchema
+from cl.runtime.serializers.bootstrap_serializers import BootstrapSerializers
+from cl.runtime.serializers.data_serializers import DataSerializers
+from cl.runtime.serializers.key_serializers import KeySerializers
+from cl.runtime.settings.db_settings import DbSettings
 
-invalid_db_name_symbols = r'/\\. "$*<>:|?'
+_INVALID_DB_NAME_SYMBOLS = r'/\\. "$*<>:|?'
 """Invalid MongoDB database name symbols."""
 
-invalid_db_name_regex = re.compile(f"[{invalid_db_name_symbols}]")
+_INVALID_DB_NAME_SYMBOLS_MSG = r'<space>/\."$*<>:|?'
+"""Invalid MongoDB database name symbols (for the error message)."""
+
+_INVALID_DB_NAME_REGEX = re.compile(f"[{_INVALID_DB_NAME_SYMBOLS}]")
 """Precompiled regex to check for invalid MongoDB database name symbols."""
 
-# TODO: Revise and consider making fields of the database
-# TODO: Review and consider alternative names, e.g. DataSerializer or RecordSerializer
-data_serializer = DictSerializer()
-key_serializer = StringSerializer()
-filter_serializer = MongoFilterSerializer()
+_RECORD_SERIALIZER = DataSerializers.FOR_MONGO
+"""Used for record serialization."""
 
-_client_dict: Dict[str, MongoClient] = {}
-"""Dict of MongoClient instances with client_uri key stored outside the class to avoid serializing them."""
+_KEY_SERIALIZER = KeySerializers.DELIMITED
+"""Used for key serialization."""
 
-_db_dict: Dict[str, Database] = {}
-"""Dict of database instances with client_uri.database_name key stored outside the class to avoid serializing them."""
+# TODO (Roman): Clean up open connections on worker shutdown
+_mongo_client_dict: dict[tuple[type, str | None], MongoClient] = {}
+"""Mongo client dict for caching and reusing Mongo connection."""
 
 
 @dataclass(slots=True, kw_only=True)
 class BasicMongoDb(Db):
-    """MongoDB database without datasets."""
+    """MongoDB database without bitemporal support."""
 
-    client_uri: str = "mongodb://localhost:27017/"
+    client_uri: str | None = None
     """MongoDB client URI, defaults to mongodb://localhost:27017/"""
 
-    def load_one(
-        self,
-        record_type: Type[TRecord],
-        record_or_key: TRecord | KeyProtocol | None,
-        *,
-        dataset: str | None = None,
-        identity: str | None = None,
-        is_key_optional: bool = False,
-        is_record_optional: bool = False,
-    ) -> TRecord | None:
-        # Check for an empty key
-        if record_or_key is None:
-            if is_key_optional:
-                return None
-            else:
-                raise UserError(f"Key is None when trying to load record type {record_type.__name__} from DB.")
+    _mongo_client: MongoClient | None = None
+    """MongoDB client instance, initialized once and stored."""
 
-        if record_or_key is None or getattr(record_or_key, "get_key", None) is not None:
-            # Record or None, return without lookup
-            return cast(RecordProtocol, record_or_key)
-        elif getattr(record_or_key, "get_key_type"):
-            # Confirm dataset and identity are both None
-            if dataset is not None:
-                raise RuntimeError("BasicMongo database type does not support datasets.")
-            if identity is not None:
-                raise RuntimeError("BasicMongo database type does not support row-level security.")
+    _mongo_db_name: str | None = None
+    """MongoDB database name, verified and stored."""
 
-            # Key, get collection name from key type by removing Key suffix if present
-            key_type = record_or_key.get_key_type()
-            collection_name = key_type.__name__  # TODO: Decision on short alias
-            db = self._get_db()
-            collection = db[collection_name]
+    _mongo_db: Database | None = None
+    """MongoDB database instance, initialized once and stored."""
 
-            serialized_key = key_serializer.serialize_key(record_or_key)
-            serialized_record = collection.find_one({"_key": serialized_key})
-            if serialized_record is not None:
-                del serialized_record["_id"]
-                del serialized_record["_key"]
-                result = data_serializer.deserialize_data(serialized_record)
-                return result
-            else:
-                # Check if returning None is allowed
-                if not is_record_optional:
-                    raise UserError(f"{record_type.__name__} record is not found for key {record_or_key}")
-                return None
-        else:
-            raise RuntimeError(f"Type {record_or_key.__class__.__name__} is not a record or key.")
+    _mongo_collection_dict: dict[type, Collection] | None = None
+    """MongoDB collection dict, collections are initialized once and stored."""
+
+    _query_types_with_index: set[type] | None = None
+    """Set of query types for which an index has already been added."""
+
+    def __init(self):
+        db_settings = DbSettings.instance()
+
+        # Set MongoDB URI from settings if not specified
+        if self.client_uri is None:
+            self.client_uri = db_settings.db_mongo_uri
 
     def load_many(
         self,
-        record_type: Type[TRecord],
-        records_or_keys: Iterable[TRecord | KeyProtocol | tuple | str | None] | None,
+        key_type: type[KeyMixin],
+        keys: Sequence[KeyMixin],
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> Iterable[TRecord | None] | None:
-        # TODO: Implement directly for better performance
-        result = [
-            self.load_one(
-                record_type,
-                x,
-                dataset=dataset,
-                identity=identity,
-                is_key_optional=True,  # TODO: Keep the existing defaults for load_many
-                is_record_optional=True,  # TODO: Keep the existing defaults for load_many
-            )
-            for x in records_or_keys
-        ]
-        return result
+        dataset: str,
+        tenant: str,
+        project_to: type[TRecord] | None = None,
+        sort_order: SortOrder,  # Default value not provided due to the lack of natural default for this method
+    ) -> tuple[RecordMixin, ...]:
+
+        # Check params
+        assert TypeCheck.guard_key_type(key_type)
+        assert TypeCheck.guard_key_sequence(keys)
+        self._check_dataset(dataset)
+        self._check_tenant(tenant)
+
+        # Get MongoDB collection for the key type
+        collection = self._get_mongo_collection(key_type=key_type)
+
+        # Query for all records in one call using $in operator
+        serialized_records = collection.find(self._get_mongo_keys_filter(keys, dataset=dataset, tenant=tenant))
+
+        # Apply sort to the iterable
+        serialized_records = self._apply_sort(serialized_records, sort_field="_key", sort_order=sort_order)
+
+        # Prune the fields used by Db that are not part of the serialized record data and deserialize
+        result = tuple(
+            _RECORD_SERIALIZER.deserialize(self._with_pruned_fields(x, expected_dataset=dataset))
+            for x in serialized_records
+        )
+        return cast(tuple[TRecord, ...], result)
 
     def load_all(
         self,
-        record_type: Type[TRecord],
+        key_type: type[KeyMixin],
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> Iterable[TRecord | None] | None:
-        # Confirm dataset and identity are both None
-        if dataset is not None:
-            raise RuntimeError("BasicMongo database type does not support datasets.")
-        if identity is not None:
-            raise RuntimeError("BasicMongo database type does not support row-level security.")
+        dataset: str,
+        tenant: str,
+        cast_to: type[TRecord] | None = None,
+        restrict_to: type[TRecord] | None = None,
+        project_to: type[TRecord] | None = None,
+        sort_order: SortOrder = SortOrder.ASC,
+        limit: int | None = None,
+        skip: int | None = None,
+    ) -> tuple[TRecord, ...]:
 
-        # Key, get collection name from key type by removing Key suffix if present
-        key_type = record_type.get_key_type()
-        collection_name = key_type.__name__  # TODO: Decision on short alias
-        db = self._get_db()
-        collection = db[collection_name]
+        # Check params
+        assert TypeCheck.guard_key_type(key_type)
+        self._check_dataset(dataset)
+        self._check_tenant(tenant)
 
-        subtype_names = list(t.__name__ for t in Schema.get_type_successors(record_type))
-        serialized_records = collection.find({"_type": {"$in": subtype_names}})
-        result = []
-        for serialized_record in serialized_records:
-            del serialized_record["_id"]
-            del serialized_record["_key"]
-            record = data_serializer.deserialize_data(
-                serialized_record
-            )  # TODO: Convert to comprehension for performance
-            result.append(record)
-        return result
+        # Get MongoDB collection for the key type
+        collection = self._get_mongo_collection(key_type=key_type)
 
-    def load_filter(
+        # Create a query dictionary
+        query_dict = {
+            "_dataset": dataset,
+            "_tenant": tenant,
+        }
+
+        # Filter by restrict_to if specified
+        self._apply_restrict_to(query_dict=query_dict, key_type=key_type, restrict_to=restrict_to)
+
+        # TODO: Filter by keys
+        # serialized_primary_key = _KEY_SERIALIZER.serialize(key)
+        # serialized_record = collection.find_one({"_key": serialized_primary_key})
+
+        # Get iterable from the query, execution is deferred
+        serialized_records = collection.find(query_dict)
+
+        # Apply sort to the iterable
+        serialized_records = self._apply_sort(serialized_records, sort_field="_key", sort_order=sort_order)
+
+        # Apply skip and limit to the iterable
+        serialized_records = self._apply_limit_and_skip(serialized_records, limit=limit, skip=skip)
+
+        # Prune the fields used by Db that are not part of the serialized record data and deserialize
+        result = tuple(
+            _RECORD_SERIALIZER.deserialize(self._with_pruned_fields(x, expected_dataset=dataset))
+            for x in serialized_records
+        )
+        return cast(tuple[TRecord, ...], result)
+
+    def load_by_query(
         self,
-        record_type: Type[TRecord],
-        filter_obj: TRecord,
+        query: QueryMixin,
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> Iterable[TRecord]:
-        # Confirm dataset and identity are both None
-        if dataset is not None:
-            raise RuntimeError("BasicMongo database type does not support datasets.")
-        if identity is not None:
-            raise RuntimeError("BasicMongo database type does not support row-level security.")
+        dataset: str,
+        tenant: str,
+        cast_to: type[TRecord] | None = None,
+        restrict_to: type[TRecord] | None = None,
+        project_to: type[TRecord] | None = None,
+        sort_order: SortOrder = SortOrder.ASC,
+        limit: int | None = None,
+        skip: int | None = None,
+    ) -> tuple[TRecord, ...]:
 
-        # Key, get collection name from key type by removing Key suffix if present
-        key_type = record_type.get_key_type()
-        collection_name = key_type.__name__  # TODO: Decision on short alias
-        db = self._get_db()
-        collection = db[collection_name]
+        # Check that the query has been frozen
+        query.check_frozen()
 
-        # Convert filter object to a dictionary
-        filter_dict = filter_serializer.serialize_filter(filter_obj)
+        # Check dataset
+        self._check_dataset(dataset)
+        self._check_tenant(tenant)
 
-        serialized_records = collection.find(filter_dict)  # TODO: Filter by derived type
-        result = []
-        for serialized_record in serialized_records:
-            del serialized_record["_id"]
-            del serialized_record["_key"]
-            record = data_serializer.deserialize_data(
-                serialized_record
-            )  # TODO: Convert to comprehension for performance
-            result.append(record)
-        return result
+        # Get table name from key type and check it has an acceptable format
+        query_target_type = query.get_target_type()
+        key_type = query_target_type.get_key_type()
 
-    def save_one(
+        # Get MongoDB collection for the key type
+        collection = self._get_mongo_collection(key_type=key_type)
+
+        # Add index based on public fields of the query target type in the order of declaration from base to derived
+        self._add_index(collection=collection, query_type=typeof(query))
+
+        # Create query dict
+        query_dict = {
+            "_dataset": dataset,
+            "_tenant": tenant,
+        }
+
+        # Serialize the query and update query dict
+        query_dict.update(BootstrapSerializers.FOR_MONGO_QUERY.serialize(query))
+        # TODO: Remove table fields
+
+        # Convert op_* fields to MongoDB $* syntax
+        query_dict = self._convert_op_fields_to_mongo_syntax(query_dict)
+
+        # Validate restrict_to or use the query target type if not specified
+        if restrict_to is None:
+            # Default to the query target type
+            restrict_to = query_target_type
+        elif not issubclass(restrict_to, query_target_type):
+            # Ensure restrict_to is a subclass of the query target type
+            raise RuntimeError(
+                f"In {typename(type(self))}.load_by_query, restrict_to={typename(restrict_to)} is not a subclass\n"
+                f"of the query target type {typename(query_target_type)} for {typename(type(query))}."
+            )
+
+        # Filter by restrict_to if specified
+        self._apply_restrict_to(query_dict=query_dict, key_type=key_type, restrict_to=restrict_to)
+
+        # Get iterable from the query, execution is deferred
+        serialized_records = collection.find(query_dict)
+
+        # Apply sort to the iterable
+        serialized_records = self._apply_sort(serialized_records, sort_field="_key", sort_order=sort_order)
+
+        # Apply skip and limit to the iterable
+        serialized_records = self._apply_limit_and_skip(serialized_records, limit=limit, skip=skip)
+
+        # Set cast_to to restrict_to if not specified
+        if cast_to is None:
+            cast_to = restrict_to
+
+        # Prune the fields used by Db that are not part of the serialized record data and deserialize
+        result = tuple(
+            _RECORD_SERIALIZER.deserialize(self._with_pruned_fields(x, expected_dataset=dataset))
+            for x in serialized_records
+        )
+        return cast(tuple[TRecord, ...], result)
+
+    def count_by_query(
         self,
-        record: RecordProtocol | None,
+        query: QueryMixin,
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> None:
-        # If record is None, do nothing
-        if record is None:
-            return
+        dataset: str,
+        tenant: str,
+        restrict_to: type | None = None,
+    ) -> int:
 
-        # Call on_save if defined
-        if hasattr(record, "on_save"):
-            record.on_save()  # TODO: Refactor on_save
+        # Check that the query has been frozen
+        query.check_frozen()
 
-        # Confirm dataset and identity are both None
-        if dataset is not None:
-            raise RuntimeError("BasicMongo database type does not support datasets.")
-        if identity is not None:
-            raise RuntimeError("BasicMongo database type does not support row-level security.")
+        # Check dataset
+        self._check_dataset(dataset)
+        self._check_tenant(tenant)
 
-        # Get collection name from key type by removing Key suffix if present
-        key_type = record.get_key_type()
-        collection_name = key_type.__name__  # TODO: Decision on short alias
-        db = self._get_db()
-        collection = db[collection_name]
+        # Get table name from key type and check it has an acceptable format
+        query_target_type = query.get_target_type()
+        key_type = query_target_type.get_key_type()
 
-        # Serialize record data and key
-        serialized_key = key_serializer.serialize_key(record)
-        serialized_record = data_serializer.serialize_data(record)
+        # Get MongoDB collection for the key type
+        collection = self._get_mongo_collection(key_type=key_type)
 
-        # Use update_one with upsert=True to insert if not present or update if present
-        # TODO (Roman): update_one does not affect fields not presented in record. Changed to replace_one
-        serialized_record["_key"] = serialized_key
-        collection.replace_one({"_key": serialized_key}, serialized_record, upsert=True)
+        # Add index based on public fields of the query target type in the order of declaration from base to derived
+        self._add_index(collection=collection, query_type=typeof(query))
+
+        # Create query dict
+        query_dict = {
+            "_dataset": dataset,
+            "_tenant": tenant,
+        }
+
+        # Serialize the query and update query dict
+        query_dict.update(BootstrapSerializers.FOR_MONGO_QUERY.serialize(query))
+        # TODO: Remove table fields
+
+        # Convert op_* fields to MongoDB $* syntax
+        query_dict = self._convert_op_fields_to_mongo_syntax(query_dict)
+
+        # Validate restrict_to or use the query target type if not specified
+        if restrict_to is None:
+            # Default to the query target type
+            restrict_to = query_target_type
+        elif not issubclass(restrict_to, query_target_type):
+            # Ensure restrict_to is a subclass of the query target type
+            raise RuntimeError(
+                f"In {typename(type(self))}.count_by_query, restrict_to={typename(restrict_to)} is not a subclass\n"
+                f"of the target type {typename(query_target_type)} for {typename(query)}."
+            )
+
+        # Filter by restrict_to if specified
+        self._apply_restrict_to(query_dict=query_dict, key_type=key_type, restrict_to=restrict_to)
+
+        # Use count_documents to get the count
+        count = collection.count_documents(query_dict)
+        return count
 
     def save_many(
         self,
-        records: Iterable[RecordProtocol],
+        key_type: type[KeyMixin],
+        records: Sequence[RecordMixin],
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
+        dataset: str,
+        tenant: str,
+        save_policy: SavePolicy,
     ) -> None:
-        # TODO: Temporary, replace by independent implementation
-        [self.save_one(x, dataset=dataset, identity=identity) for x in records]
-        return
 
-    def delete_one(
-        self,
-        key_type: Type[TKey],
-        key: TKey | KeyProtocol | tuple | str | None,
-        *,
-        dataset: str | None = None,
-        identity: str | None = None,
-    ) -> None:
-        # Confirm dataset and identity are both None
-        if dataset is not None:
-            raise RuntimeError("BasicMongo database type does not support datasets.")
-        if identity is not None:
-            raise RuntimeError("BasicMongo database type does not support row-level security.")
+        # Check params
+        assert TypeCheck.guard_key_type(key_type)
+        assert TypeCheck.guard_record_sequence(records)
+        self._check_dataset(dataset)
+        self._check_tenant(tenant)
 
-        # Get collection name from key type by removing Key suffix if present
-        collection_name = key_type.__name__  # TODO: Decision on short alias
-        db = self._get_db()
-        collection = db[collection_name]
+        # Get MongoDB collection for the key type
+        collection = self._get_mongo_collection(key_type=key_type)
 
-        serialized_key = key_serializer.serialize_key(key)
+        # TODO: Provide a more performant implementation
+        for record in records:
+            # Serialize key
+            serialized_key = _KEY_SERIALIZER.serialize(record.get_key())
+            key_dict = {
+                "_dataset": dataset,
+                "_key": serialized_key,
+                "_tenant": tenant,
+            }
 
-        delete_filter = {"_key": serialized_key}
-        collection.delete_one(delete_filter)
+            # Serialize record
+            serialized_record = _RECORD_SERIALIZER.serialize(record)
+            serialized_record["_dataset"] = dataset
+            serialized_record["_key"] = serialized_key
+            serialized_record["_tenant"] = tenant
+
+            if save_policy == SavePolicy.INSERT:
+                collection.insert_one(serialized_record)
+            elif save_policy == SavePolicy.REPLACE:
+                collection.replace_one(key_dict, serialized_record, upsert=True)
+            else:
+                ErrorUtil.enum_value_error(save_policy, SavePolicy)
 
     def delete_many(
         self,
-        keys: Iterable[KeyProtocol] | None,
+        key_type: type[KeyMixin],
+        keys: Sequence[KeyMixin],
         *,
-        dataset: str | None = None,
-        identity: str | None = None,
+        dataset: str,
+        tenant: str,
     ) -> None:
-        for key in keys:
-            self.delete_one(type(key), key, dataset=dataset, identity=identity)
 
-    def delete_all_and_drop_db(self) -> None:
-        # Check that db_id and db_name both match temp_db_prefix
+        # Check params
+        assert TypeCheck.guard_key_type(key_type)
+        assert TypeCheck.guard_key_sequence(keys)
+        self._check_dataset(dataset)
+        self._check_tenant(tenant)
+
+        # Get MongoDB collection for the key type
+        collection = self._get_mongo_collection(key_type=key_type)
+
+        # Create filter and delete
+        keys_filter = self._get_mongo_keys_filter(keys, dataset=dataset, tenant=tenant)
+        collection.delete_many(keys_filter)
+
+    def delete_by_query(
+        self,
+        query: QueryMixin,
+        *,
+        dataset: str,
+        tenant: str,
+        restrict_to: type | None = None,
+    ) -> None:
+
+        # Check that the query has been frozen
+        query.check_frozen()
+
+        # Check dataset
+        self._check_dataset(dataset)
+        self._check_tenant(tenant)
+
+        # Get table name from key type and check it has an acceptable format
+        query_target_type = query.get_target_type()
+        key_type = query_target_type.get_key_type()
+
+        # Get MongoDB collection for the key type
+        collection = self._get_mongo_collection(key_type=key_type)
+
+        # Add index based on public fields of the query target type in the order of declaration from base to derived
+        self._add_index(collection=collection, query_type=typeof(query))
+
+        # Create query dict
+        query_dict = {
+            "_dataset": dataset,
+            "_tenant": tenant,
+        }
+
+        # Serialize the query and update query dict
+        query_dict.update(BootstrapSerializers.FOR_MONGO_QUERY.serialize(query))
+        # TODO: Remove table fields
+
+        # Convert op_* fields to MongoDB $* syntax
+        query_dict = self._convert_op_fields_to_mongo_syntax(query_dict)
+
+        # Validate restrict_to or use the query target type if not specified
+        if restrict_to is None:
+            # Default to the query target type
+            restrict_to = query_target_type
+        elif not issubclass(restrict_to, query_target_type):
+            # Ensure restrict_to is a subclass of the query target type
+            raise RuntimeError(
+                f"In {typename(type(self))}.count_by_query, restrict_to={typename(restrict_to)} is not a subclass\n"
+                f"of the target type {typename(query_target_type)} for {typename(query)}."
+            )
+
+        # Filter by restrict_to if specified
+        self._apply_restrict_to(query_dict=query_dict, key_type=key_type, restrict_to=restrict_to)
+
+        # Delete from DB
+        collection.delete_many(query_dict)
+
+    def drop_test_db(self) -> None:
+        # Check preconditions
+        self.check_drop_test_db_preconditions()
+
+        # Drop the entire database without possibility of recovery.
+        # This relies on the preconditions check above to prevent unintended use
+        client = self._get_mongo_client()
         db_name = self._get_db_name()
-        Context.error_if_not_temp_db(self.db_id)
-        Context.error_if_not_temp_db(db_name)
+        client.drop_database(db_name)
 
-        # Drop the entire database without possibility of recovery, this
-        # relies on the temp_db_prefix check above to prevent unintended use
-        client = self._get_client()
+    def drop_temp_db(self, *, user_approval: bool) -> None:
+        # Check preconditions
+        self.check_drop_temp_db_preconditions(user_approval=user_approval)
+
+        # Drop the entire database without possibility of recovery.
+        # This relies on the preconditions check above to prevent unintended use
+        client = self._get_mongo_client()
+        db_name = self._get_db_name()
         client.drop_database(db_name)
 
     def close_connection(self) -> None:
-        if (client := _client_dict.get(self.client_uri, None)) is not None:
-            # Close connection
-            client.close()
-            # Remove client from dictionary so connection can be reopened on next access
-            del _client_dict[self.client_uri]
+        # TODO: Review the use of this method and when it is invoked
+        self._get_mongo_client().close()
 
-    def _get_client(self) -> MongoClient:
-        """Get PyMongo client object."""
-        if (client := _client_dict.get(self.client_uri, None)) is None:
-            # Create if it does not exist
-            client = MongoClient(
-                self.client_uri,
-                uuidRepresentation="standard",
-            )
-            # TODO: Implement dispose logic
-            _client_dict[self.client_uri] = client
-        return client
+    def _convert_op_fields_to_mongo_syntax(self, query_dict: dict[str, Any]) -> dict[str, Any]:
+        """Convert op_* fields to MongoDB $* syntax recursively."""
+        if not isinstance(query_dict, dict):
+            return query_dict
 
-    def _get_db(self) -> Database:
-        """Get PyMongo database object."""
-        db_name = self._get_db_name()
-        db_key = f"{self.client_uri}{db_name}"
-        if (result := _db_dict.get(db_key, None)) is None:
-            # Create if it does not exist
-            client = self._get_client()
-            # TODO: Implement dispose logic
-            result = client[db_name]
-            _db_dict[db_key] = result
+        result = {}
+        for key, value in query_dict.items():
+            if key.startswith("op_"):
+                # Convert op_* to $* syntax
+                mongo_key = "$" + key[3:]  # Remove "op_" prefix
+                result[mongo_key] = value
+            elif isinstance(value, dict):
+                # Recursively convert nested dictionaries
+                result[key] = self._convert_op_fields_to_mongo_syntax(value)
+            elif isinstance(value, list):
+                # Recursively convert list items
+                result[key] = [
+                    self._convert_op_fields_to_mongo_syntax(item) if isinstance(item, dict) else item for item in value
+                ]
+            else:
+                # Keep other values as-is
+                result[key] = value
+
         return result
+
+    def _get_mongo_collection(self, key_type: type[KeyMixin]) -> Collection:
+        """Get pymongo collection for the specified key type."""
+        if self._mongo_collection_dict is None:
+            self._mongo_collection_dict = {}
+        if (collection := self._mongo_collection_dict.get(key_type, None)) is None:
+            # This also checks that the name of key_type has Key suffix
+            assert TypeCheck.guard_key_type(key_type)
+
+            # Get collection object
+            mongo_db = self._get_mongo_db()
+            key_type_name = typename(key_type)
+            collection_name = key_type_name.removesuffix("Key")
+            collection = mongo_db[collection_name]
+
+            # Add a unique index on tenant, dataset and key in ascending order
+            key_index = (
+                ("_tenant", pymongo.ASCENDING),
+                ("_dataset", pymongo.ASCENDING),
+                ("_key", pymongo.ASCENDING),
+            )
+            # TODO: !!!! Add updated_index
+            collection.create_index(key_index, unique=True, background=True)
+
+            # Cache for reuse
+            self._mongo_collection_dict[key_type] = collection
+        return collection
+
+    def _get_mongo_client_type(self) -> type:
+        """Get the type of MongoDB client object, BasicMongoMockDb overrides this to return the mongomock version."""
+        return MongoClient
+
+    def _get_mongo_client(self) -> MongoClient:
+        """Get MongoDB client object, MongoMock will override."""
+
+        # TODO (Roman): Refactor. Consider removing _mongo_client from instance-level fields
+        if self._mongo_client is None:
+            mongo_client_type = self._get_mongo_client_type()
+
+            mongo_client_key = (mongo_client_type, self.client_uri)
+            cached_mongo_client = _mongo_client_dict.get(mongo_client_key)
+
+            if cached_mongo_client is None:
+                mongo_client = mongo_client_type(
+                    self.client_uri,
+                    tz_aware=True,
+                    uuidRepresentation="standard",
+                )
+                self._mongo_client = mongo_client
+                _mongo_client_dict[mongo_client_key] = mongo_client
+            else:
+                self._mongo_client = cached_mongo_client
+
+        return self._mongo_client
 
     def _get_db_name(self) -> str:
-        """Database is from db_id, check validity before returning."""
-        result = self.db_id
-        self.check_db_id(result)
-        return result
+        """For MongoDB, database name is db_id, perform validation before returning."""
+        if self._mongo_db_name is None:
+            self._mongo_db_name = self.db_id
+            # Check for invalid characters in MongoDB name
+            if _INVALID_DB_NAME_REGEX.search(self._mongo_db_name):
+                raise RuntimeError(
+                    f"MongoDB database name '{self._mongo_db_name}' is not valid because it contains "
+                    f"special characters from this list: '{_INVALID_DB_NAME_SYMBOLS_MSG}'"
+                )
+
+            # Check for maximum byte length of less than 64 (use Unicode bytes, not string chars to count)
+            max_bytes = 63
+            actual_bytes = len(self._mongo_db_name.encode("utf-8"))
+            if actual_bytes > max_bytes:
+                raise RuntimeError(
+                    f"MongoDB does not support database name '{self._mongo_db_name}' because "
+                    f"it has {actual_bytes} bytes, exceeding the maximum of {max_bytes}."
+                )
+        return self._mongo_db_name
+
+    def _get_mongo_db(self) -> Database:
+        """Get or create the pymongo database object."""
+        if self._mongo_db is None:
+            db_name = self._get_db_name()
+            client = self._get_mongo_client()
+            self._mongo_db = client[db_name]
+        return self._mongo_db
 
     @classmethod
-    def check_db_id(cls, db_id: str) -> None:
-        """Check that db_id follows MongoDB database name restrictions, error message otherwise."""
+    def _apply_restrict_to(
+        cls,
+        *,
+        query_dict: dict,
+        key_type: type,
+        restrict_to: type | None,
+    ) -> None:
+        """Add filter by the specified type to the query dictionary."""
+        if restrict_to is None:
+            # Do nothing if restrict_to is not specified
+            return
+        if is_record_type(restrict_to):
+            # Add filter condition on type if it is a record type
+            child_record_type_names = TypeInfo.get_child_and_self_type_names(restrict_to, type_kind=TypeKind.RECORD)
+            query_dict["_type"] = {"$in": child_record_type_names}
+        elif is_key_type(restrict_to):
+            # Check that it matches the key type obtained from the query
+            if restrict_to != key_type:
+                raise RuntimeError(
+                    f"Parameter restrict_to={typename(restrict_to)} does not match " f"key_type={typename(key_type)}."
+                )
+        else:
+            raise RuntimeError(f"Parameter restrict_to={typename(restrict_to)} is not a key or record.")
 
-        # Check for invalid characters in MongoDB name
-        if invalid_db_name_regex.search(db_id):
-            raise RuntimeError(
-                f"MongoDB db_id='{db_id}' is not valid because it contains "
-                f"special characters from this list: {invalid_db_name_symbols}"
-            )
+    @classmethod
+    def _apply_limit_and_skip(
+        cls,
+        serialized_records: Iterable,
+        *,
+        limit: int | None = None,
+        skip: int | None = None,
+    ) -> Iterable:
+        """Apply limit and skip to the records iterable."""
+        # Apply skip
+        if skip is not None:
+            if skip > 0:
+                # Apply skip to iterable
+                serialized_records = serialized_records.skip(skip)
+            elif skip == 0:
+                # We interpret skip=0 as not skipping, do nothing
+                pass
+            else:
+                raise RuntimeError(f"Parameter skip={skip} is negative.")
 
-        # Check for maximum byte length of less than 64 (use Unicode bytes, not string chars to count)
-        max_bytes = 63
-        actual_bytes = len(db_id.encode("utf-8"))
-        if actual_bytes > max_bytes:
-            raise RuntimeError(
-                f"MongoDB does not support db_id='{db_id}' because "
-                f"it has {actual_bytes} bytes, exceeding the maximum of {max_bytes}."
-            )
+        # Apply limit
+        if limit is not None:
+            if limit > 0:
+                # Apply limit to iterable
+                serialized_records = serialized_records.limit(limit)
+            elif limit == 0:
+                # Handle this case separately because pymongo interprets limit=0 as no limit,
+                # while we interpret it as returning no records
+                return tuple()
+            else:
+                raise RuntimeError(f"Parameter limit={limit} is negative.")
+        return serialized_records
 
-    # TODO (Roman): move to base Db class?
-    def is_empty(self) -> bool:
-        """Return True if db has no collections."""
-        return len(self._get_db().list_collection_names()) == 0
+    @classmethod
+    def _apply_sort(cls, records: Cursor, sort_field: str, sort_order: SortOrder) -> Cursor:
+        """Apply sorting to the records using the specified sort field and sort order."""
+        if sort_order == SortOrder.UNORDERED:
+            return records  # no sort applied
+        elif sort_order == SortOrder.ASC:
+            return records.sort(sort_field, direction=pymongo.ASCENDING)
+        elif sort_order == SortOrder.DESC:
+            return records.sort(sort_field, direction=pymongo.DESCENDING)
+        elif sort_order == SortOrder.INPUT:
+            # Not implemented. Return unchanged records by default.
+            return records
+        else:
+            raise ValueError(f"Unsupported SortOrder: {order}")
+
+    def _with_pruned_fields(
+        self,
+        record_dict: dict[str, Any],
+        *,
+        expected_dataset: str,
+    ) -> dict[str, Any]:
+        """Prune and validate fields that are not part of the serialized record data and return the same instance."""
+
+        # Remove or pop and validate
+        del record_dict["_id"]
+        assert record_dict.pop("_dataset") == expected_dataset
+        del record_dict["_key"]
+
+        return record_dict
+
+    def _get_mongo_keys_filter(self, keys: Sequence[KeyMixin], *, dataset: str, tenant: str) -> dict[str, Any]:
+        """Get filter for loading records that match one of the specified keys."""
+        serialized_keys = tuple(_KEY_SERIALIZER.serialize(key) for key in keys)
+        return {
+            "_dataset": dataset,
+            "_tenant": tenant,
+            "_key": {"$in": serialized_keys},
+        }
+
+    def _add_index(
+        self,
+        *,
+        collection: Collection,
+        query_type: type,
+    ) -> None:
+        """Add index for the specified query_type."""
+        if not self._query_types_with_index:
+            # Create an empty set of query types for which the index has already been added
+            self._query_types_with_index = set()
+        if query_type not in self._query_types_with_index:
+
+            # First fields in the index
+            query_index = [("_tenant", pymongo.ASCENDING), ("_dataset", pymongo.ASCENDING)]
+            # Populate query fields recursively
+            self._populate_index(type_=query_type, result=query_index)
+            # Key is the last field in the index
+            query_index.append(("_key", pymongo.ASCENDING))
+
+            # Add index to DB in background mode
+            collection.create_index(query_index, unique=True, background=True)
+            # Add to the set of query types for which the index has already been added
+            self._query_types_with_index.add(query_type)
+
+    def _populate_index(
+        self,
+        *,
+        type_: type,
+        field_prefix: str | None = None,
+        result: list[tuple[str, int]],
+    ) -> None:
+        """
+        Populate a flat dict of (field_name, ASCENDING | DESCENDING) for the specified type
+        with recursion into embedded data, key or record types.
+        """
+        type_spec = CastUtil.cast(DataSpec, TypeSchema.for_type(type_))
+        for field_spec in type_spec.fields:
+
+            # Get type hint and ensure it is not a container
+            field_type_hint = field_spec.field_type_hint
+            if field_type_hint.remaining:
+                raise RuntimeError(
+                    f"Field {field_spec.field_name} in type {typename(type_)} is a container and cannot be queried."
+                )
+
+            # Combine field prefix with field name
+            if field_prefix:
+                combined_field_prefix = f"{field_prefix}.{field_spec.field_name}"
+            else:
+                combined_field_prefix = field_spec.field_name
+
+            # Populate depending on field type
+            field_type = field_type_hint.schema_type
+            if is_primitive_type(field_type) or is_enum_type(field_type):
+                # Add a primitive or enum field
+                field_order = pymongo.DESCENDING if field_spec.descending else pymongo.ASCENDING
+                result.append((combined_field_prefix, field_order))
+            elif is_data_key_or_record_type(field_type):
+                # Add a data, key or record field
+                self._populate_index(
+                    type_=field_type,
+                    field_prefix=combined_field_prefix,
+                    result=result,
+                )
+            else:
+                raise RuntimeError(f"Cannot create index for field type {typename(field_type)}.")

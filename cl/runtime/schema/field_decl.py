@@ -16,15 +16,22 @@ import datetime as dt
 import types
 import typing
 from dataclasses import dataclass
-from enum import Enum
-from typing import Literal
-from typing import Type
+from typing import Self
 from uuid import UUID
-from typing_extensions import Self
-from cl.runtime.primitive.case_util import CaseUtil
-from cl.runtime.records.class_info import ClassInfo
-from cl.runtime.records.dataclasses_extensions import missing
-from cl.runtime.schema.field_kind import FieldKind
+import numpy
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.protocols import PRIMITIVE_TYPES
+from cl.runtime.records.protocols import is_data_key_or_record_type
+from cl.runtime.records.protocols import is_enum_type
+from cl.runtime.records.protocols import is_key_type
+from cl.runtime.records.protocols import is_primitive_type
+from cl.runtime.records.protocols import is_record_type
+from cl.runtime.records.typename import typename
+from cl.runtime.schema.container_decl import ContainerDecl
+from cl.runtime.schema.container_kind import ContainerKind
+from cl.runtime.schema.type_decl_key import TypeDeclKey
+from cl.runtime.schema.type_kind import TypeKind
 
 primitive_types = (str, float, bool, int, dt.date, dt.time, dt.datetime, UUID, bytes)
 """Tuple of primitive types."""
@@ -34,34 +41,31 @@ primitive_modules = ["builtins", "datetime", "uuid"]
 
 
 @dataclass(slots=True, kw_only=True)
-class FieldDecl:
+class FieldDecl(DataclassMixin):
     """Field declaration."""
 
-    name: str = missing()
+    name: str = required()
     """Field name."""
 
-    label: str | None = missing()
+    label: str | None = None
     """Field label (if not specified, titleized name is used instead)."""
 
-    comment: str | None = missing()
+    comment: str | None = None
     """Field comment."""
 
-    field_kind: FieldKind = missing()
-    """Kind of the element within the container if the field is a container, otherwise kind of the field itself."""
+    field_kind: TypeKind = required()
+    """Kind of the element inside the innermost container if the field is a container, otherwise kind of the field."""
 
-    field_type: str = missing()
-    """Field type name for builtins and uuid modules and module.ClassName for all other types."""
+    field_type_decl: TypeDeclKey = required()
+    """Declaration for the field type."""
 
-    container_type: str | None = None
-    """Container type name for builtins module and module.ClassName for other types."""
+    container: ContainerDecl | None = None
+    """Container declaration if the value is inside a container."""
 
-    optional_field: bool = False
+    optional_field: bool | None = None
     """Indicates if the entire field can be None."""
 
-    optional_values: bool = False
-    """Indicates if values within the container can be None if the field is a container, otherwise None."""
-
-    additive: bool = False
+    additive: bool | None = None
     """Optional flag indicating if the element is additive (i.e., its sum across records has meaning)."""
 
     formatter: str | None = None
@@ -73,12 +77,12 @@ class FieldDecl:
     @classmethod
     def create(
         cls,
-        record_type: Type,
+        record_type: type,
         field_name: str,
-        field_type: Type,
+        field_type: type,
         field_comment: str,
         *,
-        dependencies: typing.Set[Type] | None = None,
+        dependencies: typing.Set[type] | None = None,
     ) -> Self:
         """
         Create from field name and type.
@@ -91,131 +95,160 @@ class FieldDecl:
             dependencies: Set of types used in field or methods of the specified type, populated only if not None
         """
 
-        from cl.runtime.schema.schema import Schema  # TODO: Avoid circlular dependency
+        from cl.runtime.schema.type_info import TypeInfo  # TODO: Avoid circular dependency
 
         result = cls()
-        result.name = CaseUtil.snake_to_pascal_case(field_name.removesuffix("_"))
+        result.name = field_name
         result.comment = field_comment
 
         # Get origin and args of the field type
         field_origin = typing.get_origin(field_type)
         field_args = typing.get_args(field_type)
 
-        # Note two possible forms of origin for optional, typing.Union and types.UnionType
-        is_union = field_origin is typing.Union or field_origin is types.UnionType
-        is_optional = is_union and type(None) in field_args
+        # There are two possible forms of origin for optional, typing.Union and types.UnionType
+        if field_origin is typing.Union or field_origin is types.UnionType:
+            # Union with None is the only permitted Union type
+            if len(field_args) != 2 or field_args[1] is not type(None):
+                raise RuntimeError(
+                    f"Union type hint '{field_type}' for field '{field_name}'\n"
+                    f"in record '{typename(record_type)}' is not supported for DB schema\n"
+                    f"because it is not an optional value using the syntax 'Type | None',\n"
+                    f"where None is placed second per the standard convention.\n"
+                    f"It cannot be used to specify a choice between two types.\n"
+                )
 
-        # Strip optional from field_type
-        if is_optional:
-            # Indicate that field can be None
+            # Set optional flag in result
             result.optional_field = True
 
             # Get type information without None
             field_type = field_args[0]
             field_origin = typing.get_origin(field_type)
             field_args = typing.get_args(field_type)
-        else:
-            # Indicate that field cannot be None
-            result.optional_field = False
 
         # Check for one of the supported container types
-        if field_origin in [list, dict]:
-            if field_origin.__module__ == "builtins":
-                result.container_type = field_origin.__name__
+        outer_container = None
+        supported_containers = [list, tuple, dict]
+        while field_origin in supported_containers:
+            if field_origin is list:
+                container = ContainerDecl(container_kind=ContainerKind.LIST)
+                # Perform additional checks for list
+                if len(field_args) != 1:
+                    raise RuntimeError(
+                        f"List type hint '{field_type}' for field '{field_name}'\n"
+                        f"in record '{typename(record_type)}' is not supported for DB schema\n"
+                        f"because it is not a list of elements using the syntax 'list[type]'.\n"
+                        f"Other list type hint formats are not supported.\n"
+                    )
+            elif field_origin is tuple:
+                container = ContainerDecl(container_kind=ContainerKind.LIST)
+                # Perform additional checks for tuple
+                if len(field_args) == 1 or (len(field_args) > 1 and field_args[1] is not Ellipsis):
+                    raise RuntimeError(
+                        f"Tuple type hint '{field_type}' for field '{field_name}'\n"
+                        f"in record '{typename(record_type)}' is not supported for DB schema\n"
+                        f"because it is not a variable-length tuple using the syntax 'tuple[type, ...]',\n"
+                        f"where ellipsis '...' is placed second per the standard convention.\n"
+                        f"It cannot be used to specify a fixed size tuple or a tuple with\n"
+                        f"different element types.\n"
+                    )
+            elif field_origin is dict:
+                container = ContainerDecl(container_kind=ContainerKind.DICT)
+                # Perform additional checks for dict
+                if len(field_args) != 2 and field_args[0] is not str:
+                    raise RuntimeError(
+                        f"Dict type hint '{field_type}' for field '{field_name}'\n"
+                        f"in record '{typename(record_type)}' is not supported for DB schema\n"
+                        f"because it is not a dictionary with string keys using the syntax 'dict[str, type]'.\n"
+                        f"It cannot be used to specify a dictionary with keys of a different type.\n"
+                    )
+                # TODO: Support dict[str, list[x]]
             else:
-                result.container_type = f"{field_origin.__module__}.{field_origin.__name__}"
+                supported_container_names = ", ".join([typename(x) for x in supported_containers])
+                raise RuntimeError(
+                    f"Type {field_origin.__name__} is not one of the supported container types "
+                    f"{supported_container_names}."
+                )
 
             # Strip container information from field_type to get the type of value inside the container
             field_type = field_args[0]
             field_origin = typing.get_origin(field_type)
             field_args = typing.get_args(field_type)
-        else:
-            # No container
-            result.container_type = None
 
-        # Strip optional again from the inner type
-        is_union = field_origin is typing.Union or field_origin is types.UnionType
-        is_optional = is_union and type(None) in field_args
-        if is_optional:
-            # Indicate that values can be None
-            result.optional_values = True
+            # There are two possible forms of origin for optional, typing.Union and types.UnionType
+            if field_origin is typing.Union or field_origin is types.UnionType:
+                # Union with None is the only permitted Union type
+                if len(field_args) != 2 or field_args[1] is not type(None):
+                    raise RuntimeError(
+                        f"Union type hint '{field_type}' for an element of\n"
+                        f"the {container.container_kind.name}field '{field_name}'\n"
+                        f"in record '{typename(record_type)}' is not supported for DB schema\n"
+                        f"because it is not an optional value using the syntax 'Type | None',\n"
+                        f"where None is placed second per the standard convention.\n"
+                        f"It cannot be used to specify a choice between two types.\n"
+                    )
 
-            # Get type information without None
-            field_type = field_args[0]
-            field_origin = typing.get_origin(field_type)
-            field_args = typing.get_args(field_type)
-        else:
-            # Indicate that values cannot be None
-            result.optional_values = False
+                # Indicate that container elements can be None
+                container.optional_items = True
+
+                # Get type information without None
+                field_type = field_args[0]
+                field_origin = typing.get_origin(field_type)
+                field_args = typing.get_args(field_type)  # TODO: Add a check
+
+            # Assign container to result or outer container
+            if outer_container is None:
+                result.container = container
+            else:
+                outer_container.inner = container
+            outer_container = container
 
         # Parse the value itself
-        if field_origin is Literal:
-            # List of literal strings
-            result.field_kind = "primitive"
-            result.field_type = str.__name__
+        if field_origin in supported_containers:
+            raise RuntimeError("Containers within containers are not supported when building database schema.")
+        elif field_origin is numpy.ndarray:
+            # Handle numpy.ndarray-type hints as primitives with a special name
+            result.field_kind = TypeKind.PRIMITIVE
 
-        elif field_origin is tuple:
-            # Generic key
-            result.field_kind = "primitive"
-            result.field_type = "key"
+            # Create base TypeDeclKey instance and clone to make unfrozen
+            base_field_type_decl = TypeDeclKey.for_type(field_type).clone()
+
+            # Rename to str representation of GenericAlias
+            base_field_type_decl.name = str(field_type)
+            base_field_type_decl.build()
+
+            result.field_type_decl = base_field_type_decl
 
         elif field_origin is None:
-            # Assign element kind
-            if field_type in primitive_types:
-                # Indicate that field is one of the supported primitive types
-                result.field_kind = "primitive"
-            elif issubclass(field_type, Enum):
-                # Indicate that field is an enum
-                result.field_kind = "enum"
-            elif field_type.__name__.endswith("Key"):
-                # Indicate that field is a key
-                result.field_kind = "key"
+
+            # Assign type declaration key
+            result.field_type_decl = TypeDeclKey.for_type(field_type)
+
+            # Add field type to dependencies, do not use if dependencies to prevent from skipping on first item added
+            if dependencies is not None and not is_primitive_type(field_type):
+                dependencies.add(field_type)
+
+            # Assign field kind
+            if field_type in PRIMITIVE_TYPES:
+                # Field is one of the supported primitive types
+                result.field_kind = TypeKind.PRIMITIVE
+            elif is_enum_type(field_type):
+                # Field is an enum
+                result.field_kind = TypeKind.ENUM
+            elif is_key_type(field_type):
+                # Field is a key (excludes records)
+                result.field_kind = TypeKind.KEY
+            elif is_record_type(field_type):
+                # Field is a record (excludes keys)
+                result.field_kind = TypeKind.RECORD
+            elif is_data_key_or_record_type(field_type):
+                # Field is a slotted data type (excludes keys and records)
+                result.field_kind = TypeKind.DATA
             else:
-                # Indicate that field is a user-defined data or record
-                result.field_kind = "data"
-
-            if field_type.__module__ in primitive_modules:
-                # Primitive type, specify type name
-                result.field_type = field_type.__name__
-            else:
-                # Complex type, specify full class path
-                field_class_path = f"{field_type.__module__}.{field_type.__name__}"
-
-                # For keys, remove suffix
-                if result.field_kind == "key":
-                    if field_class_path.endswith("Key"):
-                        field_class_module = field_type.__module__
-                        field_class_name = field_type.__name__
-                        field_class_path = f"{field_class_module}.{field_class_name}"
-                    else:
-                        raise RuntimeError("Field has TypeKind=key but class name does not end in 'Key'.")
-
-                result.field_type = field_class_path
-                field_type_obj = ClassInfo.get_class_type(field_class_path)
-
-                if (
-                    dependencies is not None
-                    and field_type_obj is not record_type
-                    and field_type_obj not in dependencies
-                ):
-                    # TODO: Do we need this if we are processing dependencies?
-                    # TODO: Should a list of dependencies be added to TypeDecl object directly
-                    if issubclass(field_type_obj, Enum):
-                        from cl.runtime.schema.enum_decl import EnumDecl
-
-                        # TODO: Restore call when implemented EnumDecl.for_type(field_type_obj, dependencies=dependencies)
-                    else:
-                        from cl.runtime.schema.type_decl import TypeDecl
-
-                        TypeDecl.for_type(field_type_obj, dependencies=dependencies)
-
-                # Add to dependencies
-                if dependencies is not None:
-                    dependencies.add(field_type_obj)
-
-                # Add to Schema
-
+                raise RuntimeError(
+                    f"Field type '{field_type}' for field '{field_name}' is not\n"
+                    f"a primitive type, enum, key, record or a slotted data type."
+                )
         else:
-            raise RuntimeError(f"Complex type {field_type} is not recognized when building database schema.")
+            raise RuntimeError(f"Complex type {field_type} is not supported when building database schema.")
 
         return result

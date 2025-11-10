@@ -13,46 +13,53 @@
 # limitations under the License.
 
 from __future__ import annotations
-from typing import List
 from inflection import titleize
 from pydantic import BaseModel
 from cl.runtime.primitive.case_util import CaseUtil
-from cl.runtime.routers.user_request import UserRequest
-from cl.runtime.schema.schema import Schema
+from cl.runtime.records.typename import typename
+from cl.runtime.schema.type_info import TypeInfo
+from cl.runtime.schema.type_kind import TypeKind
 
 
 class TypesResponseItem(BaseModel):
-    """Single item of the list returned by the /data/types route."""
+    """Single item of the list returned by the /schema/types route."""
 
     name: str
     """Class name (may be customized in settings)."""
 
-    module: str
-    """Module path in dot-delimited format (may be customized in settings)."""
-
-    label: str
+    label: str | None
     """Type label displayed in the UI is humanized class name (may be customized in settings)."""
+
+    kind: str | None = None
+    """Flag to indicate type kind."""
 
     class Config:
         alias_generator = CaseUtil.snake_to_pascal_case
         populate_by_name = True
 
     @classmethod
-    def get_types(cls, request: UserRequest) -> List[TypesResponseItem]:
+    def get_types(cls) -> list[TypesResponseItem]:
         """Implements /schema/types route."""
 
-        # TODO: Check why UserRequest is not used in this method
+        # Get cached classes (does not rebuild cache)
+        record_types = TypeInfo.get_types(type_kind=TypeKind.RECORD)
 
-        # Get a dictionary of types indexed by short name
-        type_dict = Schema.get_type_dict()
-
-        result = [
+        # Add types to result
+        types_result = [
             TypesResponseItem(
-                name=record_type.__name__,
-                module=CaseUtil.snake_to_pascal_case(record_type.__module__),
-                label=titleize(record_type.__name__),
+                name=typename(record_type),
+                label=titleize(typename(record_type)),  # TODO: Make label different from name or remove
             )
-            for record_type in type_dict.values()
-            if hasattr(record_type, "get_key")
+            for record_type in record_types
         ]
-        return result
+
+        return types_result
+
+    @classmethod
+    def _check_name_collisions(cls, types: list[TypesResponseItem], tables: list[TypesResponseItem]) -> None:
+        """Check name collisions between types and tables."""
+        collisions = set([x.name for x in types]) & set([x.name for x in tables])
+        if collisions:
+            raise RuntimeError(
+                f"Name collision detected. The following names are used in both 'types' and 'tables': {', '.join(collisions)}"
+            )

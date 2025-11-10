@@ -13,13 +13,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class MethodLabelKey(KeyMixin):
+@dataclass(slots=True)
+class MethodLabelKey(DataclassMixin, KeyMixin):
     """
     Custom method label overrides the standard 'method_name' -> 'Method Name' transformation.
 
@@ -28,9 +28,9 @@ class MethodLabelKey(KeyMixin):
         - This UI setting does not affect the REST API
     """
 
-    method_name: str = missing()
+    method_name: str = required()
     """Method name without reference to a class (the setting will apply to this method name in every class)."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return MethodLabelKey

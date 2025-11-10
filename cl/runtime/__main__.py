@@ -12,130 +12,96 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import traceback
-import uuid
+import logging.config
 import webbrowser
 import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from starlette.staticfiles import StaticFiles
-from cl.runtime import Context
-from cl.runtime.context.process_context import ProcessContext
+from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.events.event_broker import EventBroker
 from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.log.log_entry import LogEntry
-from cl.runtime.log.log_entry_level_enum import LogEntryLevelEnum
-from cl.runtime.log.user_log_entry import UserLogEntry
-from cl.runtime.primitive.datetime_util import DatetimeUtil
-from cl.runtime.routers.app import app_router
-from cl.runtime.routers.auth import auth_router
-from cl.runtime.routers.entity import entity_router
-from cl.runtime.routers.health import health_router
-from cl.runtime.routers.schema import schema_router
-from cl.runtime.routers.storage import storage_router
-from cl.runtime.routers.tasks import tasks_router
+from cl.runtime.log.log_config import logging_config
+from cl.runtime.log.log_config import uvicorn_empty_logging_config
+from cl.runtime.records.typename import typename
+from cl.runtime.routers.context_middleware import ContextMiddleware
+from cl.runtime.routers.server_util import ServerUtil
+from cl.runtime.server.env import Env
 from cl.runtime.settings.api_settings import ApiSettings
+from cl.runtime.settings.celery_settings import CelerySettings
 from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.settings.project_settings import ProjectSettings
+from cl.runtime.tasks.celery.celery_queue import CeleryQueue
 from cl.runtime.tasks.celery.celery_queue import celery_delete_existing_tasks
-from cl.runtime.tasks.celery.celery_queue import celery_start_queue
 
 # Server
 server_app = FastAPI()
 
 
 # Universal exception handler function
-async def handle_exception(request, exc, log_level):
+async def handle_exception(request, exc):
+    """Create error response."""
 
-    # Get context logger using request URL as name
-    logger = Context.current().get_logger(str(request.url))
-
-    # Log the exception
-    logger.error(repr(exc))
-
-    # Output traceback
-    traceback.print_exception(exc)
-
-    # TODO (Roman): save all logs to db
-    # Save log entry to the database
-    log_type = UserLogEntry if isinstance(exc, UserError) else LogEntry
-    entry = log_type(  # noqa
-        message=str(exc),
-        level=log_level,
-    )
-    entry.init()
-    Context.current().save_one(entry)
-
-    # Message to display for user
-    user_message = str(exc) if log_level == LogEntryLevelEnum.USER_ERROR else None
-
-    # Return 500 response to avoid exception handler multiple calls
+    # TODO (Roman): Temporary before introduce sse.
+    # Return 500 response to avoid exception handler multiple calls.
     # IMPORTANT:
-    # - If UserMessage is set it will be shown to the user on toast badge and bell becomes red,
-    # - Otherwise default message will be shown
-    # TODO: Make it possible to customize default message in client code or pass from settings via runtime
+    # - If UserMessage is set it will be shown to the user on toast badge and bell becomes red.
+    # - Otherwise default message will be shown.
+    user_message = str(exc) if isinstance(exc, UserError) else None
     return JSONResponse({"UserMessage": user_message}, status_code=500)
 
 
-# Add RuntimeError exception handler
-@server_app.exception_handler(RuntimeError)
+# Add an exception handler
+@server_app.exception_handler(Exception)
 async def http_exception_handler(request, exc):
-    return await handle_exception(request, exc, log_level=LogEntryLevelEnum.ERROR)
+    return await handle_exception(request, exc)
 
 
-# Add Warning exception handler
-@server_app.exception_handler(Warning)
-async def http_warning_handler(request, exc):
-    return await handle_exception(request, exc, log_level=LogEntryLevelEnum.WARNING)
-
-
-# Add UserError exception handler
-@server_app.exception_handler(UserError)
-async def http_user_error_handler(request, exc):
-    return await handle_exception(request, exc, log_level=LogEntryLevelEnum.USER_ERROR)
-
-
-# Get Runtime settings from Dynaconf
+# Get CORSMiddleware settings defined in Dynaconf from ApiSettings
 api_settings = ApiSettings.instance()
-
-# Permit origins based on either hostname or host IP
-origins = [
-    f"{api_settings.host_name}:{api_settings.port}",
-    f"{api_settings.host_ip}:{api_settings.port}",
-]
-
 server_app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],  # Specify allowed HTTP methods, e.g., ["GET", "POST"]
-    allow_headers=["*"],  # Specify allowed headers, e.g., ["Content-Type", "Authorization"]
+    allow_origins=api_settings.api_allow_origins,
+    allow_origin_regex=api_settings.api_allow_origin_regex,
+    allow_credentials=api_settings.api_allow_credentials,
+    allow_methods=api_settings.api_allow_methods,
+    allow_headers=api_settings.api_allow_headers,
+    expose_headers=api_settings.api_expose_headers,
+    max_age=api_settings.api_max_age,
 )
 
-# Routers
-server_app.include_router(app_router.router, prefix="", tags=["App"])
-server_app.include_router(health_router.router, prefix="", tags=["Health Check"])
-server_app.include_router(auth_router.router, prefix="/auth", tags=["Authorization"])
-server_app.include_router(schema_router.router, prefix="/schema", tags=["Schema"])
-server_app.include_router(storage_router.router, prefix="/storage", tags=["Storage"])
-server_app.include_router(entity_router.router, prefix="/entity", tags=["Entity"])
-server_app.include_router(tasks_router.router, prefix="/tasks", tags=["Tasks"])
+# Middleware for clearing contextvars and restoring their previous state after async task execution
+server_app.add_middleware(ContextMiddleware)
 
-if __name__ == "__main__":
-    with ProcessContext():
+# Add routers
+ServerUtil.include_routers(server_app)
+
+_logger = logging.getLogger(__name__)
+
+
+def run_backend() -> None:
+    """Run REST backend."""
+
+    # Set up logging config
+    logging.config.dictConfig(logging_config)
+
+    with activate(Env().build()), activate(DataSource().build()), activate(EventBroker.create()):
+
+        data_source = active(DataSource)
+        _logger.info(f"Connected to DB type '{typename(type(data_source.db))}', db_id = '{data_source.db.db_id}'.")
+
         # TODO: This only works for the Mongo celery backend
-        celery_delete_existing_tasks()
+        if CelerySettings.instance().celery_is_embedded_worker:
+            celery_delete_existing_tasks()
 
-        # Start Celery workers (will exit when the current process exits)
-        log_dir = os.path.join(ProjectSettings.get_project_root(), "logs")  # TODO: Make unique
-        celery_start_queue(log_dir=log_dir)
+            # Start Celery workers (will exit when the current process exits)
+            CeleryQueue.run_start_queue()
 
-        # Preload data
-        PreloadSettings.instance().preload()
-
-        # Execute configure for each config_id specified in PreloadSettings.configs
-        PreloadSettings.instance().configure()
+        # Save records from preload directory to DB and execute run_configure on all preloaded Config records
+        PreloadSettings.instance().save_and_configure()
 
         # Find wwwroot directory, error if not found
         wwwroot_dir = ProjectSettings.get_wwwroot()
@@ -143,9 +109,20 @@ if __name__ == "__main__":
         # Mount static client files
         server_app.mount("/", StaticFiles(directory=wwwroot_dir, html=True))
 
-        # Open new browser tab in the default browser
-        webbrowser.open_new_tab(f"http://{api_settings.host_name}:{api_settings.port}")
+        # Open new browser tab in the default browser using http protocol.
+        # It will switch to https if cert is present.
+        webbrowser.open_new_tab(f"http://{api_settings.api_hostname}:{api_settings.api_port}")
 
         # Run Uvicorn using hostname and port specified by Dynaconf
-        api_settings = ApiSettings.instance()
-        uvicorn.run(server_app, host=api_settings.host_name, port=api_settings.port)
+        uvicorn.run(
+            server_app,
+            host=api_settings.api_hostname,
+            port=api_settings.api_port,
+            log_config=uvicorn_empty_logging_config,
+        )
+
+
+if __name__ == "__main__":
+
+    # Run backend
+    run_backend()

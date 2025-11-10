@@ -1,0 +1,7 @@
+type_: StubDataclass
+type_kind: Record
+fields:
+- field_name: id
+  field_type_hint:
+    schema_type: str
+

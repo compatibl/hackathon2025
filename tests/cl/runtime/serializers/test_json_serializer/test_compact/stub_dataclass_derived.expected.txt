@@ -1,0 +1,1 @@
+{"_type":"StubDataclassDerived","id":"abc","derived_str_field":"derived"}
