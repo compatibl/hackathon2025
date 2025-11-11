@@ -15,47 +15,93 @@
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from cl.runtime.primitive.ordered_uuid import OrderedUuid
+from typing import Self
+from cl.runtime.contexts.context_manager import active_or_default
+from cl.runtime.parsers.locale import Locale
+from cl.runtime.parsers.locale_key import LocaleKey
+from cl.runtime.parsers.locale_keys import LocaleKeys
+from cl.runtime.primitive.timestamp import Timestamp
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.schema.type_info import TypeInfo
 from cl.convince.llms.completion_cache import CompletionCache
+from cl.convince.llms.completion_util import CompletionUtil
 from cl.convince.llms.llm_key import LlmKey
+from cl.convince.settings.llm_settings import LlmSettings
 
 
 @dataclass(slots=True, kw_only=True)
-class Llm(LlmKey, RecordMixin[LlmKey], ABC):
+class Llm(LlmKey, RecordMixin, ABC):
     """Provides an API for single query and chat completion."""
+
+    llm_locale: LocaleKey = required()
+    """Locale used by the LLM, may differ from the active locale."""
 
     _completion_cache: CompletionCache | None = None
     """Completion cache is used to return cached LLM responses."""
 
     def get_key(self) -> LlmKey:
-        return LlmKey(llm_id=self.llm_id)
+        return LlmKey(llm_id=self.llm_id).build()
 
-    def completion(self, query: str, *, trial_id: str | int | None = None) -> str:
+    @classmethod
+    def default(cls) -> Self:
+        # Default instance based on LlmSettings
+        llm_settings = LlmSettings.instance()
+        llm_type = TypeInfo.from_type_name(llm_settings.llm_type)
+        llm_id = llm_settings.llm_id
+        llm_locale = LocaleKey(locale_id=llm_settings.llm_locale).build()
+        return llm_type(llm_id=llm_id, llm_locale=llm_locale).build()
+
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+
+        if self.llm_id is None:
+            # Default to LlmSettings.llm_id if not specified
+            self.llm_id = LlmSettings.instance().llm_id
+
+        if self.llm_locale is None:
+            if (llm_settings_locale := LlmSettings.instance().llm_locale) is not None:
+                # Try using locale from LlmSettings first
+                self.llm_locale = LocaleKey(locale_id=llm_settings_locale)
+            else:
+                # Otherwise use the active or default locale
+                self.llm_locale = active_or_default(Locale)
+
+        if self.llm_locale != LocaleKeys.EN_US:
+            # TODO: Enable locale other than en-US after the code using LLM locale is added
+            raise RuntimeError("LLM locale is not yet supported.")
+
+        # Initialize completion cache
+        self._completion_cache = CompletionCache(channel=self.llm_id).build()
+
+    def completion(self, query: str) -> str:
         """Text-in, text-out single query completion without model-specific tags (uses response caching)."""
 
-        # Remove leading and trailing whitespace and normalize EOL in query
-        query = CompletionCache.normalize_value(query)
+        # Get cache key with trial, EOL normalization, and stripped leading and trailing whitespace
+        query_create = CompletionUtil.format_query(query)
 
-        # Create completion cache if does not exist
-        if self._completion_cache is None:
-            self._completion_cache = CompletionCache(channel=self.llm_id)
+        if not self._completion_cache:
+            # Initialize completion cache on first use, error message if self is not yet frozen
+            # to prevent the cache from being out of sync with the object
+            self.check_frozen()
+            self._completion_cache = CompletionCache(channel=self.llm_id).build()
 
         # Try to find in completion cache by cache_key, make cloud provider call only if not found
-        if (result := self._completion_cache.get(query, trial_id=trial_id)) is None:
-            # Generate OrderedUuid and convert to readable ordered string in date-hash format
-            request_uuid = OrderedUuid.create_one()
-            request_id = OrderedUuid.to_readable_str(request_uuid)
+        if (result := self._completion_cache.get(query_create)) is None:
+            # Request identifier is UUIDv7 timestamp in time-ordered dash-delimited format
+            # is used to prevent LLM cloud provider caching and to identify LLM API calls
+            # for audit log and error reporting purposes
+            request_id = Timestamp.create()
 
             # Invoke LLM by calling the cloud provider API
-            result = self.uncached_completion(request_id, query)
+            result = self.uncached_completion(request_id, query_create)
 
             # Save the result in cache before returning, request_id is recorded
             # but not taken into account during lookup
-            self._completion_cache.add(request_id, query, result, trial_id=trial_id)
+            self._completion_cache.add(request_id, query_create, result)
 
         # Remove leading and trailing whitespace and normalize EOL in result
-        result = CompletionCache.normalize_value(result)
+        result = CompletionUtil.format_completion(result)
         return result
 
     @abstractmethod

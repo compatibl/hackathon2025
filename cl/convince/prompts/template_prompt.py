@@ -15,39 +15,35 @@
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from cl.runtime import RecordMixin
+from typing import Any
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.case_util import CaseUtil
-from cl.runtime.records.dataclasses_extensions import missing
-from cl.runtime.records.protocols import TDataDict
-from cl.runtime.serialization.dict_serializer import DictSerializer
-from cl.runtime.serialization.string_serializer import StringSerializer
+from cl.runtime.records.data_mixin import TDataDict
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.records.typename import typename
+from cl.runtime.schema.type_info import TypeInfo
+from cl.runtime.serializers.data_serializers import DataSerializers
+from cl.runtime.serializers.key_serializers import KeySerializers
 from cl.convince.prompts.prompt import Prompt
-from cl.convince.prompts.prompt_key import PromptKey
-
-_data_serializer = DictSerializer()
-"""Serializer used to serialize params object for rendering the template."""
-
-_key_serializer = StringSerializer()
-"""Serializer used to serialize keys for error reporting."""
 
 
 @dataclass(slots=True, kw_only=True)
 class TemplatePrompt(Prompt, ABC):
     """Uses a template to render the prompt, param names are PascalCase in curly braces."""
 
-    template: str = missing()
+    template: str = required()
     """Uses a template to render the prompt, param names are PascalCase in curly braces."""
 
-    def get_key(self) -> PromptKey:
-        return PromptKey(prompt_id=self.prompt_id)
+    params_type: str = required()
+    """Record whose pascalized fields are used as template parameters in ClassName format."""
 
     def render(self, params: RecordMixin) -> str:
         """Use data from the parameters object of 'params_type' to render the template."""
         # Check params type
         self._check_params_type(params)
         # Serialize and convert keys to PascalCase
-        params_dict = _data_serializer.serialize_data(params)
+        params_dict = DataSerializers.DEFAULT.serialize(params)
         params_dict_with_pascal_case_keys = {
             CaseUtil.snake_to_pascal_case(k): v for k, v in params_dict.items() if v is not None
         }
@@ -56,13 +52,13 @@ class TemplatePrompt(Prompt, ABC):
             result = self._render(params_dict_with_pascal_case_keys)
         except KeyError as e:
             field_name = str(e)
-            params_key_str = _key_serializer.serialize_key(params.get_key())
+            params_key_str = KeySerializers.DELIMITED.serialize(params.get_key())
             present_keys_str = "".join(f"  - {x}\n" for x in params_dict_with_pascal_case_keys.keys())
             raise UserError(
                 f"Parameter required by prompt is either None or not a field of the parameters object.\n"
                 f"Prompt key='{self.prompt_id}'\n"
                 f"Parameter name: {field_name}\n"
-                f"Parameters object type={type(params).__name__} and key='{params_key_str}'\n"
+                f"Parameters object type={typename(type(params))} and key='{params_key_str}'\n"
                 f"Available non-empty fields of the parameters object:\n{present_keys_str}\n"
             )
         return result
@@ -70,3 +66,14 @@ class TemplatePrompt(Prompt, ABC):
     @abstractmethod
     def _render(self, dict_with_pascal_case_keys: TDataDict) -> str:
         """Protected method performing the actual rendering, must throw KeyError if a parameter is missing."""
+
+    def _check_params_type(self, params: Any) -> None:
+        """Check that params object is an instance of the right type."""
+        if params is None:
+            raise UserError(f"Params field is empty for prompt '{self.prompt_id}'.")
+        params_type = TypeInfo.from_type_name(self.params_type)
+        if not isinstance(params, params_type):
+            raise UserError(
+                f"Parameters object for prompt {self.prompt_id} has type {typename(params)} which "
+                f"is not a subclass of the expected type {self.params_type}."
+            )

@@ -13,18 +13,18 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Type
-from cl.runtime.records.dataclasses_extensions import missing
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class LlmKey(KeyMixin):
+@dataclass(slots=True)
+class LlmKey(DataclassMixin, KeyMixin):
     """Provides an API for single query and chat completion."""
 
-    llm_id: str = missing()
+    llm_id: str = required()
     """Unique LLM identifier."""
 
     @classmethod
-    def get_key_type(cls) -> Type:
+    def get_key_type(cls) -> type[KeyMixin]:
         return LlmKey

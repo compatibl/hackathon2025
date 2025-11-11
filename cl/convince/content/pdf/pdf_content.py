@@ -14,8 +14,8 @@
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing_extensions import Self
-from cl.runtime.records.dataclasses_extensions import missing
+from typing import Self
+from cl.runtime.records.for_dataclasses.extensions import required
 from cl.convince.content.content import Content
 
 
@@ -23,7 +23,7 @@ from cl.convince.content.content import Content
 class PdfContent(Content):
     """Single-page content in text format."""
 
-    pdf_bytes: bytes = missing()
+    pdf_bytes: bytes = required()
     """PDF document in its original format."""
 
     @abstractmethod

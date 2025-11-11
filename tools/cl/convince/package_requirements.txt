@@ -1,5 +1,7 @@
 anthropic>=0.34.2
 fireworks-ai>=0.15.1
-google-generativeai>=0.8.1
+google-genai>=1.10.0
 jinja2>=3.1.4
 openai>=1.45.0
+parse>=1.20.2
+text2num>=2.5.1

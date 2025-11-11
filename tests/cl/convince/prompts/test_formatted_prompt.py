@@ -13,9 +13,8 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.context.testing_context import TestingContext
 from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.testing.regression_guard import RegressionGuard
+from cl.runtime.qa.regression_guard import RegressionGuard
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
 from stubs.cl.convince.prompts.stub_prompt_params import StubPromptParams
 
@@ -24,20 +23,18 @@ _TEMPLATE = "StrReq='{StrReq}' StrOpt='{StrOpt}' IntReq='{IntReq}' IntOpt='{IntO
 
 def test_formatted_prompt():
     """Smoke test."""
+    guard = RegressionGuard()
+    prompt = FormattedPrompt(prompt_id="Default", template=_TEMPLATE, params_type=StubPromptParams.__name__)
 
-    with TestingContext():
-        guard = RegressionGuard()
-        prompt = FormattedPrompt(prompt_id="Default", template=_TEMPLATE, params_type=StubPromptParams.__name__)
+    # Simple prompt
+    guard.write(prompt.render(StubPromptParams(str_opt="def", int_opt=456)))
 
-        # Simple prompt
-        guard.write(prompt.render(StubPromptParams(str_opt="def", int_opt=456)))
-
-        # Formatted string raises an error when parameter is None
-        try:
-            prompt.render(StubPromptParams())
-        except UserError as e:
-            guard.write(f"Expected UserError: {e}")
-        RegressionGuard.verify_all()
+    # Formatted string raises an error when parameter is None
+    try:
+        prompt.render(StubPromptParams())
+    except UserError as e:
+        guard.write(f"Expected UserError: {e}")
+    RegressionGuard().verify_all()
 
 
 if __name__ == "__main__":

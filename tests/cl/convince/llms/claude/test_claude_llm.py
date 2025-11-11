@@ -13,19 +13,16 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.context.testing_context import TestingContext
 from cl.convince.llms.claude.claude_llm import ClaudeLlm
 
 
-def test_smoke():
+def test_smoke(default_db_fixture):
     """Test ClaudeLlm class."""
-
-    with TestingContext():
-        llms = [
-            ClaudeLlm(llm_id="claude-3-haiku-20240307"),
-        ]
-        for llm in llms:
-            assert "4" in llm.completion("2 times 2?")
+    llms = [
+        ClaudeLlm(llm_id="claude-3-haiku-20240307").build(),
+    ]
+    for llm in llms:
+        assert "4" in llm.completion("2 times 2?")
 
 
 if __name__ == "__main__":

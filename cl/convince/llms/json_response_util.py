@@ -21,7 +21,7 @@ class JsonResponseUtil:
     """Helper methods for parsing JSON response from LLMs."""
 
     @classmethod
-    def sanitize_unescaped_quotes_and_load_json_str(cls, s: str, strict: bool = False) -> str:
+    def normalize_unescaped_quotes_and_load_json_str(cls, s: str, strict: bool = False) -> str:
         js_str = s
         max_replaces = s.count('"')
 
@@ -54,7 +54,7 @@ class JsonResponseUtil:
                 # escape it to \"
                 js_str = js_str[:prev_quote_index] + "\\" + js_str[prev_quote_index:]
         if strict:
-            raise ValueError("Unable to sanitize unescaped quotes in the provided string to a valid JSON!")
+            raise ValueError("Unable to normalize unescaped quotes in the provided string to a valid JSON!")
         return "{}"
 
     @classmethod
@@ -65,28 +65,35 @@ class JsonResponseUtil:
         first_curly_bracket = json_string.find("{")
         last_curly_bracket = json_string.rfind("}")
 
-        # Ensure that both curly brackets were found
-        if first_curly_bracket != -1 and last_curly_bracket != -1:
-            first_square_bracket = json_string.find("[", 0, first_curly_bracket)
-            last_square_bracket = json_string.rfind("]", last_curly_bracket, len(json_string))
+        first_square_bracket = json_string.find("[")
+        last_square_bracket = json_string.rfind("]")
 
-            if first_square_bracket != -1 and last_square_bracket != -1:
-                # Extract the substring between the square brackets, it is an array
-                return json_string[first_square_bracket : last_square_bracket + 1]
-            elif first_square_bracket == -1 and last_square_bracket == -1:
-                # Extract the substring between the curly brackets, it is an object
+        is_square_brackets_found = first_square_bracket != -1 and last_square_bracket != -1
+        is_curly_brackets_found = first_curly_bracket != -1 and last_curly_bracket != -1
+
+        if is_square_brackets_found and is_curly_brackets_found:
+            is_content_in_curly_brackets = bool(
+                first_curly_bracket < first_square_bracket and last_square_bracket < last_curly_bracket
+            )
+            is_content_in_square_brackets = bool(
+                first_curly_bracket > first_square_bracket and last_square_bracket > last_curly_bracket
+            )
+            if is_content_in_curly_brackets:
                 return json_string[first_curly_bracket : last_curly_bracket + 1]
+            if is_content_in_square_brackets:
+                return json_string[first_square_bracket : last_square_bracket + 1]
+        elif is_square_brackets_found:
+            return json_string[first_square_bracket : last_square_bracket + 1]
+        elif is_curly_brackets_found:
+            return json_string[first_curly_bracket : last_curly_bracket + 1]
 
-        # Return original string in case one or both opened and closed curly brackets were not found
+        # Return original string in case one or both opened and closed curly brackets were not found,
+        # the provided json string is incorrect in such case. And content can not be extracted properly.
         return json_string
 
     @classmethod
     def fix_json_format(cls, json_string: str) -> str:
         """Fix JSON quotes and values."""
-
-        # Remove all the symbols before the first opened bracket and after the last closed,
-        # in particular, '''json<actual_json>''' wrap.
-        fixed_json_string = cls.extract_json_content(json_string)
 
         temp_str = "__TEMP__"
 
@@ -97,7 +104,7 @@ class JsonResponseUtil:
         #
         # sample_string = 'He's going to the doctor\'s office on his brothers' motorcycle.'
         # fixed_string  = 'He{temp_str}s going to the doctor{temp_str}s office on his brothers{temp_str} motorcycle.'
-        fixed_json_string = re.sub(r"(?<=\w)'(?=\w)", temp_str, fixed_json_string)  # It's
+        fixed_json_string = re.sub(r"(?<=\w)'(?=\w)", temp_str, json_string)  # It's
         fixed_json_string = re.sub(r"(?<=\w)\\'(?=\w)", temp_str, fixed_json_string)  # It\'s
         fixed_json_string = re.sub(r"(?<=s)'(?=\s)", temp_str, fixed_json_string)  # Its'_  (_ is space)
         fixed_json_string = re.sub(r"(?<=s)\\'(?=\s)", temp_str, fixed_json_string)  # Its\'_  (_ is space)
@@ -130,21 +137,43 @@ class JsonResponseUtil:
         return fixed_json_string
 
     @classmethod
-    def try_to_load_json_string(cls, json_string: str) -> str:
+    def try_to_load_json_then_normalize(cls, json_string: str) -> str:
         """Try to load the provided json string. In case of success, return str, otherwise raise JSONDecodeError."""
         try:
-            # try to load the provided json string firstly
+            # Try to load the provided json string firstly
             json.loads(json_string)
             return json_string
         except json.JSONDecodeError:
-            # in case of exception, try to sanitize quotes and load it once again
+            # In case of exception, try to normalize quotes and load it once again
             try:
-                sanitized_string = cls.sanitize_unescaped_quotes_and_load_json_str(json_string, strict=True)
-                json.loads(sanitized_string)
-                return sanitized_string
+                normalized_string = cls.normalize_unescaped_quotes_and_load_json_str(json_string, strict=True)
+                json.loads(normalized_string)
+                return normalized_string
             except ValueError:
-                # Llm might not fully understand an exception message
-                # that is raised in sanitize_unescaped_quotes_and_load_json_str function
-                # so, we pass this exception and relay on the original one re-raising it
+                # LLM might not fully understand an exception message that is raised in
+                # normalize_unescaped_quotes_and_load_json_str function.
+                # For this reason, we suppress this exception and raise on the original one
                 pass
             raise
+
+    @classmethod
+    def get_correct_json_string(cls, json_string: str | None) -> str:
+        """Get correct json string applying all available methods to fix in case the provided string is incorrect."""
+
+        if not json_string:
+            return "{}"
+
+        # Remove all the symbols before the first opened bracket and after the last closed,
+        # in particular, '''json<actual_json>''' wrap.
+        extracted_json_content = cls.extract_json_content(json_string)
+
+        try:
+            json.loads(extracted_json_content)
+            return extracted_json_content
+        except json.JSONDecodeError:
+            pass
+        except Exception:
+            raise
+
+        fixed_json_string = cls.fix_json_format(extracted_json_content)
+        return cls.try_to_load_json_then_normalize(fixed_json_string)

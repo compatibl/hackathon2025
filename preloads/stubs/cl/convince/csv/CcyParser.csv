@@ -1,0 +1,2 @@
+reader_id,retriever
+Default,MultipleChoiceRetriever

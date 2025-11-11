@@ -4,11 +4,11 @@ Prompt key='Default'
 Parameter name: 'StrOpt'
 Parameters object type=StubPromptParams and key='Default'
 Available non-empty fields of the parameters object:
+  - Type
   - PromptParamsId
   - StrReq
   - StrReqList
   - IntReq
   - FloatReq
-  - Type
 
 

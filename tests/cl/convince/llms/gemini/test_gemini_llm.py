@@ -13,19 +13,16 @@
 # limitations under the License.
 
 import pytest
-from cl.runtime.context.testing_context import TestingContext
 from cl.convince.llms.gemini.gemini_llm import GeminiLlm
 
 
-def test_smoke():
+def test_smoke(default_db_fixture):
     """Test GeminiLlm class."""
-
-    with TestingContext():
-        llms = [
-            GeminiLlm(llm_id="gemini-1.5-flash"),
-        ]
-        for llm in llms:
-            assert "4" in llm.completion("2 times 2?")
+    llms = [
+        GeminiLlm(llm_id="gemini-1.5-flash").build(),
+    ]
+    for llm in llms:
+        assert "4" in llm.completion("2 times 2?")
 
 
 if __name__ == "__main__":

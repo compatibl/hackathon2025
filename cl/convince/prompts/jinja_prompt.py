@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass
 from jinja2 import Template
-from cl.runtime.records.protocols import TDataDict
+from cl.runtime.records.data_mixin import TDataDict
 from cl.convince.prompts.template_prompt import TemplatePrompt
 
 

@@ -13,32 +13,27 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
-from cl.runtime import RecordMixin
+from cl.runtime.primitive.timestamp import Timestamp
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.retrievers.retrieval_key import RetrievalKey
+from cl.convince.retrievers.retriever_key import RetrieverKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Retrieval(RetrievalKey, RecordMixin[RetrievalKey]):
-    """Retrieves the requested data from the text."""
+class Retrieval(RetrievalKey, RecordMixin):  # TODO: Derive from Task
+    """Records inputs and results of a retrieval."""
 
-    input_text: str
-    """Text from which the parameter is retrieved."""
+    retriever: RetrieverKey = required()
+    """Retriever which generated this retrieval."""
 
-    param_description: str
-    """Description of the retrieved parameter."""
-
-    param_samples: List[str] | None = None
-    """Samples of possible retrieved parameter values for few-shot prompts."""
-
-    success: bool | None = None
-    """True for success and False for failure (populated after the retrieval and may be used by a validating prompt)."""
-
-    param_value: str | None = None
-    """Value of the extracted parameter (populated after the retrieval and may be used by a validating prompt)."""
-
-    justification: str | None = None
-    """Justification (populated after the retrieval and may be used by a validating prompt)."""
+    trial: str | None = None
+    """Optional trial identifier when running multiple trials, included in model input to prevent completion caching."""
 
     def get_key(self) -> RetrievalKey:
-        return RetrievalKey(retrieval_id=self.retrieval_id)
+        return RetrievalKey(retrieval_id=self.retrieval_id).build()
+
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        if self.retrieval_id is None:
+            self.retrieval_id = Timestamp.create()

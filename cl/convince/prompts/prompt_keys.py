@@ -14,11 +14,9 @@
 
 from cl.convince.prompts.prompt_key import PromptKey
 
-cls = PromptKey
-
 
 class PromptKeys:
     """PromptKey constants."""
 
-    ANNOTATING_RETRIEVER_PROMPT: cls = cls(prompt_id="AnnotatingRetrieverPrompt")
+    ANNOTATING_RETRIEVER_PROMPT = PromptKey(prompt_id="AnnotatingRetrieverPrompt")
     """Instructs the model to surround the requested parameter by curly braces for subsequent retrieval."""

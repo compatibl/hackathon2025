@@ -15,13 +15,13 @@
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing_extensions import Self
+from typing import Self
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.content.content_key import ContentKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Content(ContentKey, RecordMixin[ContentKey], ABC):
+class Content(ContentKey, RecordMixin, ABC):
     """Content consumed or generated during AI workflows (derived classes provide format-specific functionality)."""
 
     @abstractmethod
@@ -34,4 +34,4 @@ class Content(ContentKey, RecordMixin[ContentKey], ABC):
         """Convert from string format."""
 
     def get_key(self) -> ContentKey:
-        return ContentKey(content_id=self.content_id)
+        return ContentKey(content_id=self.content_id).build()

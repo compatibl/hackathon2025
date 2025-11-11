@@ -14,14 +14,14 @@
 
 import json
 import re
-from typing import Optional
+from typing import Dict
 
 
 class RetrieverUtil:
     """Helper methods for retrievers."""
 
     @classmethod
-    def extract_json(cls, text: str) -> Optional[dict]:
+    def extract_json(cls, text: str) -> Dict | None:
         """Extract JSON from model output."""
         match = re.search(r"({.*})", text, re.DOTALL)
         if match is None:

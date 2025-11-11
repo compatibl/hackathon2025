@@ -14,18 +14,21 @@
 
 import re
 from dataclasses import dataclass
-from typing import List
-from cl.runtime import Context
+from cl.runtime.contexts.context_manager import activate
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.contexts.context_manager import active_or_default
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.exceptions.user_error import UserError
+from cl.runtime.primitive.bool_util import BoolUtil
 from cl.runtime.primitive.string_util import StringUtil
-from cl.runtime.records.dataclasses_extensions import missing
-from cl.convince.entries.entry import Entry
-from cl.convince.llms.gpt.gpt_llm import GptLlm
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.typename import typename
+from cl.runtime.stat.draw import Draw
 from cl.convince.llms.llm import Llm
-from cl.convince.llms.llm_key import LlmKey
 from cl.convince.prompts.formatted_prompt import FormattedPrompt
 from cl.convince.prompts.prompt import Prompt
 from cl.convince.prompts.prompt_key import PromptKey
+from cl.convince.retrievers.annotating_retrieval import AnnotatingRetrieval
 from cl.convince.retrievers.retrieval import Retrieval
 from cl.convince.retrievers.retriever import Retriever
 from cl.convince.retrievers.retriever_util import RetrieverUtil
@@ -44,7 +47,7 @@ You must reply with JSON formatted strictly according to the JSON specification 
 The JSON must have the following keys:
 
 {{
-    "success": <Y if at least one piece of information was found and N otherwise. This parameter is required.>
+    "success": <true if at least one piece of information was found and false otherwise. This parameter is required.>
     "annotated_text": "<The input text where each piece of information about this parameter is surrounded by curly braces. There should be no changes other than adding curly braces, even to whitespace. Leave this field empty in case of failure.>,"
     "justification": "<Justification for your annotations in case of success or the reason why you were not able to find the parameter in case of failure.>"
 }}
@@ -57,126 +60,157 @@ Parameter description: ```{ParamDescription}```
 class AnnotatingRetriever(Retriever):
     """Instructs the model to surround the requested parameter by curly braces and uses the annotations to retrieve."""
 
-    llm: LlmKey = missing()
-    """LLM used to perform the retrieval."""
-
-    prompt: PromptKey = missing()
+    prompt: PromptKey = required()
     """Prompt used to perform the retrieval."""
 
-    def init(self) -> None:
-        """Same as __init__ but can be used when field values are set both during and after construction."""
-        if self.llm is None:
-            self.llm = GptLlm(llm_id="gpt-4o")  # TODO: Review the handling of defaults
+    max_retries: int = required()
+    """How many times to retry the annotation in case changes other than braces are detected."""
+
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
         if self.prompt is None:
             self.prompt = FormattedPrompt(
                 prompt_id="AnnotatingRetriever",
-                params_type=Retrieval.__name__,
+                params_type=typename(Retrieval),
                 template=_TEMPLATE,
             )  # TODO: Review the handling of defaults
 
+        # Default max_retries
+        if self.max_retries is None:
+            self.max_retries = 1
+
     def retrieve(
         self,
-        entry_id: str,  # TODO: Generate instead
+        *,
         input_text: str,
         param_description: str,
-        param_samples: List[str] | None = None,
-    ) -> str:
-        # Get LLM and prompt
-        llm = Context.current().load_one(Llm, self.llm)
-        prompt = Context.current().load_one(Prompt, self.prompt)
+        is_required: bool = False,  # TODO: Make this parameter required
+        param_samples: list[str] | None = None,
+    ) -> str | None:
 
-        # Strip starting and ending whitespace
-        input_text = input_text.strip()  # TODO: Perform more advanced normalization
+        # Load the prompt
+        prompt = active(DataSource).load_one(self.prompt, cast_to=Prompt)
 
-        # Create a retrieval record
-        retrieval = Retrieval(
-            retrieval_id=f"{entry_id}: {param_description}",
-            input_text=input_text,
-            param_description=param_description,
-            param_samples=param_samples,
-        )
+        # Run multiple retries
+        for retry_index in range(self.max_retries):
 
-        # Create braces extraction prompt
-        rendered_prompt = prompt.render(params=retrieval)
+            # Include retry_index in query to avoid reusing a cached completion
+            draw_index = retry_index if self.max_retries > 1 else 0
+            trial = retry_index if self.max_retries > 1 else None  # TODO: Use draw index (requires cache rebuild)
+            is_last_trial = retry_index == self.max_retries - 1
 
-        trial_count = 2
-        for trial_index in range(trial_count):
-            is_last_trial = trial_index == trial_count - 1
-            try:
-                # Get text annotated with braces and check that the only difference is braces and whitespace
-                completion = llm.completion(rendered_prompt, trial_id=trial_index)
+            # Create a draw context
+            with activate(Draw(draw_index=draw_index).build()) as draw:
 
-                # Extract the results
-                json_result = RetrieverUtil.extract_json(completion)  # TODO(Major): Do not depend on stubs
-                if json_result is None:
-                    raise UserError(f"NCould not extract JSON from the LLM response. LLM response:\n{completion}\n")
-                success_text = json_result.get("success", None)
-                annotated_text = json_result.get("annotated_text", None)
-                justification = json_result.get("justification", None)
+                # Strip starting and ending whitespace
+                input_text = input_text.strip()  # TODO: Perform more advanced normalization
 
-                # Go to the next trial in case of failure
-                success = Entry.parse_required_bool(success_text, field_name="success_text")
-                if not success:
-                    continue
-
-                if StringUtil.is_not_empty(annotated_text):
-                    # Compare after removing the curly brackets
-                    to_compare = self._deannotate(annotated_text)
-                    if to_compare != input_text:
-                        if not is_last_trial:
-                            # Continue if not the last trial
-                            continue
-                        else:
-                            # Otherwise report an error
-                            # TODO: Use unified diff
-                            raise UserError(
-                                f"Annotated text has changes other than curly braces.\n"
-                                f"Input text: ```{input_text}```\n"
-                                f"Annotated text: ```{annotated_text}```\n"
-                            )
-                else:
-                    raise RuntimeError(
-                        f"Extraction success reported by {llm.llm_id}, however "
-                        f"the annotated text is empty. Input text:\n{input_text}\n"
+                try:
+                    # Create a retrieval record and populate it with inputs, each trial will have a new one
+                    retrieval = AnnotatingRetrieval(
+                        retriever=self.get_key(),
+                        trial=trial,
+                        input_text=input_text,
+                        param_description=param_description,
+                        is_required=is_required,
+                        param_samples=param_samples,
                     )
 
-                # Extract data inside braces
-                matches = re.findall(_BRACES_RE, annotated_text)
-                for match in matches:
-                    if "{" in match or "}" in match:
-                        if not is_last_trial:
+                    # Create a brace extraction prompt using input parameters
+                    rendered_prompt = prompt.render(params=retrieval)
+
+                    # Get text annotated with braces and check that the only difference is braces and whitespace
+                    completion = (llm := active_or_default(Llm)).completion(rendered_prompt)
+
+                    # Extract the results
+                    json_result = RetrieverUtil.extract_json(completion)
+                    if json_result is not None:
+                        retrieval.success = json_result.get("success", None)
+                        retrieval.annotated_text = json_result.get("annotated_text", None)
+                        retrieval.justification = json_result.get("justification", None)
+                    else:
+                        raise UserError(
+                            f"Unable to retrieve a parameter from the following input:\n"
+                            f"Parameter: {param_description}\n"
+                            f"Input: {input_text}\n"
+                            f"LLM response: {completion}\n"
+                        )
+
+                    try:
+                        # None if not found
+                        success = BoolUtil.from_str_or_none(retrieval.success)
+                    except RuntimeError:
+                        # None on parsing error
+                        success = None
+                    if not success:
+                        # Parameter is not found
+                        if is_required:
+                            # Required, continue with the next trial
                             continue
                         else:
-                            raise UserError(
-                                f"Nested curly braces are present in annotated text.\n"
-                                f"Annotated text: ```{annotated_text}```\n"
-                            )
+                            # Optional, return None
+                            return None
 
-                # Combine and return from inside the loop
-                # TODO: Determine if numbered combination works better
-                param_value = " ".join(matches)
+                    if StringUtil.is_not_empty(retrieval.annotated_text):
+                        # Compare after removing the curly brackets
+                        to_compare = self._deannotate(retrieval.annotated_text)
+                        if to_compare != input_text:
+                            if not is_last_trial:
+                                # Continue if not the last trial
+                                continue
+                            else:
+                                # Otherwise report an error
+                                # TODO: Use unified diff
+                                raise UserError(
+                                    f"Annotated text has changes other than curly braces.\n"
+                                    f"Input text: ```{input_text}```\n"
+                                    f"Annotated text: ```{retrieval.annotated_text}```\n"
+                                )
+                    else:
+                        raise RuntimeError(
+                            f"Extraction success reported by {llm.llm_id}, however "
+                            f"the annotated text is empty. Input text:\n{input_text}\n"
+                        )
 
-                # Populate the output fields and save the retrieval object for validation
-                retrieval.success = True
-                retrieval.param_value = param_value
-                retrieval.justification = justification
-                Context.current().save_one(retrieval)
+                    # Extract data inside braces
+                    matches = re.findall(_BRACES_RE, retrieval.annotated_text)
+                    for match in matches:
+                        if "{" in match or "}" in match:
+                            if not is_last_trial:
+                                continue
+                            else:
+                                raise UserError(
+                                    f"Nested curly braces are present in annotated text.\n"
+                                    f"Annotated text: ```{retrieval.annotated_text}```\n"
+                                )
 
-                # Return only the parameter value
-                return param_value
+                    # Combine and return from inside the loop
+                    # TODO: Determine if numbered combination works better
+                    retrieval.output_text = " ".join(matches)
+                    retrieval.build()
+                    active(DataSource).replace_one(retrieval, commit=True)
 
-            except Exception as e:
-                if is_last_trial:
-                    # Rethrow only when the last trial is reached
-                    raise UserError(
-                        f"Unable to extract parameter from the input text after {trial_count} trials.\n"
-                        f"Input text: {input_text}\n"
-                        f"Parameter description: {param_description}\n"
-                        f"Last trial error information: {str(e)}\n"
-                    )
+                    # Return only the parameter value
+                    return retrieval.output_text
+
+                except Exception as e:
+                    retrieval.success = "N"
+                    retrieval.justification = str(e)
+                    retrieval.build()
+                    active(DataSource).replace_one(retrieval, commit=True)
+                    if is_last_trial:
+                        # Rethrow only when the last trial is reached
+                        raise UserError(
+                            f"Unable to extract parameter from the input text after {self.max_retries} retries.\n"
+                            f"Input text: {input_text}\n"
+                            f"Parameter description: {param_description}\n"
+                            f"Last trial error information: {str(e)}\n"
+                        )
                 else:
-                    # Otherwise log the error details and continue
-                    pass  # TODO: Log failure with info message level
+                    # TODO: Review logic and remove unreachable code
+                    retrieval.success = "Y"
+                    retrieval.build()
+                    active(DataSource).replace_one(retrieval, commit=True)
 
         # The method should always return from the loop, adding as a backup in case this changes in the future
         raise UserError(
@@ -213,14 +247,14 @@ class AnnotatingRetriever(Retriever):
                 return None
             else:
                 raise UserError(
-                    f"No curly braces are present in annotated text.\n" f"Annotated text: ```{annotated_text}```\n"
+                    f"No curly braces are present in annotated text.\nAnnotated text: ```{annotated_text}```\n"
                 )
         if any("{" in match or "}" in match for match in matches):
             if continue_on_error:
                 return None
             else:
                 raise UserError(
-                    f"Nested curly braces are present in annotated text.\n" f"Annotated text: ```{annotated_text}```\n"
+                    f"Nested curly braces are present in annotated text.\nAnnotated text: ```{annotated_text}```\n"
                 )
 
         # Combine using semicolon delimiter and return

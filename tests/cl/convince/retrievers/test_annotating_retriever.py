@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import pytest
-from typing import List
-from cl.runtime.context.testing_context import TestingContext
-from cl.runtime.testing.regression_guard import RegressionGuard
-from cl.convince.entries.entry import Entry
+from cl.runtime.contexts.context_manager import activate
+from cl.runtime.parsers.locale import Locale
+from cl.runtime.qa.regression_guard import RegressionGuard
+from cl.runtime.settings.preload_settings import PreloadSettings
+from cl.convince.llms.claude.claude_llm import ClaudeLlm
+from cl.convince.llms.gpt.gpt_llm import GptLlm
+from cl.convince.llms.llama.llama_llm import LlamaLlm
 from cl.convince.retrievers.annotating_retriever import AnnotatingRetriever
 from stubs.cl.convince.experiments.stub_llms import get_stub_full_llms
 
@@ -35,28 +38,27 @@ PARAM_SAMPLES = [
 ]
 
 
-def _test_extract(input_text: str, param_description: str, param_samples: List[str] | None = None) -> None:
+def _test_extract(input_text: str, param_description: str, param_samples: list[str] | None = None) -> None:
     """Test extraction of the specified parameters from the entries."""
     # TODO: Use samples in few-shot test
     param_samples_str = "".join(f"  - {x}\n" for x in param_samples) if param_samples is not None else None
     stub_full_llms = get_stub_full_llms()
     for llm in stub_full_llms:
-        retriever = AnnotatingRetriever(
-            retriever_id="test_annotating_retriever",
-            llm=llm,
-        )
-        retriever.init_all()
-        guard = RegressionGuard(channel=llm.llm_id)
-        param_value = retriever.retrieve(retriever.retriever_id, input_text, param_description)
-        guard.write(f"Input Text: {input_text} Retrieved Value: {param_value}")
-    RegressionGuard.verify_all()
+        with activate(llm):
+            retriever = AnnotatingRetriever(
+                retriever_id="test_annotating_retriever",
+            )
+            retriever.build()
+            guard = RegressionGuard(channel=llm.llm_id)
+            param_value = retriever.retrieve(input_text=input_text, param_description=param_description)
+            guard.write(f"Input Text: {input_text} Retrieved Value: {param_value}")
+    RegressionGuard().verify_all()
 
 
-def test_zero_shot():
+def test_zero_shot(default_db_fixture):
     """Test without samples."""
-
-    with TestingContext():
-        _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)
+    PreloadSettings.instance().save_and_configure(final_record_types=[Locale, GptLlm, LlamaLlm, ClaudeLlm])
+    _test_extract(ENTRY_TEXT, PARAM_DESCRIPTION)
 
 
 if __name__ == "__main__":

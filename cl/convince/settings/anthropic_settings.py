@@ -13,22 +13,20 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from typing_extensions import final
+from cl.runtime.records.typename import typename
 from cl.runtime.settings.settings import Settings
 
 
 @dataclass(slots=True, kw_only=True)
+@final
 class AnthropicSettings(Settings):
     """Anthropic settings."""
 
-    api_key: str
-    """Anthropic API key."""
+    anthropic_api_key: str | None = None
+    """The key for making REST API calls, ensure this key is stored in .secrets.yaml rather than settings.yaml."""
 
-    def init(self) -> None:
-        """Same as __init__ but can be used when field values are set both during and after construction."""
-
-        if not isinstance(self.api_key, str):
-            raise RuntimeError(f"{type(self).__name__} field 'api_key' must be a string.")
-
-    @classmethod
-    def get_prefix(cls) -> str:
-        return "anthropic"
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        if self.anthropic_api_key is not None and not isinstance(self.anthropic_api_key, str):
+            raise RuntimeError(f"{typename(type(self))} field 'api_key' must be a string.")

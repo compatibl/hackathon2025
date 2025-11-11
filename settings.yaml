@@ -15,38 +15,22 @@ default:
     - stubs.cl.convince
 
   # Documented in DbSettings class
-  db_id: temp_runtime_main
+  db_id: temp_convince_main
   db_type: SqliteDb
 
   # Documented in ApiSettings class
-  #   - Default CORSMiddleware settings are only applied on localhost
-  #   - If this group of settings is omitted, the app will run on localhost:7008
   api_hostname: localhost
   api_port: 7008
 
-  # CORSMiddleware settings in ApiSettings class, uncomment and modify if not running in localhost
-  # api_allow_origins:
-  #   - 127.0.0.1
-  # api_allow_origin_regex: null
-  # api_allow_credentials: True
-  # api_allow_methods:
-  #   - "*"
-  # api_allow_headers:
-  #   - "*"
-  # api_expose_headers: null
-  # api_max_age: null
-
   # Documented in PreloadSettings class
   preload_dirs:
-      - preloads/cl
-      - preloads/stubs
+    - preloads/cl
+    - preloads/stubs
 
-  # Documented in CelerySettings class
-  celery_workers: 8
-  celery_pool_type: "threads"
-  celery_broker: "sqlite"
-  celery_broker_uri: "mongodb://localhost:27017/celery-{context_id}"
-  celery_broker_queue: "celery"
+  # Documented in LlmSettings class
+  llm_type: GptLlm
+  llm_id: gpt-4o
+  llm_locale: en-US
 
 # Test environment
 testing:
@@ -54,7 +38,6 @@ testing:
   # Documented in QaSettings class
   qa_db_types:
     - SqliteDb
-    - BasicMongoDb
     - BasicMongoMockDb
 
   # Documented in LogSettings class

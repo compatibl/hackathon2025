@@ -13,35 +13,21 @@
 # limitations under the License.
 
 from abc import ABC
-from abc import abstractmethod
 from dataclasses import dataclass
-from typing import List
-from cl.runtime import RecordMixin
+from cl.runtime.primitive.timestamp import Timestamp
+from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.retrievers.retriever_key import RetrieverKey
 
 
 @dataclass(slots=True, kw_only=True)
-class Retriever(RetrieverKey, RecordMixin[RetrieverKey], ABC):
+class Retriever(RetrieverKey, RecordMixin, ABC):
     """Retrieves the requested data from the text."""
 
     def get_key(self) -> RetrieverKey:
-        return RetrieverKey(retriever_id=self.retriever_id)
+        return RetrieverKey(retriever_id=self.retriever_id).build()
 
-    # TODO: Use keyword params
-    @abstractmethod
-    def retrieve(
-        self,
-        entry_id: str,  # TODO: Generate instead
-        input_text: str,
-        param_description: str,
-        param_samples: List[str] | None = None,
-    ) -> str:
-        """
-        Retrieve the specified parameter from the entry and return it as a smaller entry.
-
-        Args:
-            entry_id: The identifier of the entry from which the data is extracted
-            input_text: The text from which the data is extracted
-            param_description: Parameter description
-            param_samples: Optional parameter value samples for a few-shot prompt
-        """
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        if self.retriever_id is None:
+            # Use timestamp for temporary objects where identifier is not specified
+            self.retriever_id = Timestamp.create()

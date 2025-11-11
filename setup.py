@@ -3,16 +3,18 @@ import setuptools
 with open('./README.md', 'r') as readme_file:
     readme = readme_file.read()
 
-# Gather package requirements from all packages in monorepo
-install_requires = []
-with open('./tools/cl/runtime/package_requirements.txt') as runtime_package_requirements:
-    install_requires.extend(line.strip() for line in runtime_package_requirements.readlines())
+# Internal requirements (exclude when building from monorepo)
+install_requires = [
+    "runtime>=2.0.5",
+]
+
+# Third-party requirements
 with open('./tools/cl/convince/package_requirements.txt') as convince_package_requirements:
     install_requires.extend(line.strip() for line in convince_package_requirements.readlines())
 
 setuptools.setup(
     name='convince',
-    version='0.0.2',
+    version='0.0.1',
     author='The Project Contributors',
     description='Better instruction following for large language models',
     license='Apache Software License',
@@ -29,11 +31,6 @@ setuptools.setup(
         exclude=['tests', 'tests.*']
     ),
     package_dir={'': '.'},
-    package_data={
-        '': ['py.typed'],
-        'data': ['csv/**/*.csv', 'yaml/**/*.yaml', 'json/**/*.json'],
-    },
-    include_package_data=True,
     classifiers=[
         # Alpha - will attempt to avoid breaking changes but they remain possible
         'Development Status :: 3 - Alpha',
