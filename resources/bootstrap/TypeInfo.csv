@@ -145,6 +145,8 @@ GptLlm,Record,cl.convince.llms.gpt.gpt_llm.GptLlm,None
 GroupBarPlot,Record,cl.runtime.plots.group_bar_plot.GroupBarPlot,None
 Gt,Data,cl.runtime.records.predicates.Gt,None
 Gte,Data,cl.runtime.records.predicates.Gte,None
+HackathonBinaryExperiment,Record,cl.hackathon.hackathon_binary_experiment.HackathonBinaryExperiment,None
+HackathonCondition,Record,cl.hackathon.hackathon_condition.HackathonCondition,None
 HandlerDeclareBlockDecl,Data,cl.runtime.schema.handler_declare_block_decl.HandlerDeclareBlockDecl,None
 HandlerDeclareDecl,Data,cl.runtime.schema.handler_declare_decl.HandlerDeclareDecl,None
 HandlerParamDecl,Data,cl.runtime.schema.handler_param_decl.HandlerParamDecl,None
