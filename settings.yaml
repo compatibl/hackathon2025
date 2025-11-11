@@ -18,6 +18,10 @@ default:
   db_id: temp_convince_main
   db_type: SqliteDb
 
+  # Documented in CelerySettings class
+  celery_broker_uri: mongodb://localhost:27017/celery-{context_id}
+  # celery_broker_uri: sqlalchemy+sqlite:///{project_dir}/celery-{context_id}.db
+
   # Documented in ApiSettings class
   api_hostname: localhost
   api_port: 7008
