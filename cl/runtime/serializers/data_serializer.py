@@ -1,0 +1,474 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any
+import numpy as np
+from frozendict import frozendict
+from cl.runtime.exceptions.error_util import ErrorUtil
+from cl.runtime.primitive.case_util import CaseUtil
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.protocols import is_data_key_or_record_type
+from cl.runtime.records.protocols import is_empty
+from cl.runtime.records.protocols import is_enum_type
+from cl.runtime.records.protocols import is_key_type
+from cl.runtime.records.protocols import is_mapping_type
+from cl.runtime.records.protocols import is_ndarray_type
+from cl.runtime.records.protocols import is_primitive_type
+from cl.runtime.records.protocols import is_sequence_type
+from cl.runtime.records.typename import typename
+from cl.runtime.records.typename import typeof
+from cl.runtime.schema.data_spec import DataSpec
+from cl.runtime.schema.type_hint import TypeHint
+from cl.runtime.schema.type_info import TypeInfo
+from cl.runtime.schema.type_schema import TypeSchema
+from cl.runtime.serializers.encoder import Encoder
+from cl.runtime.serializers.serializer import Serializer
+from cl.runtime.serializers.type_format import TypeFormat
+from cl.runtime.serializers.type_inclusion import TypeInclusion
+from cl.runtime.serializers.type_placement import TypePlacement
+
+
+@dataclass(slots=True, kw_only=True)
+class DataSerializer(Serializer):
+    """Roundtrip serialization of object to dictionary with optional type information."""
+
+    primitive_serializer: Serializer = required()
+    """Use to serialize primitive types."""
+
+    enum_serializer: Serializer = required()
+    """Use to serialize enum types."""
+
+    key_serializer: Serializer | None = None
+    """Use to serialize key fields if specified, otherwise serialize the same way as data fields."""
+
+    inner_serializer: Serializer | None = None
+    """Use to serialize data fields, if specified the current serializer will only be used at root level."""
+
+    inner_encoder: Encoder | None = None
+    """Encode the output of inner serializer if specified."""
+
+    type_inclusion: TypeInclusion = TypeInclusion.AS_NEEDED
+    """When to include type information in serialized data."""
+
+    type_format: TypeFormat = TypeFormat.DEFAULT
+    """Format of the type information in serialized data (optional, not used if type_inclusion=OMIT)."""
+
+    type_placement: TypePlacement = TypePlacement.FIRST
+    """Placement of type information in the output dictionary (optional, not used if type_inclusion=OMIT)."""
+
+    type_field: str = "_type"
+    """Dictionary key under which type information is stored (optional, defaults to '_type')."""
+
+    pascalize_keys: bool | None = None
+    """Pascalize keys during serialization if set."""
+
+    def __validate(self) -> None:
+        """Perform checks without changing the data."""
+        if (self.inner_serializer is not None) ^ (self.inner_encoder is not None):
+            raise ErrorUtil.mutually_required_fields_error(
+                ["inner_serializer", "inner_encoder"], type_name=self.__class__.__name__
+            )
+
+    def serialize(self, data: Any, type_hint: TypeHint | None = None) -> Any:
+        """Serialize the argument to a dictionary type_hint and schema."""
+
+        if self.type_inclusion not in [TypeInclusion.AS_NEEDED, TypeInclusion.ALWAYS, TypeInclusion.OMIT]:
+            raise ErrorUtil.enum_value_error(self.type_inclusion, TypeInclusion)
+
+        # Get parameters from the type chain, considering the possibility that it may be None
+        schema_type = type_hint.schema_type if type_hint is not None else None
+        is_optional = type_hint.optional if type_hint is not None else None
+        remaining_chain = type_hint.remaining if type_hint is not None else None
+
+        if is_empty(data):
+            if type_hint is None or is_optional:
+                # Return None if type hint is not specified or is_optional flag is set, otherwise raise an error
+                return None
+            else:
+                raise RuntimeError(
+                    f"Data is None or an empty primitive type but type hint\n"
+                    f"{type_hint.to_str()} indicates it is required."
+                )
+        elif is_primitive_type(type(data)):
+            if remaining_chain:
+                raise RuntimeError(
+                    f"Data is an instance of a primitive class {type(data).__name__} which is incompatible\n"
+                    f"with type hint {type_hint.to_str()}."
+                )
+
+            if is_primitive_type(schema_type):
+                # Deserialize using primitive serializer if a primitive type
+                return self.primitive_serializer.serialize(data, type_hint)
+            else:
+                # Otherwise assume it is an enum
+                # TODO: !!! Check for type_kind in TypeHint instead
+                result = self.enum_serializer.serialize(data, type_hint)
+                return result
+        elif is_enum_type(type(data)):
+            return self.enum_serializer.serialize(data, type_hint)
+        elif is_sequence_type(type(data)):
+            # Serialize sequence into list, allowing remaining_chain to be None
+            # If remaining_chain is None, it will be provided for each slotted data
+            # item in the sequence, and will cause an error for a primitive item
+            if type_hint is not None:
+                type_hint.validate_for_sequence()
+            return tuple(self.serialize(v, remaining_chain) if not is_empty(v) else None for v in data)
+        elif is_mapping_type(type(data)):
+            # Deserialize mapping into dict, allowing remaining_chain to be None
+            # If remaining_chain is None, it will be provided for each slotted data
+            # item in the mapping, and will cause an error for a primitive item
+            if type_hint is not None:
+                type_hint.validate_for_mapping()
+            return frozendict(
+                (self._serialize_key(dict_key), self.serialize(dict_value, remaining_chain))
+                for dict_key, dict_value in data.items()
+                if not is_empty(dict_value)
+            )
+        elif is_ndarray_type(type(data)):
+            # Deserialize ndarray into ndarray, remaining_chain must be None
+            values = tuple(float(x) for x in data.flatten())
+            if type_hint is not None:
+                type_hint.validate_for_ndarray()
+                # Type hint is present, do not specify _type
+                return frozendict(
+                    {
+                        "shape": tuple(data.shape),
+                        "values": values,
+                    }
+                )
+            else:
+                # Specify _type when type hint is None
+                return frozendict(
+                    {
+                        "_type": "ndarray",
+                        "shape": tuple(data.shape),
+                        "values": tuple(float(x) for x in data.flatten()),
+                    }
+                )
+        elif is_data_key_or_record_type(type(data)):
+            # Use key serializer for key types if specified
+            if self.key_serializer is not None and is_key_type(type(data)):
+                return self.key_serializer.serialize(data, type_hint)
+
+            # Perform check against the schema if provided irrespective of the type_inclusion setting
+            if schema_type is not None:
+                if not is_data_key_or_record_type(schema_type):
+                    raise RuntimeError(f"Type '{typename(schema_type)}' is not a slotted class.")
+                if not isinstance(data, schema_type):
+                    raise RuntimeError(
+                        f"Type {typename(type(data))} is not the same or a subclass of "
+                        f"the type {typename(schema_type)} specified in schema."
+                    )
+
+            # Include type in output according to the type_inclusion setting
+            if self.type_inclusion == TypeInclusion.ALWAYS:
+                include_type = True
+            elif self.type_inclusion == TypeInclusion.AS_NEEDED:
+                # Include if schema type is not provided or not the same as data type
+                include_type = schema_type is None or schema_type is not type(data)
+            elif self.type_inclusion == TypeInclusion.OMIT:
+                include_type = False
+            else:
+                raise ErrorUtil.enum_value_error(self.type_inclusion, TypeInclusion)
+
+            # Parse type_format field
+            if self.type_inclusion != TypeInclusion.OMIT:
+                if self.type_format == TypeFormat.PASSTHROUGH:
+                    type_field = type(data)
+                elif self.type_format == TypeFormat.DEFAULT:
+                    type_field = typename(type(data))
+                else:
+                    raise ErrorUtil.enum_value_error(self.type_format, TypeFormat)
+            else:
+                type_field = None
+
+            # Parse type_placement field
+            if self.type_inclusion != TypeInclusion.OMIT:
+                if self.type_placement == TypePlacement.FIRST:
+                    include_type_first = include_type
+                    include_type_last = False
+                elif self.type_placement == TypePlacement.LAST:
+                    include_type_first = False
+                    include_type_last = include_type
+                else:
+                    raise ErrorUtil.enum_value_error(self.type_placement, TypePlacement)
+            else:
+                include_type_first = False
+                include_type_last = False
+
+            # Include type information first based on include_type_first flag
+            result = {self.type_field: type_field} if include_type_first else {}
+
+            # Use self to serialize keys unless a key serializer is specified
+            key_serializer = self.key_serializer if self.key_serializer is not None else self
+
+            # Serialize slot values in the order of declaration except those that are None
+            data_type_spec = data.get_type_spec()
+            result.update(
+                {
+                    self._serialize_key(field_name): (
+                        self.primitive_serializer.serialize(field_value, field_spec.field_type_hint)
+                        if is_primitive_type(typeof(field_value))
+                        else (
+                            self.enum_serializer.serialize(field_value, field_spec.field_type_hint)
+                            if is_enum_type(type(field_value))
+                            else (
+                                key_serializer.serialize(field_value, field_spec.field_type_hint)
+                                if is_key_type(type(field_value))
+                                else self._serialize_inner(field_value, field_spec.field_type_hint)
+                            )
+                        )
+                    )
+                    for field_spec in data_type_spec.fields
+                    if not is_empty(field_value := getattr(data, field_name := field_spec.field_name))
+                }
+            )
+
+            if include_type_last:
+                # Include type information last based on include_type_last flag
+                result[self.type_field] = type_field
+            return result
+        else:
+            raise RuntimeError(f"Cannot serialize data of type '{type(data)}'.")
+
+    def deserialize(self, data: Any, type_hint: TypeHint | None = None) -> Any:
+        """Deserialize data using type_hint and schema."""
+
+        if self.type_inclusion == TypeInclusion.OMIT:
+            raise RuntimeError("Deserialization is not supported when type_inclusion=OMIT.")
+        elif self.type_inclusion not in [TypeInclusion.AS_NEEDED, TypeInclusion.ALWAYS]:
+            raise ErrorUtil.enum_value_error(self.type_inclusion, TypeInclusion)
+
+        if type_hint is None:
+            if is_mapping_type(type(data)):
+                # Attempt to extract type information from the mapping data
+                if (type_name := data.get(self.type_field, None) if data else None) is not None:
+                    # Type name is specified, look up the class
+                    type_spec = TypeSchema.for_type_name(type_name)
+                    type_hint = TypeHint.for_type(type_spec.type_)
+                    # Recursive call is needed because of nested containers
+                    return self.deserialize(data, type_hint)
+                else:
+                    raise RuntimeError(
+                        f"Key '_type' is missing in the serialized data and type hint is not specified, "
+                        f"cannot deserialize."
+                    )
+            elif is_sequence_type(type(data)):
+                # Recursive call is needed because type information may be contained inside items
+                return [self.deserialize(v) for v in data]
+            else:
+                raise RuntimeError(
+                    f"Data is not a list or mapping, cannot deserialize without type_hint argument:\n"
+                    f"{ErrorUtil.wrap(data)}."
+                )
+
+        # Get parameters from the type chain, considering the possibility that it may be None
+        schema_type = type_hint.schema_type if type_hint is not None else None
+        is_optional = type_hint.optional if type_hint is not None else None
+        remaining_chain = type_hint.remaining if type_hint is not None else None
+
+        if is_empty(data):
+            if type_hint is None or is_optional:
+                # Return None if type hint is not specified or is_optional flag is set, otherwise raise an error
+                return None
+            else:
+                raise RuntimeError(f"Data is None but type hint {type_hint.to_str()} indicates it is required.")
+        elif is_primitive_type(schema_type):
+            type_hint.validate_for_primitive()
+            return self.primitive_serializer.deserialize(data, type_hint)
+        elif is_sequence_type(schema_type):
+            type_hint.validate_for_sequence()
+            if not is_sequence_type(type(data)):
+                raise RuntimeError(
+                    f"Data type {type(data).__name__} is a sequence but schema type {typename(schema_type)} is not."
+                )
+            # Decode if necessary
+            # TODO: Eliminate check for the fist character
+            elif self.inner_encoder is not None and isinstance(data, str) and data.startswith("["):
+                # Decode and deserialize sequence using data_serializer
+                data = self.inner_encoder.decode(data)
+                return tuple(
+                    self.inner_serializer.deserialize(v, remaining_chain) if not is_empty(v) else None for v in data
+                )
+            else:
+                # Deserialize sequence using self
+                return tuple(self.deserialize(v, remaining_chain) if not is_empty(v) else None for v in data)
+        elif is_mapping_type(schema_type):
+            type_hint.validate_for_mapping()
+            if not is_mapping_type(type(data)):
+                raise RuntimeError(
+                    f"Data type {type(data).__name__} is a mapping but schema type {typename(schema_type)} is not."
+                )
+            # Deserialize mapping into frozendict
+            # TODO: Replace by frozendict
+            return frozendict(
+                (self._deserialize_key(dict_key), self.deserialize(dict_value, remaining_chain))
+                for dict_key, dict_value in data.items()
+                if not is_empty(dict_value)
+            )
+        elif is_ndarray_type(schema_type):
+            type_hint.validate_for_ndarray()
+            if not is_mapping_type(type(data)):
+                raise RuntimeError(
+                    f"Cannot deserialize because schema type {typename(schema_type)} is an ndarray\n"
+                    f"but data type {type(data).__name__} is not a mapping."
+                )
+            # Deserialize mapping into ndarray
+            shape = data["shape"]
+            values = data["values"]
+            return np.array(values, dtype=float).reshape(shape)  # TODO: !!! Support any dtype
+        elif isinstance(
+            data, str
+        ):  # TODO: !! Refactor to use if/else on schema type only like the new PrimitiveSerializer
+            # Process as enum if data is a string or enum, after checking that schema type is not primitive
+            if self.key_serializer is not None and is_key_type(schema_type):
+                if (
+                    # TODO: Eliminate check for the fist character
+                    self.inner_encoder is not None
+                    and len(data) > 0
+                    and data.startswith('{"')
+                ):  # TODO: Fix for non-JSON encoding
+                    # Decode data field using data_encoder if provided and deserialize using self
+                    decoded_data = self.inner_encoder.decode(data)
+                    return self.inner_serializer.deserialize(decoded_data, type_hint)
+                else:
+                    # Otherwise use key serializer to deserialize
+                    return self.key_serializer.deserialize(data, type_hint)
+            elif self.inner_encoder is not None and is_data_key_or_record_type(schema_type):
+                # Deserialize using inner_serializer and inner_encoder if provided, otherwise use self
+                return self._deserialize_inner(data, type_hint)
+            elif is_enum_type(schema_type):
+                # Check that no type chain is remaining
+                if remaining_chain:
+                    raise RuntimeError(
+                        f"Type hint {type_hint.to_str()} is not a container but specifies an inner type."
+                    )
+                # Deserialize
+                result = self.enum_serializer.deserialize(data, type_hint)
+                return result
+            else:
+                raise RuntimeError(
+                    f"Type hint '{type_hint.to_str()}' cannot be deserialized\n"
+                    f"from the following string or enum data:\n{ErrorUtil.wrap(data)}."
+                )
+        elif isinstance(data, Enum):
+            # Process as enum
+            return self.enum_serializer.deserialize(data, type_hint)
+        elif is_mapping_type(typeof(data)):
+            if schema_type is not None and is_mapping_type(schema_type):
+                # Deserialize into mutable dict if schema_type is a mapping
+                deserialized_type = dict
+            else:
+                # Otherwise deserialize as a slotted class
+                # Check if serialized data contains _type field
+                deserialized_type_name = data.get(self.type_field, None)
+                schema_type_name = typename(schema_type) if schema_type is not None else None
+                if deserialized_type_name is not None and deserialized_type_name != schema_type_name:
+                    # If _type field is present, it must be a subclass of schema_type
+                    deserialized_type = TypeInfo.from_type_name(deserialized_type_name)
+                    if not issubclass(deserialized_type, schema_type):
+                        raise RuntimeError(
+                            f"Field _type={deserialized_type_name} in serialized data\n"
+                            f"is not a subclass of schema type {typename(schema_type)}."
+                        )
+                elif schema_type is not None:
+                    # Otherwise use schema type if specified
+                    deserialized_type = schema_type
+                else:
+                    raise RuntimeError("Neither schema type nor _type field is provided for a mapping.")
+
+            # Get type spec
+            type_spec = TypeSchema.for_type(deserialized_type)
+            if not isinstance(type_spec, DataSpec):
+                raise RuntimeError(f"Type '{typename(deserialized_type)}' cannot be deserialized from a dictionary.")
+
+            # Check that no type chain is remaining
+            if type_hint is not None and type_hint.remaining is not None:
+                raise RuntimeError(
+                    f"Data type {typename(deserialized_type)} is not a container but type hint\n"
+                    f"specifies an inner type: {type_hint.to_str()}."
+                )
+
+            # Get class and field dictionary for type_name
+            schema_class = type_spec.type_
+            field_dict = {x.field_name: x for x in type_spec.fields} if type_spec.fields is not None else {}
+
+            # Deserialize into a dict
+            result_dict = {
+                (snake_case_k := self._deserialize_key(field_key)): (
+                    self._key_error(type_name=typename(deserialized_type), field_key=field_key)
+                    if field_dict.get(snake_case_k) is None
+                    else (
+                        self.inner_serializer.deserialize(self.inner_encoder.decode(field_value), field_hint)
+                        if (
+                            (field_hint := field_dict[snake_case_k].field_type_hint).schema_type != str
+                            and self.inner_encoder is not None
+                            and isinstance(field_value, str)
+                            and len(field_value) > 0
+                            # TODO: Improve detection of embedded JSON
+                            and (field_value.startswith('{"') or field_value.startswith("["))
+                        )
+                        else self.deserialize(field_value, field_hint)
+                    )
+                )
+                for field_key, field_value in data.items()
+                if not is_empty(field_value) and not field_key.startswith("_")
+            }
+
+            # Construct an instance of the target type
+            result = schema_class(**result_dict)
+
+            # Invoke build and return
+            return result.build()
+        else:
+            raise RuntimeError(
+                f"Cannot deserialize the following data using type hint '{type_hint.to_str()}':\n"
+                f"{ErrorUtil.wrap(data)}"
+            )
+
+    def _serialize_key(self, field_key: str) -> str:
+        """Transform the field key for use in serialization"""
+        if self.pascalize_keys:
+            return CaseUtil.snake_to_pascal_case_keep_trailing_underscore(field_key)
+        else:
+            return field_key
+
+    def _deserialize_key(self, field_key: str) -> str:
+        """Transform the field key for use in deserialization"""
+        if self.pascalize_keys:
+            return CaseUtil.pascale_to_snake_case_keep_trailing_underscore(field_key)
+        else:
+            return field_key
+
+    def _serialize_inner(self, data: Any, type_hint: TypeHint | None = None) -> Any:
+        """Use inner_serializer and inner_encoder if specified, otherwise use current serializer and no encoder."""
+        if self.inner_serializer is not None:
+            return self.inner_encoder.encode(self.inner_serializer.serialize(data, type_hint))
+        else:
+            # If inner serializer is not specified, use the current serializer
+            return self.serialize(data, type_hint)
+
+    def _deserialize_inner(self, data: Any, type_hint: TypeHint | None = None) -> Any:
+        """Use inner_serializer and inner_encoder if specified, otherwise use current serializer and no encoder."""
+        if self.inner_serializer is not None:
+            return self.inner_serializer.deserialize(self.inner_encoder.decode(data), type_hint)
+        else:
+            # If inner serializer is not specified, use the current serializer
+            return self.deserialize(data, type_hint)
+
+    def _key_error(self, *, type_name: str, field_key: str) -> None:
+        """Report an error."""
+        raise RuntimeError(f"Type {type_name} does not have a field '{field_key}'.")

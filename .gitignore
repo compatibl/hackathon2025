@@ -4,9 +4,11 @@ syntax: glob
 **/.env
 **/.mypy_cache
 **/.pytest_cache
+**/databases
+**/logs
 **/*secrets*
 **/__pycache__
-**/venv
+**/.venv
 *.egg
 *.egg-info/
 *.idea

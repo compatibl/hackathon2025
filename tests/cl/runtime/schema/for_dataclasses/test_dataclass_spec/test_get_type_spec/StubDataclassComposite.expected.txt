@@ -1,0 +1,13 @@
+type_: StubDataclassComposite
+type_kind: Record
+fields:
+- field_name: primitive
+  field_type_hint:
+    schema_type: str
+- field_name: embedded_1
+  field_type_hint:
+    schema_type: StubDataclassKey
+- field_name: embedded_2
+  field_type_hint:
+    schema_type: StubDataclassKey
+

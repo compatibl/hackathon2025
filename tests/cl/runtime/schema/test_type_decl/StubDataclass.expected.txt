@@ -1,0 +1,38 @@
+module:
+  module_name: cl
+name: StubDataclass
+label: Stub Dataclass
+comment: Stub record base class.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclassKey
+elements:
+- value:
+    type_: String
+  name: Id
+  comment: Unique identifier.
+keys:
+- Id
+
+module:
+  module_name: cl
+name: StubDataclass
+label: Stub Dataclass
+comment: Stub record base class.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclassKey
+elements:
+- value:
+    type_: String
+  name: Id
+  comment: Unique identifier.
+keys:
+- Id
+

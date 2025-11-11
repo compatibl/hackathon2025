@@ -1,0 +1,18 @@
+module:
+  module_name: cl
+name: StubDataclassSingleton
+label: Stub Dataclass Singleton
+comment: Singleton record has no key fields.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclassSingletonKey
+elements:
+- value:
+    type_: String
+  name: StrField
+  comment: Stub field.
+keys: []
+

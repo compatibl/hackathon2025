@@ -1,0 +1,102 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import pytest
+from cl.runtime.primitive.case_util import CaseUtil
+from cl.runtime.qa.regression_guard import RegressionGuard
+from cl.runtime.records.builder_checks import BuilderChecks
+from cl.runtime.serializers.data_serializer import DataSerializer
+from cl.runtime.serializers.enum_serializers import EnumSerializers
+from cl.runtime.serializers.primitive_serializers import PrimitiveSerializers
+from cl.runtime.serializers.yaml_serializers import YamlSerializers
+from stubs.cl.runtime import StubDataclass
+from stubs.cl.runtime import StubDataclassComposite
+from stubs.cl.runtime import StubDataclassDerived
+from stubs.cl.runtime import StubDataclassDictFields
+from stubs.cl.runtime import StubDataclassDictListFields
+from stubs.cl.runtime import StubDataclassDoubleDerived
+from stubs.cl.runtime import StubDataclassListDictFields
+from stubs.cl.runtime import StubDataclassListFields
+from stubs.cl.runtime import StubDataclassNestedFields
+from stubs.cl.runtime import StubDataclassOptionalFields
+from stubs.cl.runtime import StubDataclassOtherDerived
+from stubs.cl.runtime import StubDataclassPrimitiveFields
+from stubs.cl.runtime import StubDataclassSingleton
+from stubs.cl.runtime import StubDataclassTupleFields
+
+_SAMPLE_TYPES = [
+    StubDataclass,
+    StubDataclassNestedFields,
+    StubDataclassComposite,
+    StubDataclassDerived,
+    StubDataclassDoubleDerived,
+    StubDataclassOtherDerived,
+    StubDataclassListFields,
+    StubDataclassOptionalFields,
+    StubDataclassDictFields,
+    StubDataclassDictListFields,
+    StubDataclassListDictFields,
+    StubDataclassPrimitiveFields,
+    StubDataclassSingleton,
+    StubDataclassTupleFields,
+]
+
+_PASSTHROUGH_SERIALIZER = DataSerializer(
+    primitive_serializer=PrimitiveSerializers.PASSTHROUGH,
+    enum_serializer=EnumSerializers.DEFAULT,
+).build()
+
+
+def test_to_yaml():
+    """Test DataSerializer.to_yaml method."""
+
+    for sample_type in _SAMPLE_TYPES:
+
+        # Create and serialize to YAML
+        obj = sample_type().build()
+        obj_yaml = YamlSerializers.DEFAULT.serialize(obj)
+
+        # Write to regression guard
+        snake_case_type_name = CaseUtil.pascal_to_snake_case(sample_type.__name__)
+        guard = RegressionGuard(channel=snake_case_type_name)
+        guard.write(obj_yaml)
+
+    RegressionGuard().verify_all()
+
+
+def test_from_yaml():
+    """Test DataSerializer.to_yaml method."""
+
+    for sample_type in _SAMPLE_TYPES:
+
+        # Create and serialize to YAML
+        obj = sample_type().build()
+        serialized = YamlSerializers.DEFAULT.serialize(obj)
+
+        # Serialize to dict using all_string_dict_serializer flag, all primitive values are strings except None
+        # all_string_obj_dict = all_string_dict_serializer.serialize(obj)
+
+        # Deserialize from YAML, when schema is not used all primitive values will be strings
+        deserialized = YamlSerializers.DEFAULT.deserialize(serialized)
+
+        # Use passthrough serializer to convert both to dicts
+        obj_dict = _PASSTHROUGH_SERIALIZER.serialize(obj)
+        deserialized_dict = _PASSTHROUGH_SERIALIZER.serialize(deserialized)
+
+        # Compare with floating point tolerance
+        assert BuilderChecks.is_equal(deserialized_dict, obj_dict)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

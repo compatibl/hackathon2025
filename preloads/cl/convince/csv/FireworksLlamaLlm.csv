@@ -1,0 +1,5 @@
+llm_id,model_name,temperature
+llama-v3-8b-instruct,,
+llama-v3-8b-instruct-02,llama-v3-8b-instruct,"""0.2"""
+llama-v3-70b-instruct,,
+llama-v3-70b-instruct-02,llama-v3-70b-instruct,"""0.2"""

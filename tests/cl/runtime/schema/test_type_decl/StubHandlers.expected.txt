@@ -1,0 +1,379 @@
+module:
+  module_name: cl
+name: StubHandlers
+label: Stub Handlers
+comment: Stub record base class.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubHandlersKey
+declare:
+  handlers:
+  - name: class_method_1a
+    label: Class Method 1A
+    comment: Stub handler.
+    type_: Job
+    static: true
+  - name: class_method_1b
+    label: Class Method 1B
+    comment: Stub handler.
+    type_: Job
+    static: true
+  - name: class_method_2a_with_params
+    label: Class Method 2A With Params
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      name: Param2
+    static: true
+  - name: class_method_2b
+    label: Class Method 2B
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: true
+  - name: class_method_3a
+    label: Class Method 3A
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: true
+  - name: class_method_3b
+    label: Class Method 3B
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: true
+  - name: class_method_with_binary_param
+    label: Class Method With Binary Param
+    comment: Stub method.
+    type_: Job
+    params:
+    - data:
+        module:
+          module_name: cl
+        name: FileData
+        label: File Data
+        comment: Display the specified embedded binary content.
+        type_kind: Data
+        display_kind: Basic
+        elements:
+        - value:
+            type_: String
+          name: Name
+          comment: Content name.
+          optional: true
+        - enum:
+            module:
+              module_name: cl
+            name: FileKind
+          name: FileKind
+          comment: Format of the file contents, some values match to more than 
+            one file extension.
+          optional: true
+        - value:
+            type_: Binary
+          name: FileBytes
+          comment: Embedded binary content to be displayed as the current view.
+      name: PdfFile
+    static: true
+  - name: generate_list_of_long_handlers
+    label: Generate List Of Long Handlers
+    comment: Generate a lot of long handlers.
+    type_: Job
+    static: true
+  - name: instance_method_1a
+    label: Instance Method 1A
+    comment: Stub handler.
+    type_: Job
+    static: false
+  - name: instance_method_1a_with_int_param
+    label: Instance Method 1A With Int Param
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: Int
+      name: IntParam
+    static: false
+  - name: instance_method_1a_with_primitive_params
+    label: Instance Method 1A With Primitive Params
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: StrParam
+    - value:
+        type_: Double
+      name: FloatParam
+    - value:
+        type_: Bool
+      name: BoolParam
+    - value:
+        type_: Int
+      name: IntParam
+    - value:
+        type_: Date
+      name: DateParam
+    - value:
+        type_: Time
+      name: TimeParam
+    - value:
+        type_: DateTime
+      name: DatetimeParam
+    - value:
+        type_: UUID
+      name: UuidParam
+    - value:
+        type_: Binary
+      name: BytesParam
+    static: false
+  - name: instance_method_1b
+    label: Instance Method 1B
+    comment: Stub handler.
+    type_: Job
+    static: false
+  - name: instance_method_2a_with_params
+    label: Instance Method 2A With Params
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: false
+  - name: instance_method_2b
+    label: Instance Method 2B
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: false
+  - name: instance_method_3a
+    label: Instance Method 3A
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: false
+  - name: instance_method_3b
+    label: Instance Method 3B
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: false
+  - name: instance_method_with_binary_param
+    label: Instance Method With Binary Param
+    comment: Stub method.
+    type_: Job
+    params:
+    - data:
+        module:
+          module_name: cl
+        name: FileData
+        label: File Data
+        comment: Display the specified embedded binary content.
+        type_kind: Data
+        display_kind: Basic
+        elements:
+        - value:
+            type_: String
+          name: Name
+          comment: Content name.
+          optional: true
+        - enum:
+            module:
+              module_name: cl
+            name: FileKind
+          name: FileKind
+          comment: Format of the file contents, some values match to more than 
+            one file extension.
+          optional: true
+        - value:
+            type_: Binary
+          name: FileBytes
+          comment: Embedded binary content to be displayed as the current view.
+      name: PdfFile
+    - value:
+        type_: String
+      name: NoteParam
+    static: false
+  - name: long_handler
+    label: Long Handler
+    type_: Job
+    static: true
+  - name: long_handler_with_error
+    label: Long Handler With Error
+    type_: Job
+    static: false
+  - name: save_to_db
+    label: Save To Db
+    comment: Stub method.
+    type_: Job
+    static: false
+  - name: static_method_1a
+    label: Static Method 1A
+    comment: Stub handler.
+    type_: Job
+    static: true
+  - name: static_method_1b
+    label: Static Method 1B
+    comment: Stub handler.
+    type_: Job
+    static: true
+  - name: static_method_2a
+    label: Static Method 2A
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: true
+  - name: static_method_2b
+    label: Static Method 2B
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: true
+  - name: static_method_3a
+    label: Static Method 3A
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: true
+  - name: static_method_3b
+    label: Static Method 3B
+    comment: Stub handler.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Param1
+    - value:
+        type_: String
+      optional: true
+      name: Param2
+    static: true
+  - name: with_args_and_optional
+    label: With Args And Optional
+    comment: Stub method.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Arg1
+    - value:
+        type_: String
+      name: Arg2
+    - value:
+        type_: String
+      optional: true
+      name: Arg3
+    return_:
+      value:
+        type_: String
+    static: false
+  - name: with_error
+    label: With Error
+    comment: Stub method.
+    type_: Job
+    static: false
+  - name: with_two_args
+    label: With Two Args
+    comment: Stub method.
+    type_: Job
+    params:
+    - value:
+        type_: String
+      name: Arg1
+    - value:
+        type_: String
+      name: Arg2
+    return_:
+      value:
+        type_: String
+    static: false
+  - name: with_user_error
+    label: With User Error
+    comment: Stub method.
+    type_: Job
+    static: false
+elements:
+- value:
+    type_: String
+  name: StubId
+  comment: Stub identifier.
+keys:
+- StubId
+

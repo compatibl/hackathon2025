@@ -1,0 +1,6 @@
+{
+  "key_int_field": {
+    "op_gt": 1,
+    "op_lt": 10
+  }
+}

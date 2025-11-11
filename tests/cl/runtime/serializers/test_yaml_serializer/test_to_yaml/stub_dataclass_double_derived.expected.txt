@@ -1,0 +1,5 @@
+_type: StubDataclassDoubleDerived
+id: abc
+derived_str_field: derived
+double_derived_str_field: double_derived
+

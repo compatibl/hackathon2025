@@ -1,10 +1,8 @@
 # Default environment
 default:
 
-  # Default log level (documented in LogSettings class)
+  # Documented in LogSettings class
   log_level: info
-
-  # Default log filename prefix (documented in LogSettings class)
   log_filename_prefix: main
 
   # Documented in EnvSettings class
@@ -22,13 +20,18 @@ default:
   db_id: temp_hackathon_main
   db_type: SqliteDb
 
-  # REST API hostname and port (documented in ApiSettings class)
+  # Documented in CelerySettings class
+  celery_broker_uri: mongodb://localhost:27017/celery-{context_id}
+  # celery_broker_uri: sqlalchemy+sqlite:///{project_dir}/celery-{context_id}.db
+
+  # Documented in ApiSettings class
   api_hostname: localhost
   api_port: 7008
 
-  # Preload directories to include (documented in PreloadSettings class)
+  # Documented in PreloadSettings class
   preload_dirs:
-    - cl
+    - preloads/cl
+    - preloads/stubs
 
   # Documented in LlmSettings class
   llm_type: GptLlm
@@ -43,5 +46,5 @@ testing:
     - SqliteDb
     - BasicMongoMockDb
 
-  # Test log filename prefix (documented in LogSettings class)
+  # Documented in LogSettings class
   log_filename_prefix: tests

@@ -1,0 +1,30 @@
+RequestID,Query,Completion
+2025-01-01-01-52-47-106-7571913ae9370fb293bc,"Trial: 0
+You will be provided with an input text, a description of a parameter, and possible values of this parameter.
+Your goal is to extract the value of the parameter from the provided input text.
+
+You must reply with JSON formatted strictly according to the JSON specification in which all values are strings.
+The JSON must have the following keys:
+
+{
+    ""success"": ""<true if you successfully extracted the parameter value and it matches one of the provided choices and false otherwise. This field is required.>"",
+    ""param_value"": ""<Parameter value you extracted which matches one of the provided choices. Leave this field empty in case of failure.>"",
+    ""justification"": ""<Justification for the parameter value you extracted in case of success or the reason why you were not able to find the parameter in case of failure. This field is required.>""
+}
+Input text: ```USD```
+Parameter description: ```Currency code in strict ISO-4217 format of three uppercase letters, no variations allowed.```
+Semicolon-delimited list of valid choices: ```CAD;EUR;GBP;USD```
+
+Keep in mind that the input text does not need to be one of the valid choices. Rather, you must use your knowledge as
+Senior Quantitative Analyst to determine if the input has the same meaning or maps to one of the valid choices,
+without necessarily being exactly the same or having the same format.
+
+Examples:
+  - When input text is $, a valid choice may be USD
+  - When input text is %, a valid choice may be percent","```json
+{
+    ""success"": ""true"",
+    ""param_value"": ""USD"",
+    ""justification"": ""The input text is 'USD', which matches one of the provided valid choices 'USD'. It is in the correct ISO-4217 format of three uppercase letters.""
+}
+```"

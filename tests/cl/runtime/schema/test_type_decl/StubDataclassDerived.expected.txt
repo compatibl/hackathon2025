@@ -1,0 +1,22 @@
+module:
+  module_name: cl
+name: StubDataclassDerived
+label: Stub Dataclass Derived
+comment: Stub derived class.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclass
+elements:
+- value:
+    type_: String
+  name: Id
+- value:
+    type_: String
+  name: DerivedStrField
+  comment: Stub field.
+keys:
+- Id
+

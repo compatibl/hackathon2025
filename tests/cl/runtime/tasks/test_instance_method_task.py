@@ -1,0 +1,66 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import pytest
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
+from cl.runtime.tasks.instance_method_task import InstanceMethodTask
+from cl.runtime.tasks.task_queue_key import TaskQueueKey
+from stubs.cl.runtime import StubHandlers
+
+TASK_COUNT = 3
+
+
+def test_smoke(default_db_fixture, event_broker_fixture):
+    """Smoke test."""
+    records = [
+        sample.build()
+        for sample in [
+            StubHandlers(stub_id="abc"),
+        ]
+    ]
+    active(DataSource).insert_many(records, commit=True)
+
+    instance_handlers_on_object = [(x.get_key(), x.run_instance_method_1a) for x in records]
+    instance_handlers_on_class = [(x.get_key(), StubHandlers.run_instance_method_1a) for x in records]
+    class_handlers_on_class = [(x.get_key(), StubHandlers.run_class_method_1a) for x in records]
+
+    sample_inputs = instance_handlers_on_object + instance_handlers_on_class + class_handlers_on_class
+
+    for sample_input in sample_inputs:
+        key = sample_input[0]
+        method_callable = sample_input[1]
+        task = InstanceMethodTask.create(
+            queue=TaskQueueKey(queue_id="Sample Queue"),
+            key=key,
+            method_callable=method_callable,
+        ).build()
+        task.run_task()
+
+
+def _run_task(task_index: int):
+    instance = StubHandlers(stub_id=f"abc{task_index}").build()
+    active(DataSource).replace_one(instance, commit=True)
+
+    task = InstanceMethodTask.create(
+        queue=TaskQueueKey(queue_id="Sample Queue"),
+        key=instance.get_key(),
+        method_callable=instance.run_instance_method_1a,
+    ).build()
+
+    task.run_task()
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

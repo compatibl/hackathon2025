@@ -1,0 +1,333 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import annotations
+import ast
+import dataclasses
+import inspect
+from dataclasses import dataclass
+from enum import Enum
+from itertools import tee
+from typing import Dict
+from typing import Self
+from typing import Set
+from typing import get_type_hints  # TODO: Use TypeHint class instead
+from inflection import titleize
+from memoization import cached
+from cl.runtime.primitive.case_util import CaseUtil
+from cl.runtime.records.for_dataclasses.extensions import required
+from cl.runtime.records.protocols import is_abstract_type
+from cl.runtime.records.protocols import is_data_type
+from cl.runtime.records.protocols import is_enum_type
+from cl.runtime.records.protocols import is_key_type
+from cl.runtime.records.protocols import is_primitive_type
+from cl.runtime.records.protocols import is_record_type
+from cl.runtime.records.record_mixin import RecordMixin
+from cl.runtime.records.typename import typename
+from cl.runtime.schema.element_decl import ElementDecl
+from cl.runtime.schema.field_decl import FieldDecl
+from cl.runtime.schema.handler_declare_block_decl import HandlerDeclareBlockDecl
+from cl.runtime.schema.module_decl_key import ModuleDeclKey
+from cl.runtime.schema.type_decl_key import TypeDeclKey
+from cl.runtime.schema.type_kind import TypeKind
+from cl.runtime.serializers.bootstrap_serializers import BootstrapSerializers
+
+
+def for_type_key_maker(
+    cls,
+    record_type: type,
+    *,
+    dependencies: Set[type] | None = None,
+    skip_fields: bool = False,
+    skip_handlers: bool = False,
+) -> str:
+    """Custom key marker for 'for_type' class method."""
+    # TODO: Replace by lambda if skip_fields parameter is removed
+    return f"{record_type.__module__}.{typename(record_type)}.{dependencies.__hash__}{skip_fields}{skip_handlers}"
+
+
+def get_name_of_type_decl_dict(dict_: dict[str, Dict]) -> str | None:
+    """Search for the type name in the given dict and return in format {module}.{name} ."""
+
+    # Element fields contain "key_" in case of key-field or "data" section in case of data-field
+    key_field = dict_.get("key_", None)
+    data_field = dict_.get("data", None)
+    name_field = "name"
+    module_field = "module"
+    module_name_field = "module_name"
+
+    module = None
+    name = None
+
+    if key_field is not None and name_field in key_field:
+        module = key_field.get(module_field, {}).get(module_name_field, None)
+        name = key_field[name_field]
+    elif data_field is not None and name_field in data_field:
+        module = data_field.get(module_field, {}).get(module_name_field, None)
+        name = data_field[name_field]
+    # Name of the whole type is contained in "name" field. But type decl cannot contain only "name" and "module" fields
+    elif (name_ := dict_.get(name_field, None)) is not None and module_field in dict_:
+        if len(dict_) > 2:
+            name = name_
+
+    type_name = f"{module}.{name}" if module is not None else name
+    return type_name
+
+
+@dataclass(slots=True, kw_only=True)
+class TypeDecl(TypeDeclKey, RecordMixin):
+    """Provides information about a class, its fields, and its methods."""
+
+    label: str | None = None
+    """Type label."""
+
+    comment: str | None = None
+    """Type comment. Contains additional information."""
+
+    type_kind: TypeKind = required()  # TODO: ObjectKind or inherit
+    """Type kind."""
+
+    display_kind: str = required()  # TODO: Make optional, treat None as Basic
+    """Display kind."""
+
+    inherit: TypeDeclKey | None = None
+    """Parent type reference."""
+
+    declare: HandlerDeclareBlockDecl | None = None  # TODO: Flatten or use block for abstract flag
+    """Handler declaration block."""
+
+    elements: list[ElementDecl] | None = None  # TODO: Deprecated
+    """Element declaration block."""
+
+    keys: list[str] | None = None
+    """Array of key element names (specify in base class only)."""
+
+    abstract: bool | None = None
+    """True if the class is abstract."""
+
+    immutable: bool | None = None
+    """Immutable flag."""
+
+    permanent: bool | None = None
+    """When the record is saved, also save it permanently."""
+
+    def get_key(self) -> TypeDeclKey:
+        return TypeDeclKey(module=self.module, name=self.name).build()
+
+    def __init(self) -> None:
+        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
+        if self.display_kind not in (display_kinds := ["Basic", "Singleton", "Dashboard"]):
+            raise RuntimeError(
+                f"Field TypeDecl.display_kind has the value of {self.display_kind}\n"
+                f"Permitted values are {', '.join(display_kinds)}"
+            )
+
+    @classmethod
+    @cached(custom_key_maker=for_type_key_maker)
+    def for_type(
+        cls,
+        record_type: type,
+        *,
+        dependencies: Set[type] | None = None,
+        skip_fields: bool = False,
+        skip_handlers: bool = False,
+    ) -> Self:
+        """
+        Create or return cached object for the specified record type.
+
+        Args:
+            record_type: Type of the record for which the declaration is created
+            dependencies: Set of types used in field or methods of the specified type, populated only if not None
+            skip_fields: Use this flag to skip fields generation when the method is invoked from a derived class
+            skip_handlers: Use this flag to skip handlers generation when the method is invoked internal methods
+        """
+
+        # Create instance of the result
+        result = cls()
+
+        # Set type kind
+        if is_record_type(record_type):
+            result.type_kind = TypeKind.RECORD
+        elif is_key_type(record_type):
+            result.type_kind = TypeKind.DATA  # TODO: !!! Review, should be KEY
+        elif is_data_type(record_type):
+            result.type_kind = TypeKind.DATA
+        elif is_enum_type(record_type):
+            raise RuntimeError(f"Cannot create TypeDecl for class {typename(record_type)} because it is an enum.")
+        elif issubclass(record_type, tuple):
+            raise RuntimeError(f"Cannot create TypeDecl for class {typename(record_type)} because it is a tuple.")
+        else:
+            raise RuntimeError(
+                f"Cannot create TypeDecl for class {typename(record_type)} because it is not a record, key or data."
+            )
+
+        result.module = ModuleDeclKey().build()
+        result.name = typename(record_type)
+        result.label = titleize(result.name)  # TODO: Add override from settings
+        result.comment = record_type.__doc__
+
+        # Set abstract flag, use None instead of False
+        result.abstract = True if is_abstract_type(record_type) else None
+
+        # Set display kind
+        result.display_kind = "Basic"  # TODO: Remove Basic after display_kind is made optional
+
+        # Iterate over MRO types
+        for mro_type in record_type.__mro__:
+            # TODO: Refactor to make it work not only for dataclasses
+            mro_type_name = typename(mro_type)
+            if mro_type is not record_type and dataclasses.is_dataclass(mro_type):
+                if not result.inherit:
+                    # The first class in MRO sequence other than self is the direct parent
+                    mro_type_module = ModuleDeclKey().build()
+                    result.inherit = TypeDeclKey(module=mro_type_module, name=mro_type_name).build()
+
+                # Add all MRO types to dependencies
+                # Note - do not use 'if dependencies' syntax, otherwise
+                # an empty dependencies list will never be extended
+                if dependencies is not None:
+                    dependencies.add(mro_type)
+
+        # Get type public methods
+        if not skip_handlers:
+            handlers_block = HandlerDeclareBlockDecl.get_type_methods(record_type, inherit=True)
+            if handlers_block.handlers:
+                result.declare = handlers_block
+
+        # Get key fields if a record
+        if result.type_kind == TypeKind.RECORD:
+            snake_case_key_fields = record_type.get_key_type().get_field_names()  # noqa
+            if snake_case_key_fields is not None:
+                pascal_case_key_fields = [CaseUtil.snake_to_pascal_case(x) for x in snake_case_key_fields]
+                result.keys = pascal_case_key_fields  # TODO: Use slots of key type when present?
+
+        # Use this flag to skip fields generation when the method is invoked from a derived class
+        if not skip_fields:
+            # Get type aliases with resolved ForwardRefs
+            type_aliases = get_type_hints(record_type)
+
+            # Dictionary of member comments (docstrings), currently requires source parsing due Python limitations
+            if not is_primitive_type(record_type):
+                member_comments = cls.get_member_comments(record_type)
+            else:
+                member_comments = f"Primitive type {record_type.__name__}"
+
+            # Add an element for each type hint
+            for field_name, field_type in type_aliases.items():
+
+                # Create only if there is at least one field
+                if result.elements is None:
+                    result.elements = []
+
+                # Skip protected fields
+                if field_name.startswith("_"):
+                    continue
+
+                # Field comment (docstring)
+                field_comment = member_comments.get(field_name, None)
+
+                # Use a separate set to keep track of dependencies added during this call
+                added_dependencies = set()
+
+                # Create field declaration
+                field_decl = FieldDecl.create(
+                    record_type, field_name, field_type, field_comment, dependencies=added_dependencies
+                )
+
+                if dependencies is not None:
+                    # Iterate over only the added dependencies
+                    for dep in added_dependencies:
+                        # Call recursively on all added dependencies unless already in dependencies or primitive
+                        # TODO(Sasha): Review if enum declarations should be in dependencies
+                        if not is_primitive_type(dep) and not is_enum_type(dep) and dep not in dependencies:
+                            cls.for_type(
+                                dep, dependencies=dependencies, skip_fields=skip_fields, skip_handlers=skip_handlers
+                            )
+                    # Update dependencies with added dependencies
+                    dependencies.update(added_dependencies)
+
+                # Convert to element and add
+                element_decl = ElementDecl.create(field_decl)
+                result.elements.append(element_decl)
+
+        return result
+
+    @classmethod
+    @cached
+    def as_dict_with_dependencies(cls, record_type: type) -> dict[str, Dict]:
+        """
+        Declarations for the specified type and all dependencies, returned as a dictionary.
+
+        Args:
+            record_type: Type of the record for which the schema is created.
+        """
+        dependencies = set()
+
+        # Get or create type declaration the argument class
+        type_decl_obj = cls.for_type(record_type, dependencies=dependencies)
+
+        # Sort the list of dependencies
+        dependencies = sorted(dependencies, key=lambda x: typename(x))
+
+        # TODO: Restore after Enum decl generation is supported
+        dependencies = [dependency_type for dependency_type in dependencies if not issubclass(dependency_type, Enum)]
+
+        # Requested type is always first
+        type_decl_list = [type_decl_obj] + [cls.for_type(dependency_type) for dependency_type in dependencies]
+
+        # TODO: Move pascalize to a helper class
+        result = {
+            f"{type_decl.module.module_name}.{type_decl.name}": BootstrapSerializers.FOR_UI.serialize(type_decl)
+            for type_decl in type_decl_list
+        }
+        return result
+
+    @classmethod
+    @cached
+    def get_member_comments(cls, record_type: type) -> dict[str, str]:
+        """Extract class member comments."""
+
+        # Include comments from key class fields for base
+        # TODO: Revise approach to key fields
+        if len(record_type.__mro__) > 1 and record_type.__mro__[1].__name__.endswith("Key"):
+            comments = cls.get_member_comments(record_type.__mro__[1])
+        else:
+            comments = dict()
+
+        ast_tree = ast.parse(inspect.getsource(record_type))
+
+        for i, j in cls.by_pair(ast.iter_child_nodes(ast_tree.body[0])):
+            if isinstance(i, ast.AnnAssign):
+                target_node = i.target
+            elif isinstance(i, ast.Assign):
+                target_node = i.targets[0]
+            else:
+                continue
+
+            if not isinstance(target_node, ast.Name):
+                continue
+
+            name: str = target_node.id
+            # TODO: ast.Str is replaced by ast.Constant in Python 3.8, update
+            if isinstance(j, ast.Expr) and isinstance(j.value, ast.Str):
+                comments[name] = inspect.cleandoc(j.value.s)
+
+        return comments
+
+    @classmethod
+    def by_pair(cls, iterable):
+        """s -> (s0,s1), (s1,s2), (s2, s3), ..."""
+        a, b = tee(iterable)
+        next(b, None)
+        return zip(a, b)

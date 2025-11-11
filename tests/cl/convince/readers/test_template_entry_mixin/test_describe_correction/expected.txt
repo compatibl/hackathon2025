@@ -1,0 +1,18 @@
+The template and data from your previous response did not match the input text.
+Please provide a new response that corrects the differences described below.
+
+Template body:
+
+The value is {value}
+
+Template parameters:
+
+Value: def
+
+
+Unified diff (---InputText +++RenderedText):
+
+- The value is abc
++ The value is def
+
+

@@ -1,0 +1,98 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import datetime as dt
+from dataclasses import dataclass
+from cl.runtime.records.for_dataclasses.extensions import required
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclass
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclassKey
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data import StubDataclassData
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_derived import StubDataclassDerived
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_data_dict_factory
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_date_dict_factory
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_derived_dict_factory
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_key_dict_factory
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_dict_fields import stub_dataclass_record_dict_factory
+
+
+def stub_dataclass_str_dict_list_factory() -> list[str]:
+    """Create stub values."""
+    return ["abc", "def"]
+
+
+def stub_dataclass_float_dict_list_factory() -> list[dict[str, float]]:
+    """Create stub values."""
+    return [
+        {"a": 1.0},
+        {"b": 2.0},
+    ]
+
+
+def stub_dataclass_date_dict_list_factory() -> list[dict[str, dt.date]]:
+    """Create stub values."""
+    return [
+        stub_dataclass_date_dict_factory(),
+        stub_dataclass_date_dict_factory(),
+    ]
+
+
+def stub_dataclass_data_dict_list_factory() -> list[dict[str, StubDataclassData]]:
+    """Create stub values."""
+    return [
+        stub_dataclass_data_dict_factory(),
+        stub_dataclass_data_dict_factory(),
+    ]
+
+
+def stub_dataclass_key_dict_list_factory() -> list[dict[str, StubDataclassKey]]:
+    """Create stub values."""
+    return [
+        stub_dataclass_key_dict_factory(),
+        stub_dataclass_key_dict_factory(),
+    ]
+
+
+def stub_dataclass_record_dict_list_factory() -> list[dict[str, StubDataclass]]:
+    """Create stub values."""
+    return [
+        stub_dataclass_record_dict_factory(),
+        stub_dataclass_record_dict_factory(),
+    ]
+
+
+def stub_dataclass_derived_dict_list_factory() -> list[dict[str, StubDataclassDerived]]:
+    """Create stub values."""
+    return [
+        stub_dataclass_derived_dict_factory(),
+        stub_dataclass_derived_dict_factory(),
+    ]
+
+
+@dataclass(slots=True, kw_only=True)
+class StubDataclassDictListFields(StubDataclass):
+    """Stub record whose elements are dictionaries."""
+
+    float_dict_list: list[dict[str, float]] = required(default_factory=stub_dataclass_float_dict_list_factory)
+    """Stub field."""
+
+    date_dict_list: list[dict[str, dt.date]] = required(default_factory=stub_dataclass_date_dict_list_factory)
+    """Stub field."""
+
+    record_dict_list: list[dict[str, StubDataclass]] = required(default_factory=stub_dataclass_record_dict_list_factory)
+    """Stub field."""
+
+    derived_dict_list: list[dict[str, StubDataclassDerived]] = required(
+        default_factory=stub_dataclass_derived_dict_list_factory
+    )
+    """Stub field."""

@@ -1,0 +1,118 @@
+# Copyright (C) 2023-present The Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import datetime as dt
+from dataclasses import dataclass
+from cl.runtime.primitive.date_util import DateUtil
+from cl.runtime.records.for_dataclasses.extensions import required
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclass
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass import StubDataclassKey
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_data import StubDataclassData
+from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_derived import StubDataclassDerived
+
+
+def stub_dataclass_str_list_factory() -> list[str]:
+    """Create stub values."""
+    return ["abc", "def"]
+
+
+def stub_dataclass_float_list_factory() -> list[float]:
+    """Create stub values."""
+    return [
+        0.0000123456789,
+        0.000123456789,
+        0.00123456789,
+        0.0123456789,
+        0.123456789,
+        1.23456789,
+        12.3456789,
+        123.456789,
+        1234.56789,
+        12345.6789,
+    ]
+
+
+def stub_dataclass_float_or_none_list_factory() -> list[float | None]:
+    """Create stub values."""
+    return [
+        None,
+        12345.6789,
+        None,
+    ]
+
+
+def stub_dataclass_date_list_factory() -> list[dt.date]:
+    """Create stub values."""
+    return [
+        DateUtil.from_fields(2003, 4, 21),
+        DateUtil.from_fields(2003, 5, 1),
+    ]
+
+
+def stub_dataclass_data_list_factory() -> list[StubDataclassData]:
+    """Create stub values."""
+    return [
+        StubDataclassData(str_field="A", int_field=0),
+        StubDataclassData(str_field="B", int_field=1),
+    ]
+
+
+def stub_dataclass_key_list_factory() -> list[StubDataclassKey]:
+    """Create stub values."""
+    return [
+        StubDataclassKey(id="A"),
+        StubDataclassKey(id="B"),
+    ]
+
+
+def stub_dataclass_record_list_factory() -> list[StubDataclass]:
+    """Create stub values."""
+    return [
+        StubDataclass(id="A"),
+        StubDataclass(id="B"),
+    ]
+
+
+def stub_dataclass_derived_list_factory() -> list[StubDataclassDerived]:
+    """Create stub values."""
+    return [
+        StubDataclassDerived(id="A"),
+        StubDataclassDerived(id="B"),
+    ]
+
+
+@dataclass(slots=True, kw_only=True)
+class StubDataclassListFields(StubDataclass):
+    """Stub record whose elements are lists."""
+
+    str_list: list[str] = required(default_factory=stub_dataclass_str_list_factory)
+    """Stub field."""
+
+    float_list: list[float] = required(default_factory=stub_dataclass_float_list_factory)
+    """Stub field."""
+
+    date_list: list[dt.date] = required(default_factory=stub_dataclass_date_list_factory)
+    """Stub field."""
+
+    data_list: list[StubDataclassData] = required(default_factory=stub_dataclass_data_list_factory)
+    """Stub field."""
+
+    key_list: list[StubDataclassKey] = required(default_factory=stub_dataclass_key_list_factory)
+    """Stub field."""
+
+    record_list: list[StubDataclass] = required(default_factory=stub_dataclass_record_list_factory)
+    """Stub field."""
+
+    derived_list: list[StubDataclassDerived] = required(default_factory=stub_dataclass_derived_list_factory)
+    """Stub field."""

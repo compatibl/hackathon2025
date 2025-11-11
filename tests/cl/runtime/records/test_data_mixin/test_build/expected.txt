@@ -1,0 +1,9 @@
+Testing Base:
+StubDataclassData.__init
+Testing Derived:
+StubDataclassData.__init
+StubDataclassDerivedData.__init
+Testing DoubleDerivedWithInit:
+StubDataclassData.__init
+StubDataclassDerivedData.__init
+StubDataclassDoubleDerivedData.__init

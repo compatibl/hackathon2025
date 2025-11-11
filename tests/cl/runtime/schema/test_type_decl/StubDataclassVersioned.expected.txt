@@ -1,0 +1,23 @@
+module:
+  module_name: cl
+name: StubDataclassVersioned
+label: Stub Dataclass Versioned
+comment: Stub record base class.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclassVersionedKey
+elements:
+- value:
+    type_: String
+  name: Id
+  comment: Stub field.
+- value:
+    type_: Int
+  name: Version
+  comment: Stub version field.
+keys:
+- Id
+

@@ -1,0 +1,47 @@
+module:
+  module_name: cl
+name: StubDataclassListDictFields
+label: Stub Dataclass List Dict Fields
+comment: Stub record whose elements are dictionaries.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclass
+elements:
+- value:
+    type_: String
+  name: Id
+- value:
+    type_: Dict
+  name: FloatListDict
+  comment: Stub field.
+- value:
+    type_: Dict
+  name: FloatOrNoneListDict
+  comment: Stub field.
+- value:
+    type_: Dict
+  name: FloatListOrNoneDict
+  comment: Stub field.
+- value:
+    type_: Dict
+  name: FloatListDictOrNone
+  comment: Stub field.
+  optional: true
+- value:
+    type_: Dict
+  name: DateListDict
+  comment: Stub field.
+- value:
+    type_: Dict
+  name: RecordListDict
+  comment: Stub field.
+- value:
+    type_: Dict
+  name: DerivedListDict
+  comment: Stub field.
+keys:
+- Id
+

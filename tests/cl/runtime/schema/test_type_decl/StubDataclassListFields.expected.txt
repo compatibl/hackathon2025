@@ -1,0 +1,61 @@
+module:
+  module_name: cl
+name: StubDataclassListFields
+label: Stub Dataclass List Fields
+comment: Stub record whose elements are lists.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: StubDataclass
+elements:
+- value:
+    type_: String
+  name: Id
+- value:
+    type_: String
+  name: StrList
+  comment: Stub field.
+  vector: true
+- value:
+    type_: Double
+  name: FloatList
+  comment: Stub field.
+  vector: true
+- value:
+    type_: Date
+  name: DateList
+  comment: Stub field.
+  vector: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassData
+  name: DataList
+  comment: Stub field.
+  vector: true
+- key_:
+    module:
+      module_name: cl
+    name: StubDataclassKey
+  name: KeyList
+  comment: Stub field.
+  vector: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclass
+  name: RecordList
+  comment: Stub field.
+  vector: true
+- data:
+    module:
+      module_name: cl
+    name: StubDataclassDerived
+  name: DerivedList
+  comment: Stub field.
+  vector: true
+keys:
+- Id
+

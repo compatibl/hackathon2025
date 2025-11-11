@@ -1,0 +1,83 @@
+module:
+  module_name: cl
+name: UiAppState
+label: Ui App State
+comment: UiAppState.
+type_kind: Record
+display_kind: Basic
+inherit:
+  module:
+    module_name: cl
+  name: UiAppStateKey
+elements:
+- key_:
+    module:
+      module_name: cl
+    name: UserKey
+  name: User
+  comment: A user the app state is applied for.
+- data:
+    module:
+      module_name: cl
+    name: TabInfo
+  name: OpenedTabs
+  comment: Information about opened tabs.
+  vector: true
+  optional: true
+- value:
+    type_: String
+  name: Favorites
+  comment: Information about favorite tables, types and filters.
+  vector: true
+  optional: true
+- value:
+    type_: Int
+  name: ActiveTabIndex
+  comment: Index of active opened tab.
+  optional: true
+- value:
+    type_: String
+  name: BackendVersion
+  comment: DEPRECATED. Use versions instead.
+  optional: true
+- value:
+    type_: Dict
+  name: Versions
+  comment: Component versions.
+  optional: true
+- value:
+    type_: String
+  name: ApplicationName
+  comment: Application name.
+  optional: true
+- value:
+    type_: Bool
+  name: ReadOnly
+  comment: Flag indicating that UI is read-only.
+  optional: true
+- value:
+    type_: String
+  name: ApplicationTheme
+  comment: Application theme (dark, light, etc.).
+  optional: true
+- value:
+    type_: String
+  name: UserSecretIdentifiers
+  comment: |-
+    Suggested key names in My Keys section of the head and shoulders dialog.
+
+    Notes:
+        - This is a list of suggestions, no restriction on entering secrets with other names
+        - The secret names should be in snake_case, for example ["openai_api_key", "anthropic_api_key"] 
+  vector: true
+  optional: true
+- value:
+    type_: Bool
+  name: FullScreenMode
+  comment: |-
+    Flag indicating whether the UI is in full-screen mode (e.g., only a single active tab is visible with a 
+    minimalistic interface).
+  optional: true
+keys:
+- User
+

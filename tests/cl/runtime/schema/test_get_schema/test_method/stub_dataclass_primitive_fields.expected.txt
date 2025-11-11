@@ -1,0 +1,157 @@
+Module:
+  ModuleName: cl
+Name: StubDataclassPrimitiveFields
+Label: Stub Dataclass Primitive Fields
+Comment: Stub record whose elements are primitive types.
+TypeKind: Record
+DisplayKind: Basic
+Inherit:
+  Module:
+    ModuleName: cl
+  Name: StubDataclassPrimitiveFieldsKey
+Elements:
+- Value:
+    Type: String
+  Name: KeyStrField
+  Comment: Stub field.
+- Value:
+    Type: Double
+  Name: KeyFloatField
+  Comment: Stub field.
+- Value:
+    Type: Bool
+  Name: KeyBoolField
+  Comment: Stub field.
+- Value:
+    Type: Int
+  Name: KeyIntField
+  Comment: Stub field.
+- Value:
+    Type: Long
+  Name: KeyLongField
+  Comment: 'The default is maximum safe signed int for JSON: 2^53 - 1.'
+- Value:
+    Type: Date
+  Name: KeyDateField
+  Comment: Stub field.
+- Value:
+    Type: Time
+  Name: KeyTimeField
+  Comment: Stub field.
+- Value:
+    Type: DateTime
+  Name: KeyDateTimeField
+  Comment: Stub field.
+- Value:
+    Type: UUID
+  Name: KeyUuidField
+  Comment: Stub field.
+- Value:
+    Type: Binary
+  Name: KeyBytesField
+  Comment: Stub field.
+- Value:
+    Type: type
+  Name: KeyTypeField
+  Comment: Stub field.
+  Optional: true
+- Enum:
+    Module:
+      ModuleName: cl
+    Name: StubIntEnum
+  Name: KeyIntEnumField
+  Comment: Stub field.
+- Value:
+    Type: String
+  Name: ObjStrField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: String
+  Name: ObjStrWithEolField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: String
+  Name: ObjStrWithTrailingEolField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: String
+  Name: ObjStrTimestampField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: Double
+  Name: ObjFloatField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: Bool
+  Name: ObjBoolField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: Int
+  Name: ObjIntField
+  Comment: Stub field.
+- Value:
+    Type: Long
+  Name: ObjLongField
+  Comment: 'The default is maximum safe signed int for JSON: 2^53 - 1.'
+- Value:
+    Type: Date
+  Name: ObjDateField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: Time
+  Name: ObjTimeField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: DateTime
+  Name: ObjDateTimeField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: UUID
+  Name: ObjUuidField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: Binary
+  Name: ObjBytesField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: Binary
+  Name: ObjBytesLargeField
+  Comment: Stub field.
+  Optional: true
+- Value:
+    Type: type
+  Name: ObjTypeField
+  Comment: Stub field.
+  Optional: true
+- Enum:
+    Module:
+      ModuleName: cl
+    Name: StubIntEnum
+  Name: ObjIntEnumField
+  Comment: Stub field.
+  Optional: true
+Keys:
+- KeyStrField
+- KeyFloatField
+- KeyBoolField
+- KeyIntField
+- KeyLongField
+- KeyDateField
+- KeyTimeField
+- KeyDateTimeField
+- KeyUuidField
+- KeyBytesField
+- KeyTypeField
+- KeyIntEnumField
+
