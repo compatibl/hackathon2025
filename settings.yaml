@@ -1,28 +1,35 @@
 # Default environment
-default:
+default: &default_settings
 
   # Documented in LogSettings class
   log_level: info
   log_filename_prefix: main
 
   # Documented in EnvSettings class
-  env_id: temp_hackathon_main
-  env_tenant: temp_tenant
+  env_id: dev_hackathon_main
+  env_kind: dev
   env_packages:
     - cl.runtime
     - cl.convince
     - cl.hackathon
     - stubs.cl.runtime
     - stubs.cl.convince
-    - stubs.cl.hackathon
 
   # Documented in DbSettings class
-  db_id: temp_hackathon_main
-  db_type: SqliteDb
+  db_id: dev_hackathon_main
+  db_type: BasicMongoDb
+  db_mongo_uri: "mongodb://localhost:27017/"
+  # db_type: SqliteDb
 
-  # Documented in CelerySettings class
+  # Documented in CelerySettings class (multiple workers)
   celery_broker_uri: mongodb://localhost:27017/celery-{context_id}
   # celery_broker_uri: sqlalchemy+sqlite:///{project_dir}/celery-{context_id}.db
+
+  celery_multiprocess_pool: true  # Enable multiprocess worker pool
+  celery_workers: 8  # Number of worker processes
+  celery_pool_type: solo  # Each worker uses solo pool
+  celery_worker_restart_interval: 30  # Restart workers if unresponsive for 30 seconds
+  celery_worker_log_level: info
 
   # Documented in ApiSettings class
   api_hostname: localhost
@@ -31,20 +38,41 @@ default:
   # Documented in PreloadSettings class
   preload_dirs:
     - preloads/cl
-    - preloads/stubs
 
-  # Documented in LlmSettings class
-  llm_type: GptLlm
-  llm_id: gpt-4o
-  llm_locale: en-US
+  # Documented in CompletionSettings (disable caching for client)
+  completion_disable_caching: True
+  completion_load_from_csv: False
+  completion_save_to_csv: False
 
 # Test environment
 testing:
 
+  db_type: BasicMongoMockDb
   # Documented in QaSettings class
+  # TODO: Add other DB types
   qa_db_types:
-    - SqliteDb
     - BasicMongoMockDb
+    - SqliteDb
+    
+  env_packages:
+    - cl.runtime
+    - cl.convince
+    - cl.hackathon
+    - stubs.cl.runtime
+    - stubs.cl.convince
+
+  preload_dirs:
+    - preloads/cl
+    - preloads/stubs
 
   # Documented in LogSettings class
   log_filename_prefix: tests
+
+  # Documented in CompletionSettings (use caching for tests)
+  completion_disable_caching: False
+  completion_load_from_csv: True
+  completion_save_to_csv: True
+
+  # Documented in LlmSettings class
+  llm_type: GptLlm
+  llm_id: gpt-4o
