@@ -13,12 +13,14 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from typing import Any
 import fireworks.client  # noqa
 from fireworks.client import Fireworks
 from cl.runtime.contexts.context_manager import active_or_default
-from cl.runtime.contexts.user_context import UserContext
+from cl.runtime.contexts.user_secrets import UserSecrets
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.convince.llms.llama.llama_llm import LlamaLlm
+from cl.convince.llms.llm_request_telemetry import LlmRequestTelemetry
 from cl.convince.settings.fireworks_settings import FireworksSettings
 
 
@@ -29,18 +31,11 @@ class FireworksLlamaLlm(LlamaLlm):
     model_name: str | None = None
     """Model name in Fireworks format including version if any, defaults to 'llm_id'."""
 
-    max_tokens: int = 4096
-    """Maximum number of tokens the model will generate in response to the query."""
+    max_tokens: int | None = None
+    """Maximum number of tokens the model will generate in response to the query (optional)."""
 
     temperature: float | None = None
-    """
-    The sampling temperature between 0 and 1 (optional, passed as 'temperature' to OpenAI SDK).
-
-    Notes:
-        Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it
-        more focused  and deterministic. If set to 0, the model will use log probability to automatically
-        increase the temperature until certain thresholds are hit.
-    """
+    """Sampling temperature, optimal value and valid range are model-dependent (optional)."""
 
     def uncached_completion(self, request_id: str, query: str) -> str:
         """Perform completion without CompletionCache lookup, call completion instead."""
@@ -51,7 +46,7 @@ class FireworksLlamaLlm(LlamaLlm):
 
         # Try loading API key from context.secrets first and then from settings
         api_key = (
-            active_or_default(UserContext).decrypt_secret("FIREWORKS_API_KEY")
+            active_or_default(UserSecrets).decrypt_secret("FIREWORKS_API_KEY")
             or FireworksSettings.instance().fireworks_api_key
         )
         if api_key is None:
@@ -69,3 +64,15 @@ class FireworksLlamaLlm(LlamaLlm):
         )
         result = response.choices[0].message.content
         return result
+
+    def extract_completion_usage_info(self, response: Any) -> LlmRequestTelemetry:
+        """Extract usage from the completion."""
+        return LlmRequestTelemetry(
+            input_tokens=response.usage.prompt_tokens,
+            output_tokens=response.usage.completion_tokens,
+            total_tokens=response.usage.total_tokens,
+        )
+
+    def extract_text_from_completion(self, response: Any) -> str:
+        """Extract text from the completion."""
+        return response.choices[0].message.content

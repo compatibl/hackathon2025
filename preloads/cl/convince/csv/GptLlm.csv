@@ -1,5 +1,6 @@
-llm_id,model_name,temperature
-gpt-4o-mini,,
-gpt-4o-mini-02,gpt-4o-mini,"""0.2"""
-gpt-4o,,
-gpt-4o-02,gpt-4o,"""0.2"""
+llm_id,model_name,temperature,base_url,api_key_secret_name
+gpt-4o-mini,,,,
+gpt-4o-mini-02,gpt-4o-mini,"""0.2""",,
+gpt-4o,,,,
+gpt-4o-02,gpt-4o,"""0.2""",,
+"Qwen2.5-32B-Instruct-AWQ",,,"http://wawsdh002:8899/v1",None

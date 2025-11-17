@@ -39,9 +39,9 @@ class CompletionKey(DataclassMixin, KeyMixin):
             if "(" not in self.completion_id or ")" not in self.completion_id:
                 raise UserError(
                     f"""
-The field 'CompletionId' does not conform to one of the valid formats:
-Format 1: digest (llm, trial)
-Format 2: digest (llm, trial, md5)
-CompletionId: {self.completion_id}
-"""
+                    The field 'CompletionId' does not conform to one of the valid formats:
+                    Format 1: digest (llm, trial)
+                    Format 2: digest (llm, trial, md5)
+                    CompletionId: {self.completion_id}
+                    """
                 )

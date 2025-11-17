@@ -20,14 +20,14 @@ from cl.runtime.settings.settings import Settings
 
 @dataclass(slots=True, kw_only=True)
 @final
-class GoogleSettings(Settings):
+class GeminiSettings(Settings):
     """Google Gemini settings."""
 
-    google_api_key: str | None = None
+    gemini_api_key: str | None = None
     """The key for making REST API calls, ensure this key is stored in .secrets.yaml rather than settings.yaml."""
 
     def __init(self) -> None:
         """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
 
-        if self.google_api_key is not None and not isinstance(self.google_api_key, str):
+        if self.gemini_api_key is not None and not isinstance(self.gemini_api_key, str):
             raise RuntimeError(f"{typename(type(self))} field 'api_key' must be a string.")

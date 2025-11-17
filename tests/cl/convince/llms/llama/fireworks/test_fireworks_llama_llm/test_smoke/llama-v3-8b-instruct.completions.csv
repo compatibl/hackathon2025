@@ -1,2 +1,2 @@
-RequestID,Query,Completion
-2024-09-25-01-21-49-174-77009ae8e935b978dc82,2 times 2?,The answer to 2 times 2 is 4.
+completion_id,parent_completion_id,query,completion,timestamp
+"2 times 2? (llama-v3-8b-instruct, a889558bab03ece678eaf725f7d0429bcfc1470f17847309bd8a8640ac38740b)",,2 times 2?,The answer to 2 times 2 is 4.,2 times 2? (llama-v3-8b-instruct)

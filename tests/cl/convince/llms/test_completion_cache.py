@@ -42,7 +42,7 @@ def _check_cache_files_eol(base_dir: str, channels: list[str]):
             filename = f"completions.csv"
         file_path = os.path.join(base_dir, filename)
         if os.path.exists(file_path):
-            with open(file_path, "r", newline="") as file:
+            with open(file_path, "r", newline="", encoding="utf-8") as file:
                 # Get file content
                 file_content = file.read()
 

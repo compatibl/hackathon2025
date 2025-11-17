@@ -14,23 +14,13 @@
 
 from dataclasses import dataclass
 from typing_extensions import final
-from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.settings.settings import Settings
 
 
 @dataclass(slots=True, kw_only=True)
 @final
-class LlmSettings(Settings):
-    """LLM settings."""
+class ConvinceSettings(Settings):
+    """Convince module settings."""
 
-    llm_type: str = required()
-    """Type name of the default LLM instance."""
-
-    llm_id: str = required()
-    """Identifier of the default LLM instance."""
-
-    llm_locale: str = "en-US"
-    """
-    Locale the default LLM instance is instructed to use in BCP 47 language-country format, for example en-US.
-    This applies to LLM completions only and has no effect on the UI or the data file format.
-    """
+    convince_disable_telemetry_collection: bool | None = False
+    """Disables telemetry collection."""

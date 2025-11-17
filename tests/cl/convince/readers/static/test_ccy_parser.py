@@ -21,7 +21,7 @@ def test_ccy_parser(default_db_fixture):
     """Smoke test."""
     PreloadSettings.instance().save_and_configure()
 
-    reader = CcyParser().build()
+    reader = CcyParser(reader_id="test").build()
     entry = reader.read("USD")
     assert entry.ccy.iso_code == "USD"
 

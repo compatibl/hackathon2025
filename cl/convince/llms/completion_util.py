@@ -14,6 +14,7 @@
 
 import collections
 import os
+from typing import Dict
 from typing import Iterable
 from cl.runtime.contexts.context_manager import active_or_none
 from cl.runtime.stat.draw import Draw
@@ -49,13 +50,16 @@ class CompletionUtil:
         return result
 
     @classmethod
-    def to_python_eol(cls, data: Iterable[str] | str | None):
+    def to_python_eol(cls, data: Dict[str, str] | Iterable[str] | str | None):
         """Convert all types of EOL to \n for Python strings."""
         if data is None:
             return None
         if not isinstance(data, str) and isinstance(data, collections.abc.Iterable):
-            # If data is iterable return list of adjusted elements
             # Convert EOL only, do not strip leading or trailing whitespace
+            # If data is dict return dict with adjusted values
+            if isinstance(data, dict):
+                return {k: cls.to_python_eol(v) for k, v in data.items()}
+            # If data is list/tuple return list of adjusted elements
             return [cls.to_python_eol(x) for x in data]
         else:
             # Replace endings format to \n

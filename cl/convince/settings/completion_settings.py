@@ -14,10 +14,7 @@
 
 from dataclasses import dataclass
 from typing_extensions import final
-
-from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.contexts.os_util import OsUtil
-from cl.runtime.server.env import Env
 from cl.runtime.settings.settings import Settings
 
 
@@ -25,6 +22,9 @@ from cl.runtime.settings.settings import Settings
 @final
 class CompletionSettings(Settings):
     """Settings that apply to the entire Convince package."""
+
+    completion_disable_caching: bool | None = False
+    """Disables completions caching."""
 
     completion_load_from_csv: bool | None = None
     """Determines if completions are loaded from CSV files (defaults to True on Windows, required on other OS)."""
@@ -37,21 +37,21 @@ class CompletionSettings(Settings):
 
         if self.completion_load_from_csv is None:
             # Defaults to True on Windows, required on other OS
-            if OsUtil.is_windows() or active_or_default(Env).is_test():
+            if OsUtil.is_windows():
                 self.completion_load_from_csv = True
             else:
                 raise RuntimeError(
-                    "Setting CL_CONVINCE_COMPLETION_LOAD_FROM_CSV is required on non-Windows platforms\n"
-                    "except when running tests. Specify in settings.yaml or as an environment variable."
+                    "Setting CL_CONVINCE_COMPLETION_LOAD_FROM_CSV is required on non-Windows platforms.\n"
+                    "Specify in settings.yaml or as an environment variable."
                 )
 
         # Save completions to a local file on Windows only
         if self.completion_save_to_csv is None:
             # Defaults to True on Windows, required on other OS
-            if OsUtil.is_windows() or active_or_default(Env).is_test():
+            if OsUtil.is_windows():
                 self.completion_save_to_csv = True
             else:
                 raise RuntimeError(
                     "Setting CL_CONVINCE_COMPLETION_SAVE_TO_CSV is required on non-Windows platforms.\n"
-                    "except when running tests. Specify in settings.yaml or as an environment variable."
+                    "Specify in settings.yaml or as an environment variable."
                 )

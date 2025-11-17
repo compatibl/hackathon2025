@@ -1,5 +1,5 @@
-RequestID,Query,Completion
-2024-11-17-17-42-43-360-7f81b362681f221e3718,"Trial: 0
+completion_id,parent_completion_id,query,completion,timestamp
+"You will be provided with an input text and a description of a parameter. Your g (gpt-4o, 0f89ef1a380744541fe36dd38992ee236e93da09f777f8ffa017e549cedfd038)",,"Trial: 0
 You will be provided with an input text and a description of a parameter.
 Your goal is to surround each piece of information about this parameter you find in the input text by curly braces.
 Use multiple non-nested pairs of opening and closing curly braces if you find more than one piece of information.
@@ -19,4 +19,4 @@ Parameter description: ```Fixed rate.```","```json
     ""annotated_text"": ""Sell 10y SOFR swap at {3.45%}"",
     ""justification"": ""The fixed rate mentioned in the input text is '3.45%', which is identified as the rate at which the swap is being sold.""
 }
-```"
+```","Trial: 0 You will be provided with an input text and a description of a paramete (gpt-4o, e21f1c0af1cd174180c18789a3e2ce6e)"

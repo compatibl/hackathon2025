@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import re
-from abc import ABC
 from dataclasses import dataclass
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.string_util import StringUtil
@@ -21,18 +20,30 @@ from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.records.typename import typename
 from cl.convince.llms.completion_key import CompletionKey
-from cl.convince.llms.completion_key_gen import CompletionKeyGen
+from cl.convince.llms.llm_key import LlmKey
 
 _TRIAL_RE = re.compile(r"Trial:\s*(\S+)")
 """Regex for Trial."""
 
 
 @dataclass(slots=True, kw_only=True)
-class Completion(CompletionKeyGen, RecordMixin, ABC):
+class Completion(CompletionKey, RecordMixin):
     """Provides an API for single query and chat completion."""
+
+    llm: LlmKey = required()
+    """LLM for which the completion is recorded."""
+
+    query: str = required()  # TODO "str | CompositePrompt" when Unions are supported in field spec
+    """Query for which the completion is recorded."""
 
     completion: str = required()
     """Completion returned by the LLM."""
+
+    parent_completion_id: str | None = None
+    """
+    ID of the parent completion in conversation chain.
+    If ID is None the record is root of the chain. (first completion)
+    """
 
     timestamp: str = required()
     """

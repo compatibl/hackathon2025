@@ -13,14 +13,16 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from typing import Any
 from typing import ClassVar
 from openai import OpenAI
 from cl.runtime.contexts.context_manager import active_or_default
-from cl.runtime.contexts.user_context import UserContext
+from cl.runtime.contexts.user_secrets import UserSecrets
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.primitive.float_util import FloatUtil
 from cl.runtime.records.typename import typename
 from cl.convince.llms.llm import Llm
+from cl.convince.llms.llm_request_telemetry import LlmRequestTelemetry
 from cl.convince.settings.openai_settings import OpenaiSettings
 
 
@@ -32,14 +34,19 @@ class GptLlm(Llm):
     """Model name in OpenAI format including version if any (optional, defaults to 'llm_id' field of the base class)."""
 
     temperature: float | None = None
+    """Sampling temperature, optimal value and valid range are model-dependent (optional)."""
+
+    base_url: str | None = None
     """
-    The sampling temperature between 0 and 1 (optional, passed as 'temperature' to OpenAI SDK).
+    Base URL inclusive of protocol version for the REST API (optional, passed as 'base_url' to OpenAI SDK).
 
     Notes:
-        Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it
-        more focused  and deterministic. If set to 0, the model will use log probability to automatically
-        increase the temperature until certain thresholds are hit.
+        Specify this URL for providers other than OpenAI that use OpenAI REST API protocol,
+        for example 'https://api.fireworks.ai/inference/v1'.
     """
+
+    api_key_secret_name: str | None = "OPENAI_API_KEY"
+    """Secret name for api key. Set None for self-hosted llms."""
 
     _client: ClassVar[OpenAI] = None
     """OpenAI client instance."""
@@ -60,7 +67,7 @@ class GptLlm(Llm):
             else:
                 raise RuntimeError(f"{typename(type(self))} field 'api_base_url' must be None or a number from 0 to 1")
 
-    def uncached_completion(self, request_id: str, query: str) -> str:
+    def uncached_completion(self, request_id: str, query: str) -> Any:
         """Perform completion without CompletionCache lookup, call completion instead."""
 
         # Prefix a unique RequestID to the model for audit log purposes and
@@ -77,24 +84,40 @@ class GptLlm(Llm):
             temperature=self.temperature,
         )
 
-        result = response.choices[0].message.content
-        return result
+        return response
 
-    @classmethod
-    def _get_client(cls) -> OpenAI:
+    def extract_completion_usage_info(self, response: Any) -> LlmRequestTelemetry:
+        """Extract usage from the completion."""
+        return LlmRequestTelemetry(
+            input_tokens=response.usage.prompt_tokens,
+            output_tokens=response.usage.completion_tokens,
+            total_tokens=response.usage.total_tokens,
+        )
+
+    def extract_text_from_completion(self, response: Any) -> str:
+        """Extract text from the completion."""
+        return response.choices[0].message.content
+
+    def _get_client(self) -> OpenAI:
         """Instantiate and cache the OpenAI client instance."""
+        cls = type(self)
         if cls._client is None:
 
-            # Try loading API key from context.secrets first and then from settings
-            api_key = (
-                active_or_default(UserContext).decrypt_secret("OPENAI_API_KEY")
-                or OpenaiSettings.instance().openai_api_key
-            )
-            if api_key is None:
-                raise UserError("Provide OPENAI_API_KEY in Account > My Keys (users) or using Dynaconf (developers).")
+            if self.api_key_secret_name:
+                # Try loading API key from context.secrets first and then from settings
+                api_key = (
+                    active_or_default(UserSecrets).decrypt_secret(self.api_key_secret_name)
+                    or OpenaiSettings.instance().openai_api_key
+                )
+                if api_key is None:
+                    raise UserError(
+                        f"Provide {self.api_key_secret_name} in Account > My Keys (users) or using Dynaconf (developers)."
+                    )
+            else:
+                api_key = "self-hosted"  # required for OpenAI client initialization
 
             cls._client = OpenAI(
                 api_key=api_key,
-                base_url=OpenaiSettings.instance().openai_api_base_url,
+                base_url=self.base_url,
             )
         return cls._client

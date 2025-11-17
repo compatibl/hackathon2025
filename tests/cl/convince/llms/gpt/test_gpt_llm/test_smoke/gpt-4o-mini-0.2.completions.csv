@@ -1,2 +1,2 @@
-RequestID,Query,Completion
-2024-11-17-23-30-37-350-71a3a730519a215034af,2 times 2?,2 times 2 equals 4.
+completion_id,parent_completion_id,query,completion,timestamp
+"2 times 2? (gpt-4o-mini-0.2, a889558bab03ece678eaf725f7d0429bcfc1470f17847309bd8a8640ac38740b)",,2 times 2?,2 times 2 equals 4.,2025-11-13-12-54-22-147-71e3ada8de051a469360

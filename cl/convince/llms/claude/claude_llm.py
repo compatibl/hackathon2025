@@ -13,12 +13,14 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from typing import Any
 from typing import ClassVar
 from anthropic import Anthropic
 from cl.runtime.contexts.context_manager import active_or_default
-from cl.runtime.contexts.user_context import UserContext
+from cl.runtime.contexts.user_secrets import UserSecrets
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.convince.llms.llm import Llm
+from cl.convince.llms.llm_request_telemetry import LlmRequestTelemetry
 from cl.convince.settings.anthropic_settings import AnthropicSettings
 
 
@@ -29,13 +31,13 @@ class ClaudeLlm(Llm):
     model_name: str | None = None
     """Model name in Anthropic format including version if any, defaults to 'llm_id'."""
 
-    max_tokens: int = 4096
-    """Maximum number of tokens the model will generate in response to the query."""
+    max_tokens: int | None = None
+    """Maximum number of tokens the model will generate in response to the query (optional)."""
 
-    _client: ClassVar[Anthropic] = None
+    _client: ClassVar[Anthropic | None] = None
     """Anthropic client instance."""
 
-    def uncached_completion(self, request_id: str, query: str) -> str:
+    def uncached_completion(self, request_id: str, query: str) -> Any:
         """Perform completion without CompletionCache lookup, call completion instead."""
 
         # Prefix a unique RequestID to the model for audit log purposes and
@@ -52,8 +54,20 @@ class ClaudeLlm(Llm):
         )
         if len(response.content) != 1:
             raise RuntimeError(f"More than one response message received for query: {query}: {str(response)}")
-        result = response.content[0].text
-        return result
+        return response
+
+    def extract_completion_usage_info(self, response: Any) -> LlmRequestTelemetry:
+        """Extract usage from the completion."""
+        return LlmRequestTelemetry(
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.completion_tokens,
+            total_tokens=response.usage.input_tokens + response.usage.completion_tokens,
+        )
+
+    def extract_text_from_completion(self, response: Any) -> str:
+        """Extract text from the completion."""
+        content_blocks = response.content
+        return "".join(block.text for block in content_blocks if block.type == "text")
 
     @classmethod
     def _get_client(cls) -> Anthropic:
@@ -61,7 +75,7 @@ class ClaudeLlm(Llm):
 
         # Try loading API key from context.secrets first and then from settings
         api_key = (
-            active_or_default(UserContext).decrypt_secret("ANTHROPIC_API_KEY")
+            active_or_default(UserSecrets).decrypt_secret("ANTHROPIC_API_KEY")
             or AnthropicSettings.instance().anthropic_api_key
         )
         if api_key is None:

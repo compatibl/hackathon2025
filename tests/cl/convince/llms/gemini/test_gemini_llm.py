@@ -19,11 +19,16 @@ from cl.convince.llms.gemini.gemini_llm import GeminiLlm
 def test_smoke(default_db_fixture):
     """Test GeminiLlm class."""
     llms = [
-        GeminiLlm(llm_id="gemini-1.5-flash").build(),
+        GeminiLlm(llm_id="gemini-2.5-flash-lite").build(),
     ]
     for llm in llms:
         assert "4" in llm.completion("2 times 2?")
 
+
+def test_with_output_values(default_db_fixture):
+    """Test GeminiLlm with thinking config."""
+    llm = GeminiLlm(llm_id="gemini-2.5-flash-lite", response_enum=["4", "8"]).build()
+    assert llm.completion("2 times 4?") == "8"
 
 if __name__ == "__main__":
     pytest.main([__file__])

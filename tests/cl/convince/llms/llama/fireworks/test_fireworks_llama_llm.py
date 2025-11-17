@@ -21,7 +21,7 @@ def test_smoke(default_db_fixture):
     llms = [
         FireworksLlamaLlm(llm_id="llama-v3-8b-instruct").build(),
         FireworksLlamaLlm(
-            llm_id="llama-v3-8b-instruct-0.2",
+            llm_id="llama-v3-8b-instruct",
             model_name="llama-v3-8b-instruct",
             temperature=0.2,
         ).build(),

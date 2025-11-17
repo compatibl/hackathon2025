@@ -13,24 +13,18 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing_extensions import final
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.settings.settings import Settings
+from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-@final
-class LlmSettings(Settings):
-    """LLM settings."""
+@dataclass(slots=True)
+class LlmRequestTelemetryKey(DataclassMixin, KeyMixin):
+    """Record for storing usage info for LLM requests."""
 
-    llm_type: str = required()
-    """Type name of the default LLM instance."""
+    prompt_id: str = required()
+    """Unique LLm request identifier."""
 
-    llm_id: str = required()
-    """Identifier of the default LLM instance."""
-
-    llm_locale: str = "en-US"
-    """
-    Locale the default LLM instance is instructed to use in BCP 47 language-country format, for example en-US.
-    This applies to LLM completions only and has no effect on the UI or the data file format.
-    """
+    @classmethod
+    def get_key_type(cls) -> type[KeyMixin]:
+        return LlmRequestTelemetryKey
