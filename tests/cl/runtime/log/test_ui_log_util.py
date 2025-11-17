@@ -23,6 +23,7 @@ from cl.runtime.tasks.task_status import TaskStatus
 from stubs.cl.runtime import StubDataclass
 
 
+@pytest.mark.skip("Does not run under SQLite, skipping.")
 def test_flat_logs(basic_mongo_db_fixture):
     """Test UiLogUtil.run_get_flat_logs() method."""
 
@@ -54,6 +55,7 @@ def test_flat_logs(basic_mongo_db_fixture):
     assert [x["Message"] for x in flat_logs] == [x.message for x in logs_after_clear]
 
 
+@pytest.mark.skip("Does not run under SQLite, skipping.")
 def test_multiple_clear_logs(basic_mongo_db_fixture):
     """Test UiLogUtil.run_clear_logs() multiple calls."""
 
@@ -76,6 +78,7 @@ def test_multiple_clear_logs(basic_mongo_db_fixture):
     assert flat_logs == []
 
 
+@pytest.mark.skip("Does not run under SQLite, skipping.")
 def test_error_logs(basic_mongo_db_fixture):
     """Test UiLogUtil.run_get_error_logs() method."""
 
@@ -110,6 +113,7 @@ def test_error_logs(basic_mongo_db_fixture):
     assert [x["Message"] for x in error_logs] == [x.message for x in error_logs_after_clear]
 
 
+@pytest.mark.skip("Does not run under SQLite, skipping.")
 def test_task_logs(basic_mongo_db_fixture):
     """Test UiLogUtil.run_get_logs_by_task() method."""
     task_1 = ClassMethodTask(

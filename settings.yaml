@@ -1,5 +1,5 @@
 # Default environment
-default: &default_settings
+default:
 
   # Documented in LogSettings class
   log_level: info
