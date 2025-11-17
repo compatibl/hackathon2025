@@ -4,7 +4,7 @@
  * or distributed only in compliance with the terms of a written commercial
  * license from CompatibL and with the inclusion of this copyright notice.
  */
-import{l as r}from"./controls-B-lqj8_S.js";/*!-----------------------------------------------------------------------------
+import{l as r}from"./controls-BOYc9Res.js";/*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Version: 0.50.0(c321d0fbecb50ab8a5365fa1965476b0ae63fc87)
  * Released under the MIT license
