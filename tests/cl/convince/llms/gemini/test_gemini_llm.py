@@ -30,5 +30,6 @@ def test_with_output_values(default_db_fixture):
     llm = GeminiLlm(llm_id="gemini-2.5-flash-lite", response_enum=["4", "8"]).build()
     assert llm.completion("2 times 4?") == "8"
 
+
 if __name__ == "__main__":
     pytest.main([__file__])

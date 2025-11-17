@@ -41,13 +41,15 @@ class UserSecrets(DataclassMixin):
         """Decrypt the specified secret in UserContext, None if no active UserContext or the secret is not found."""
 
         # Get secrets field of the current user secrets context, return None if not specified
-        user_secrets = active_or_default(UserSecrets)  # TODO: !! Convert UserSecrets to record to compare identity by key
+        user_secrets = active_or_default(
+            UserSecrets
+        )  # TODO: !! Convert UserSecrets to record to compare identity by key
         if user_secrets is None or ((encrypted_secrets := user_secrets.encrypted_secrets) is None):
             return None
 
         # TODO (Roman): Align secrets format
-        secret_name_in_ui_format = secret_name.replace('_', '-').lower()
-        
+        secret_name_in_ui_format = secret_name.replace("_", "-").lower()
+
         # Get secret by key, return None if key is not present
         encrypted_value = encrypted_secrets.get(secret_name_in_ui_format)
         if encrypted_value is None:

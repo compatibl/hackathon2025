@@ -15,24 +15,21 @@
 import logging
 import re
 import time
-from math import ceil
-
-from google import genai  # noqa
 from dataclasses import dataclass
 from typing import Any
-
+from google import genai  # noqa
 from google.genai.errors import ClientError
-
 from cl.runtime.contexts.context_manager import active_or_none
 from cl.runtime.contexts.user_secrets import UserSecrets
+from cl.runtime.records.typename import typenameof
 from cl.convince.llms.llm import Llm
 from cl.convince.llms.llm_request_telemetry import LlmRequestTelemetry
 from cl.convince.settings.gemini_settings import GeminiSettings
-from cl.runtime.records.typename import typenameof
 
 _logger = logging.getLogger(__name__)
 
 _RATIONALE_SEPARATOR = "\n=====RATIONALE=====\n"
+
 
 @dataclass(slots=True, kw_only=True)
 class GeminiLlm(Llm):
@@ -77,7 +74,9 @@ class GeminiLlm(Llm):
                 )
 
         # Determine if structured output should be used
-        self._structured_output = self.response_type != "str" or self.response_enum is not None or self.include_rationale
+        self._structured_output = (
+            self.response_type != "str" or self.response_enum is not None or self.include_rationale
+        )
 
     def uncached_completion(self, request_id: str, query: str) -> Any:
         """Perform completion without CompletionCache lookup, call completion instead."""
@@ -107,10 +106,7 @@ class GeminiLlm(Llm):
 
             if self.response_enum is not None:
                 properties = {
-                    "response": genai.types.Schema(
-                        type=gemini_response_type,
-                        enum=list(self.response_enum)
-                    ),
+                    "response": genai.types.Schema(type=gemini_response_type, enum=list(self.response_enum)),
                 }
             else:
                 properties = {
@@ -128,7 +124,7 @@ class GeminiLlm(Llm):
                 required.append("rationale")
 
             # Full response schema
-            response_schema=genai.types.Schema(
+            response_schema = genai.types.Schema(
                 type=genai.types.Type.OBJECT,
                 required=required,
                 properties=properties,

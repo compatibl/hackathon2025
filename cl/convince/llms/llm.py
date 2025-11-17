@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from typing import Any
 from typing import Self
 from cl.runtime.contexts.context_manager import active
-from cl.runtime.contexts.context_manager import active_or_default
 from cl.runtime.contexts.context_manager import active_or_none
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.task_log import TaskLog

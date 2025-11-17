@@ -15,7 +15,6 @@
 import datetime
 from dataclasses import dataclass
 from dataclasses import field
-
 from cl.runtime.primitive.datetime_util import DatetimeUtil
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.convince.llms.llm_request_telemetry_key import LlmRequestTelemetryKey

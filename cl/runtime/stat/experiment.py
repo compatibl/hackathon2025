@@ -16,26 +16,24 @@ import time
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
-from math import floor
-
-from cl.hackathon.hackathon_trial import HackathonTrial
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
 from cl.runtime.log.exceptions.user_error import UserError
-from cl.runtime.stat.case import Case
-from cl.runtime.stat.case_key import CaseKey
 from cl.runtime.plots.plot import Plot
 from cl.runtime.primitive.timestamp import Timestamp
 from cl.runtime.records.for_dataclasses.extensions import required
 from cl.runtime.records.key_util import KeyUtil
 from cl.runtime.records.record_mixin import RecordMixin
 from cl.runtime.records.typename import typename
+from cl.runtime.stat.case import Case
+from cl.runtime.stat.case_key import CaseKey
 from cl.runtime.stat.experiment_interrupt import ExperimentInterrupt
 from cl.runtime.stat.experiment_interrupt_key import ExperimentInterruptKey
 from cl.runtime.stat.experiment_key import ExperimentKey
 from cl.runtime.stat.trial import Trial
 from cl.runtime.stat.trial_query import TrialQuery
 from cl.runtime.views.png_view import PngView
+from cl.hackathon.hackathon_trial import HackathonTrial
 
 
 @dataclass(slots=True, kw_only=True)

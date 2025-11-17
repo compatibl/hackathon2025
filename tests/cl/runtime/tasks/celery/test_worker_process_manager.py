@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-from unittest.mock import MagicMock
 from unittest.mock import Mock
 from unittest.mock import patch
 from cl.runtime.tasks.celery.worker_process_manager import WorkerProcessManager
