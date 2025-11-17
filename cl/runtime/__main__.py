@@ -37,6 +37,7 @@ from cl.runtime.settings.preload_settings import PreloadSettings
 from cl.runtime.settings.project_settings import ProjectSettings
 from cl.runtime.tasks.celery.celery_queue import CeleryQueue
 from cl.runtime.tasks.celery.celery_queue import celery_delete_existing_tasks
+from tools.cl.runtime.generate_server_secrets import SecretsGenerator
 
 # Server
 server_app = FastAPI()
@@ -88,6 +89,9 @@ def run_backend() -> None:
 
     # Set up logging config
     logging.config.dictConfig(logging_config)
+
+    # Generate server secrets
+    SecretsGenerator.run(mode="keep")
 
     with activate(Env().build()), activate(DataSource().build()), activate(EventBroker.create()):
 
