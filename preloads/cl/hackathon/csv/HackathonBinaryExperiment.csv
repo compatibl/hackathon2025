@@ -1,3 +1,0 @@
-experiment_id,params,solution,max_trials,max_parallel
-TradeEntry.0,"[""TradeEntry.Baseline"",""TradeEntry.EmbeddedOption""]",,"""10""",
-TradeEntry.1,"[""TradeEntry.Baseline"",""TradeEntry.EmbeddedOption""]",Important - consider only what is in this instrument and ignore any general statements about other instruments.,"""10""",

@@ -13,19 +13,18 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.params.param import Param
+from cl.runtime.records.key_mixin import KeyMixin
 
 
-@dataclass(slots=True, kw_only=True)
-class HackathonCondition(Param):
-    """Condition under which the hackathon classifier experiment is performed."""
+@dataclass(slots=True)
+class ChallengeKey(DataclassMixin, KeyMixin):
+    """A collection of cases that can be used to create experiments."""
 
-    preamble: str | None = None
-    """Preamble text creating a cognitive bias."""
+    challenge_id: str = required()
+    """Unique challenge identifier."""
 
-    query: str = required()
-    """Query affected by the bias."""
-
-    expected_response: str = required()
-    """Expected response."""
+    @classmethod
+    def get_key_type(cls) -> type[KeyMixin]:
+        return ChallengeKey
