@@ -6,7 +6,8 @@ syntax: glob
 **/.pytest_cache
 **/databases
 **/logs
-**/*secrets*
+**/keys
+**/.secrets*
 **/__pycache__
 **/.venv
 **/mongodb
