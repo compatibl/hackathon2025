@@ -48,9 +48,9 @@ class BoolUtil:
     def from_str(cls, value: str) -> bool:
         """Deserialize 'true' as True and 'false' as False irrespective of case, error if argument is None."""
         if value is None or value.__class__ is str:
-            if value.lower() == "true":
+            if value == "true":
                 return True
-            elif value.lower() == "false":
+            elif value == "false":
                 return False
             else:
                 raise ErrorUtil.param_value_error(
