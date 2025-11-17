@@ -23,10 +23,6 @@ from cl.runtime.file.file_data import FileData
 from cl.runtime.log.exceptions.user_error import UserError
 from cl.runtime.qa.pytest.pytest_util import PytestUtil
 from cl.runtime.records.record_mixin import RecordMixin
-from cl.runtime.records.typename import typename
-from cl.runtime.schema.type_info import TypeInfo
-from cl.runtime.tasks.class_method_task import ClassMethodTask
-from cl.runtime.tasks.task_queue import TaskQueue
 from stubs.cl.runtime import StubDataclass
 from stubs.cl.runtime.records.for_dataclasses.stub_dataclass_handlers_key import StubHandlersKey
 
@@ -210,31 +206,31 @@ class StubHandlers(StubHandlersKey, RecordMixin):
             time.sleep(3)
         raise RuntimeError("Error in handler.")
 
-    @staticmethod
-    def run_long_handler():
+    def run_long_handler(self):
         for i in range(10):
             _LOGGER.info(f"Message {i}")
             time.sleep(3)
         _LOGGER.info("Finished.")
 
-    @classmethod
-    def run_generate_list_of_long_handlers(cls):
-        """Generate a lot of long handlers."""
-        record_type = TypeInfo.from_type_name(cls.__name__)
-        long_handler_name = cls.run_long_handler.__name__
-        label = f"{typename(record_type)};{long_handler_name}"
-        task_queue = active(TaskQueue)
-        handler_task = ClassMethodTask(
-            label=label,
-            queue=task_queue.get_key(),
-            type_=record_type,
-            method_name=long_handler_name,
-        )
-
-        for i in range(100):
-            task = handler_task.build()
-            active(DataSource).replace_one(task, commit=True)
-            task_queue.submit_task(task)
+    # TODO (Roman): Restore when subtasks is supported
+    # @classmethod
+    # def run_generate_list_of_long_handlers(cls):
+    #     """Generate a lot of long handlers."""
+    #     record_type = TypeInfo.from_type_name(cls.__name__)
+    #     long_handler_name = cls.run_long_handler.__name__
+    #     label = f"{typename(record_type)};{long_handler_name}"
+    #     task_queue = active(TaskQueue)
+    #     handler_task = ClassMethodTask(
+    #         label=label,
+    #         queue=task_queue.get_key(),
+    #         type_=record_type,
+    #         method_name=long_handler_name,
+    #     )
+    #
+    #     for i in range(100):
+    #         task = handler_task.build()
+    #         active(DataSource).replace_one(task, commit=True)
+    #         task_queue.submit_task(task)
 
     def run_save_to_db(self):
         """Stub method."""

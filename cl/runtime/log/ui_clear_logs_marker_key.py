@@ -13,23 +13,19 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from typing import Self
+from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.record_mixin import RecordMixin
-from cl.runtime.params.param_key import ParamKey
+from cl.runtime.records.key_mixin import KeyMixin
 
 
 @dataclass(slots=True, kw_only=True)
-class Param(ParamKey, RecordMixin):
-    """Parameter with a unique identifier."""
+class UiClearLogsMarkerKey(DataclassMixin, KeyMixin):
+    """Record to mark the point when the logs were cleared in UI."""
 
-    label: str = required()
-    """Short label to use in charts and reporting, defaults to param_id."""
+    clear_logs_timestamp: str = required()
+    """Timestamp of cleaning logs in UI."""
 
-    def get_key(self) -> ParamKey:
-        return ParamKey(param_id=self.param_id).build()
-
-    def __init(self) -> None:
-        """Use instead of __init__ in the builder pattern, invoked by the build method in base to derived order."""
-        if self.label is None:
-            # Use param_id as label if not specified
-            self.label = self.param_id
+    @classmethod
+    def get_key_type(cls) -> type[Self]:
+        return UiClearLogsMarkerKey

@@ -12,10 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
+from dataclasses import field
+from typing import Self
+from fastapi import Request
 from pydantic import BaseModel
+from cl.runtime.contexts.context_manager import active
+from cl.runtime.db.data_source import DataSource
 from cl.runtime.primitive.case_util import CaseUtil
-from cl.runtime.routers.user_request import UserRequest
+from cl.runtime.secret_providers.secret_provider import SecretProvider
+
+
+def _get_user_secrets_public_key() -> str:
+    secret_provider = SecretProvider.create()
+    private_key = secret_provider.get_rsa_private_key("USER-SECRETS-PRIVATE-CERT")
+    public_key = secret_provider.get_rsa_public_key(private_key=private_key)
+    return public_key
 
 
 class MeResponse(BaseModel):
@@ -39,17 +50,20 @@ class MeResponse(BaseModel):
     scopes: list[str] | None
     """List of scopes for the user."""
 
+    user_secrets_public_key: str | None = field(default_factory=_get_user_secrets_public_key)
+    """Optional public key for encrypting sensitive user data on the frontend before transmission to the backend."""
+
     class Config:
         alias_generator = CaseUtil.snake_to_pascal_case
         populate_by_name = True
 
     @classmethod
-    def get_me(cls, request: UserRequest) -> MeResponse:
+    def get_me(cls, request: Request) -> Self:
         """Implements /auth/me route."""
 
         # Get user from the request or use default value if not specified
         # TODO: Obtain default user from settings
-        user = "root" if request.user is None else request.user
+        user = active(DataSource).tenant.tenant_id
 
         # Create response
         # TODO: Consolidate first and last name into a single string full_name

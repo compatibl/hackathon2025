@@ -12,19 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
-from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
-from cl.runtime.records.for_dataclasses.extensions import required
-from cl.runtime.records.key_mixin import KeyMixin
+from __future__ import annotations
+from cl.runtime.routers.context_request import ContextRequest
 
 
-@dataclass(slots=True)
-class ParamKey(DataclassMixin, KeyMixin):
-    """Parameter with a unique identifier."""
+class CancelRequest(ContextRequest):
+    """Request data type for the /tasks/cancel route."""
 
-    param_id: str = required()
-    """Unique parameter identifier."""
+    task_run_ids: list[str] = []
+    """List of task run ids to cancel."""
 
-    @classmethod
-    def get_key_type(cls) -> type[KeyMixin]:
-        return ParamKey
+    cancel_all: bool = False
+    """Flag indicating if all running tasks should be cancelled."""

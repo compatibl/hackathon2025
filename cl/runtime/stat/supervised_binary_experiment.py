@@ -16,10 +16,10 @@ from abc import ABC
 from dataclasses import dataclass
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
+from cl.runtime.stat.case import Case
 from cl.runtime.plots.stack_bar_plot import StackBarPlot
 from cl.runtime.records.key_util import KeyUtil
 from cl.runtime.stat.binary_experiment import BinaryExperiment
-from cl.runtime.params.param import Param
 from cl.runtime.stat.supervised_binary_trial import SupervisedBinaryTrial
 from cl.runtime.stat.trial_query import TrialQuery
 
@@ -30,7 +30,7 @@ class SupervisedBinaryExperiment(BinaryExperiment, ABC):
 
     def get_plot(self, plot_id: str) -> StackBarPlot:
         """Builds and returns plot for Supervised Binary Experiment."""
-        if not self.params:
+        if not self.cases:
             raise RuntimeError(
                 "Experiment must have one or more condition to build a plot."
             )  # TODO: Support no conditions
@@ -43,14 +43,20 @@ class SupervisedBinaryExperiment(BinaryExperiment, ABC):
         trial_query = TrialQuery(experiment=self.get_key()).build()
         all_trials = active(DataSource).load_by_query(trial_query, cast_to=SupervisedBinaryTrial)
 
-        params = active(DataSource).load_many(self.params, cast_to=Param)
+        params = active(DataSource).load_many(self.cases, cast_to=Case)
         for param in params:
+
+            group_labels.extend([param.label] * 4)
+            bar_labels.extend(["TP", "TN", "FP", "FN"])
+
             # Get trials for the condition
             trials = tuple(trial for trial in all_trials if KeyUtil.is_equal(trial.param, param))
             total = len(trials)
+            if total == 0:
+                values.extend([0.0] * 4)
+                continue
 
             tp = tn = fp = fn = 0
-
             for trial in trials:
                 if trial.outcome and trial.expected_outcome:
                     tp += 1
@@ -61,8 +67,6 @@ class SupervisedBinaryExperiment(BinaryExperiment, ABC):
                 elif not trial.outcome and trial.expected_outcome:
                     fn += 1
 
-            group_labels.extend([param.label] * 4)
-            bar_labels.extend(["TP", "TN", "FP", "FN"])
             values.extend(
                 [
                     tp / total,

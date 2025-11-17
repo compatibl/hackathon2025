@@ -17,11 +17,11 @@ from dataclasses import dataclass
 import numpy as np
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
+from cl.runtime.stat.case import Case
 from cl.runtime.plots.heat_map_plot import HeatMapPlot
 from cl.runtime.plots.multi_plot import MultiPlot
 from cl.runtime.records.key_util import KeyUtil
 from cl.runtime.stat.classifier_experiment import ClassifierExperiment
-from cl.runtime.params.param import Param
 from cl.runtime.stat.supervised_classifier_trial import SupervisedClassifierTrial
 from cl.runtime.stat.trial_query import TrialQuery
 
@@ -31,7 +31,7 @@ class SupervisedClassifierExperiment(ClassifierExperiment, ABC):
     """Supervised classifier experiment with string actual and expected results representing the class label."""
 
     def get_plot(self, plot_id: str) -> MultiPlot:
-        if not self.params:
+        if not self.cases:
             raise RuntimeError(
                 "Experiment must have one or more condition to build a plot."
             )  # TODO: Support no conditions
@@ -43,7 +43,7 @@ class SupervisedClassifierExperiment(ClassifierExperiment, ABC):
         trial_query = TrialQuery(experiment=self.get_key()).build()
         all_trials = active(DataSource).load_by_query(trial_query, cast_to=SupervisedClassifierTrial)
 
-        params = active(DataSource).load_many(self.params, cast_to=Param)
+        params = active(DataSource).load_many(self.cases, cast_to=Case)
         for param in params:
             # Get trials for the condition
             trials = tuple(trial for trial in all_trials if KeyUtil.is_equal(trial.param, param))

@@ -20,14 +20,15 @@ from cl.runtime.db.data_source import DataSource
 from cl.runtime.records.for_dataclasses.dataclass_mixin import DataclassMixin
 from cl.runtime.records.key_mixin import KeyMixin
 from cl.runtime.records.protocols import is_data_key_or_record_type
+from cl.runtime.records.protocols import is_data_type
 from cl.runtime.records.protocols import is_key_type
 from cl.runtime.records.protocols import is_record_type
+from cl.runtime.records.record_panel import RecordPanel
 from cl.runtime.records.typename import typename
 from cl.runtime.schema.handler_declare_decl import HandlerDeclareDecl
 from cl.runtime.schema.type_decl import TypeDecl
 from cl.runtime.schema.type_hint import TypeHint
 from cl.runtime.schema.type_info import TypeInfo
-from cl.runtime.serializers.data_serializers import DataSerializers
 from cl.runtime.serializers.key_serializers import KeySerializers
 from cl.runtime.views.empty_view import EmptyView
 from cl.runtime.views.key_list_view import KeyListView
@@ -43,7 +44,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # Create serializers
 _KEY_SERIALIZER = KeySerializers.DELIMITED
-_UI_SERIALIZER = DataSerializers.FOR_UI
 
 
 @dataclass(slots=True, kw_only=True)
@@ -53,7 +53,7 @@ class UiRecordUtil(DataclassMixin):  # TODO: Move to the appropriate directory
     """
 
     @classmethod
-    def run_get_record_panels(cls, type_name: str, key: str) -> dict:
+    def run_get_record_panels(cls, type_name: str, key: str) -> list[RecordPanel]:
         """Get list of record's viewers with their types."""
 
         # TODO: Return saved view names
@@ -84,17 +84,13 @@ class UiRecordUtil(DataclassMixin):  # TODO: Move to the appropriate directory
         handlers = declare.handlers if (declare := TypeDecl.for_type(actual_type).declare) is not None else None
 
         result = [
-            {
-                "Name": pv.view_name,
-                "Kind": ViewPersistenceUtil.get_panel_kind_from_view(pv),
-                "Persistable": True,
-            }
+            RecordPanel(name=pv.view_name, kind=ViewPersistenceUtil.get_panel_kind_from_view(pv), persistable=True)
             for pv in persisted_views
         ]
 
         if handlers:
             result += [
-                {"Name": h.label, "Kind": cls._get_panel_kind(h), "Persistable": False}
+                RecordPanel(name=h.label, kind=cls._get_panel_kind(h), persistable=False)
                 for h in handlers
                 if h.type_ == "Viewer"
             ]
@@ -124,6 +120,7 @@ class UiRecordUtil(DataclassMixin):  # TODO: Move to the appropriate directory
             # Deserialize key from string to object.
             key_obj = _KEY_SERIALIZER.deserialize(key, TypeHint.for_type(key_type))
 
+            # Return custom error response
             error_view = Script(
                 view_for=key_obj,
                 view_name="Error message",
@@ -131,8 +128,7 @@ class UiRecordUtil(DataclassMixin):  # TODO: Move to the appropriate directory
                 body=["## The following error occurred during the rendering of this view:\n", f"{str(e)}"],
                 word_wrap=True,
             )
-            # Return custom error response.
-            return _UI_SERIALIZER.serialize(error_view)
+            return error_view
 
     @classmethod
     def _get_panel_kind(cls, handler: HandlerDeclareDecl) -> str | None:
@@ -189,7 +185,7 @@ class UiRecordUtil(DataclassMixin):  # TODO: Move to the appropriate directory
         # Load nested keys and perform custom View object transformations.
         view = view.materialize()
 
-        return _UI_SERIALIZER.serialize(view)
+        return view
 
     @classmethod
     def _process_viewer_result(cls, viewer_result, view_for: KeyMixin, view_name: str) -> View:
@@ -227,15 +223,15 @@ class UiRecordUtil(DataclassMixin):  # TODO: Move to the appropriate directory
 
         # If the result is a list of keys or list of records, convert it to an appropriate View.
         elif isinstance(viewer_result, (list, tuple)):
-
             # Check iterable value type by first item.
-            if is_key_type(type(viewer_result[0])):  # TODO: Complete check instead of first item for viewer_result[0]
+            first_item_type = type(viewer_result[0])  # TODO: Complete check instead of first item for viewer_result[0]
+            if is_key_type(first_item_type):
                 return KeyListView(view_for=view_for, view_name=view_name, keys=viewer_result)
-            elif is_record_type(type(viewer_result[0])):
+            elif is_record_type(first_item_type) or is_data_type(first_item_type):
                 return RecordListView(view_for=view_for, view_name=view_name, records=viewer_result)
             else:
                 raise RuntimeError(
-                    f"If the viewer result is iterable it must be a list of keys or a list of records. "
+                    f"If the viewer result is iterable it must be a list of keys, list of records or list of data. "
                     f"Other is not supported. Received: {viewer_result}."
                 )
         else:

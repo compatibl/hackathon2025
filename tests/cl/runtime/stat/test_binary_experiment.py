@@ -14,7 +14,8 @@
 
 import pytest
 import random
-from cl.runtime.params.param import Param
+from cl.runtime.stat.case import Case
+from cl.runtime.primitive.timestamp import Timestamp
 from stubs.cl.runtime.stat.stub_binary_experiment import StubBinaryExperiment
 
 
@@ -22,25 +23,25 @@ def test_smoke(multi_db_fixture):
     """Test for BinaryExperiment class."""
     # Create and run the experiment
     experiment = StubBinaryExperiment(
-        experiment_id="test_binary_experiment.test_smoke",
-        max_trials=5,
+        experiment_id=f"test_binary_experiment.test_smoke.{Timestamp.create()}",
+        num_trials=5,
     ).build()
-    experiment.run_launch_all_trials()
+    experiment.run_run()
     trials = experiment.view_trials()
     assert len(trials) == 5
 
 
 def test_plot(multi_db_fixture, work_dir_fixture):
     experiment = StubBinaryExperiment(
-        experiment_id="Test",
-        params=[
-            Param(param_id="Test1"),
-            Param(param_id="Test2"),
+        experiment_id=f"Test.{Timestamp.create()}",
+        cases=[
+            Case(param_id="Test1"),
+            Case(param_id="Test2"),
         ],
-        max_trials=5,
+        num_trials=5,
     )
     random.seed(0)
-    experiment.run_launch_all_trials()
+    experiment.run_run()
 
     experiment.get_plot("test_binary_experiment_plot.binary_experiment_plot").save(format_="svg")
 

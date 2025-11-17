@@ -16,10 +16,10 @@ from abc import ABC
 from dataclasses import dataclass
 from cl.runtime.contexts.context_manager import active
 from cl.runtime.db.data_source import DataSource
+from cl.runtime.stat.case import Case
 from cl.runtime.plots.stack_bar_plot import StackBarPlot
 from cl.runtime.records.key_util import KeyUtil
 from cl.runtime.stat.binary_trial import BinaryTrial
-from cl.runtime.params.param import Param
 from cl.runtime.stat.experiment import Experiment
 from cl.runtime.stat.trial_query import TrialQuery
 
@@ -31,7 +31,7 @@ class BinaryExperiment(Experiment, ABC):
     def get_plot(self, plot_id: str) -> StackBarPlot:
         """Builds and returns plot for Binary Experiment."""
 
-        if not self.params:
+        if not self.cases:
             raise RuntimeError(
                 "Experiment must have one or more condition to build a plot."
             )  # TODO: !!! Support no conditions
@@ -44,18 +44,21 @@ class BinaryExperiment(Experiment, ABC):
         trial_query = TrialQuery(experiment=self.get_key()).build()
         all_trials = active(DataSource).load_by_query(trial_query, cast_to=BinaryTrial)
 
-        params = active(DataSource).load_many(self.params, cast_to=Param)
+        params = active(DataSource).load_many(self.cases, cast_to=Case)
         for param in params:
-            # Get trials for the condition
-            trials = tuple(trial for trial in all_trials if KeyUtil.is_equal(trial.param, param))
-            total = len(trials)
-
-            true_trials = sum(trial.outcome for trial in trials)
-            false_trials = total - true_trials
 
             group_labels.extend([param.label] * 2)
             bar_labels.extend(["True", "False"])
-            values.extend([true_trials / total, false_trials / total])
+
+            # Get trials for the condition
+            trials = tuple(trial for trial in all_trials if KeyUtil.is_equal(trial.param, param))
+            total = len(trials)
+            if total != 0:
+                true_trials = sum(trial.outcome for trial in trials)
+                false_trials = total - true_trials
+                values.extend([true_trials / total, false_trials / total])
+            else:
+                values.extend([0.0, 0.0])
 
         result = StackBarPlot(
             plot_id=plot_id,
